@@ -36,6 +36,9 @@ def verify_telegram_data(init_data):
 
         auth_date = int(data.get("auth_date", "0"))
 
+        if auth_date > time.time() + 60:
+            return None
+
         if time.time() - auth_date > 86400:
             return None
 
@@ -45,8 +48,8 @@ def verify_telegram_data(init_data):
         )
 
         secret_key = hmac.new(
-            b"WebAppData",
             BOT_TOKEN.encode(),
+            b"WebAppData",
             hashlib.sha256
         ).digest()
 
@@ -62,8 +65,7 @@ def verify_telegram_data(init_data):
         ):
             return None
 
-        user = json.loads(data["user"])
-        return user
+        return json.loads(data["user"])
 
     except Exception:
         return None
@@ -112,8 +114,4 @@ def balance():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
-
-    app.run(
-        host="0.0.0.0",
-        port=port
-    )
+    app.run(host="0.0.0.0", port=port)

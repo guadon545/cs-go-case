@@ -1,0 +1,391 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS GO CASE</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #080c16;
+    color: white;
+    font-family: Arial, sans-serif;
+    padding-bottom: 90px;
+}
+
+.header {
+    padding: 22px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #10182a;
+    border-bottom: 1px solid #202c44;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.logo span { color: #498cff; }
+
+.profile {
+    background: #1c2940;
+    padding: 9px 13px;
+    border-radius: 12px;
+    color: #91baff;
+}
+
+.container { padding: 18px; }
+
+.balance {
+    background: linear-gradient(135deg, #142b50, #253b70, #17213e);
+    border: 1px solid #4169ad;
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 23px;
+    text-align: center;
+}
+
+.balance-label {
+    color: #a8bddf;
+    font-size: 12px;
+    letter-spacing: 2px;
+}
+
+.balance-number {
+    font-size: 35px;
+    font-weight: 900;
+    margin: 12px 0 5px;
+}
+
+.balance-currency {
+    color: #76aaff;
+    font-size: 13px;
+}
+
+.section-title {
+    font-size: 20px;
+    margin: 20px 0 15px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.card {
+    background: #121b2d;
+    border: 1px solid #263550;
+    border-radius: 15px;
+    padding: 16px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: .15s;
+}
+
+.card:active { transform: scale(.96); }
+
+.card-icon {
+    font-size: 42px;
+    margin-bottom: 12px;
+}
+
+.card-name {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.card-description {
+    color: #8797b2;
+    font-size: 11px;
+    margin-top: 6px;
+}
+
+.case-card {
+    background: #121b2d;
+    border: 1px solid #263550;
+    border-radius: 15px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.case-name {
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+.case-price {
+    color: #79aaff;
+    font-size: 13px;
+}
+
+.open-button {
+    background: linear-gradient(135deg, #347cff, #754bff);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 15px;
+    font-weight: bold;
+}
+
+.page { display: none; }
+.page.active { display: block; }
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #10182a;
+    border-top: 1px solid #263550;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 4px 17px;
+}
+
+.nav-button {
+    background: none;
+    border: none;
+    color: #8291aa;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.nav-button.active { color: #65a0ff; }
+
+.nav-icon {
+    display: block;
+    font-size: 21px;
+    margin-bottom: 5px;
+}
+
+.placeholder {
+    background: #121b2d;
+    border: 1px solid #263550;
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    color: #aabbd4;
+    line-height: 1.7;
+}
+
+.small-note {
+    color: #72839e;
+    font-size: 11px;
+    text-align: center;
+    margin-top: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+    <div class="logo">CS GO <span>CASE</span></div>
+    <div class="profile">👤 <span id="username">Игрок</span></div>
+</header>
+
+<main class="container">
+
+<section class="page active" id="home">
+    <div class="balance">
+        <div class="balance-label">ТВОЙ БАЛАНС</div>
+        <div class="balance-number" id="balance">0 DC</div>
+        <div class="balance-currency">GUADON COIN</div>
+    </div>
+
+    <h2 class="section-title">🎮 Игровой центр</h2>
+
+    <div class="grid">
+        <div class="card" onclick="showPage('cases')">
+            <div class="card-icon">📦</div>
+            <div class="card-name">Кейсы</div>
+            <div class="card-description">Открывай и получай скины</div>
+        </div>
+
+        <div class="card" onclick="showPage('inventory')">
+            <div class="card-icon">🔫</div>
+            <div class="card-name">Инвентарь</div>
+            <div class="card-description">Твои скины и предметы</div>
+        </div>
+
+        <div class="card" onclick="showPage('upgrade')">
+            <div class="card-icon">⚡</div>
+            <div class="card-name">Апгрейд</div>
+            <div class="card-description">Улучшай свои скины</div>
+        </div>
+
+        <div class="card" onclick="showPage('contracts')">
+            <div class="card-icon">📝</div>
+            <div class="card-name">Контракты</div>
+            <div class="card-description">Обменивай 10 предметов</div>
+        </div>
+    </div>
+
+    <h2 class="section-title">🏆 Дополнительно</h2>
+
+    <div class="grid">
+        <div class="card" onclick="showPage('rating')">
+            <div class="card-icon">🏆</div>
+            <div class="card-name">Рейтинг</div>
+        </div>
+
+        <div class="card" onclick="showPage('profile')">
+            <div class="card-icon">👤</div>
+            <div class="card-name">Профиль</div>
+        </div>
+    </div>
+</section>
+
+<section class="page" id="cases">
+    <h2 class="section-title">📦 Магазин кейсов</h2>
+
+    <div class="case-card">
+        <div>
+            <div class="case-name">Kilowatt Case</div>
+            <div class="case-price">100 DC</div>
+        </div>
+        <button class="open-button" onclick="openCase('Kilowatt Case')">Открыть</button>
+    </div>
+
+    <div class="case-card">
+        <div>
+            <div class="case-name">Revolution Case</div>
+            <div class="case-price">250 DC</div>
+        </div>
+        <button class="open-button" onclick="openCase('Revolution Case')">Открыть</button>
+    </div>
+
+    <div class="case-card">
+        <div>
+            <div class="case-name">Recoil Case</div>
+            <div class="case-price">400 DC</div>
+        </div>
+        <button class="open-button" onclick="openCase('Recoil Case')">Открыть</button>
+    </div>
+
+    <p class="small-note">Демонстрационные кейсы. Открытие подключим к серверу.</p>
+</section>
+
+<section class="page" id="inventory">
+    <h2 class="section-title">🔫 Мой инвентарь</h2>
+    <div class="placeholder">
+        <div style="font-size:45px">📦</div>
+        Здесь будут твои скины CS2.
+        <br>Количество, стоимость и редкость.
+    </div>
+</section>
+
+<section class="page" id="upgrade">
+    <h2 class="section-title">⚡ Апгрейд</h2>
+    <div class="placeholder">
+        Выбирай исходный скин и предмет, который хочешь получить.
+        <br><br>Максимальный шанс — 90%.
+    </div>
+</section>
+
+<section class="page" id="contracts">
+    <h2 class="section-title">📝 Контракты</h2>
+    <div class="placeholder">
+        Выбирай 10 скинов и получай один случайный предмет.
+        <br><br>Контракт может принести прибыль или убыток.
+    </div>
+</section>
+
+<section class="page" id="rating">
+    <h2 class="section-title">🏆 Рейтинг игроков</h2>
+    <div class="placeholder">Здесь появится общий рейтинг игроков.</div>
+</section>
+
+<section class="page" id="profile">
+    <h2 class="section-title">👤 Профиль</h2>
+    <div class="placeholder">
+        <div id="profile-name">Игрок</div>
+        <br>
+        <div id="profile-id">Telegram ID: —</div>
+        <br>
+        <div>Проект CS GO CASE</div>
+    </div>
+</section>
+
+</main>
+
+<nav class="bottom-nav">
+    <button class="nav-button active" onclick="showPage('home',this)">
+        <span class="nav-icon">🏠</span>Главная
+    </button>
+    <button class="nav-button" onclick="showPage('cases',this)">
+        <span class="nav-icon">📦</span>Кейсы
+    </button>
+    <button class="nav-button" onclick="showPage('inventory',this)">
+        <span class="nav-icon">🔫</span>Инвентарь
+    </button>
+    <button class="nav-button" onclick="showPage('profile',this)">
+        <span class="nav-icon">👤</span>Профиль
+    </button>
+</nav>
+
+<script>
+const tg = window.Telegram.WebApp;
+
+tg.ready();
+tg.expand();
+
+if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+    const user = tg.initDataUnsafe.user;
+    const name = user.first_name || "Игрок";
+
+    document.getElementById("username").textContent = name;
+    document.getElementById("profile-name").textContent = name;
+    document.getElementById("profile-id").textContent =
+        "Telegram ID: " + user.id;
+}
+
+function showPage(page, button) {
+    document.querySelectorAll(".page").forEach(el => {
+        el.classList.remove("active");
+    });
+
+    document.getElementById(page).classList.add("active");
+
+    document.querySelectorAll(".nav-button").forEach(el => {
+        el.classList.remove("active");
+    });
+
+    if (button) {
+        button.classList.add("active");
+    } else {
+        document.querySelectorAll(".nav-button").forEach(el => {
+            if (el.getAttribute("onclick").includes("'" + page + "'")) {
+                el.classList.add("active");
+            }
+        });
+    }
+
+    window.scrollTo(0, 0);
+}
+
+function openCase(name) {
+    tg.showAlert(
+        "Кейс " + name +
+        "\n\nОткрытие пока не подключено. Скоро добавим настоящую систему кейсов!"
+    );
+}
+</script>
+
+</body>
+</html>

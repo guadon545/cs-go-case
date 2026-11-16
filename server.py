@@ -18,7 +18,15 @@ CORS(
     origins=["https://guadon545.github.io"]
 )
 
+# Создаём таблицы базы данных
 database.init_db()
+
+# Автоматически добавляем администраторов из Render
+admin_ids = os.getenv("ADMIN_IDS", "")
+
+for admin_id in admin_ids.split(","):
+    if admin_id.strip().isdigit():
+        database.add_admin(int(admin_id.strip()))
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -71,6 +79,14 @@ def verify_telegram_data(init_data):
         return None
 
 
+def get_telegram_user():
+    init_data = request.headers.get(
+        "X-Telegram-Init-Data", ""
+    )
+
+    return verify_telegram_data(init_data)
+
+
 @app.route("/")
 def home():
     return "GUADON COIN SERVER IS ONLINE!"
@@ -83,11 +99,7 @@ def health():
 
 @app.route("/api/balance")
 def balance():
-    init_data = request.headers.get(
-        "X-Telegram-Init-Data", ""
-    )
-
-    user = verify_telegram_data(init_data)
+    user = get_telegram_user()
 
     if not user:
         return jsonify({
@@ -112,6 +124,53 @@ def balance():
     })
 
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+@app.route("/api/admin/status")
+def admin_status():
+    user = get_telegram_user()
+
+    if not user:
+        return jsonify({"error": "Authorization failed"}), 401
+
+    user_id = user.get("id")
+
+    return jsonify({
+        "is_admin": database.is_admin(user_id)
+    })
+
+
+@app.route("/api/admin/give-dc", methods=["POST"])
+def admin_give_dc():
+    user = get_telegram_user()
+
+    if not user:
+        return jsonify({"error": "Authorization failed"}), 401
+
+    admin_id = user.get("id")
+
+    if not database.is_admin(admin_id):
+        return jsonify({"error": "Нет доступа"}), 403
+
+    data = request.get_json(silent=True) or {}
+
+    try:
+        target_id = int(data.get("user_id"))
+        amount = int(data.get("amount"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Неверные данные"}), 400
+
+    if target_id <= 0 or amount <= 0:
+        return jsonify({"error": "Сумма и ID должны быть положительными"}), 400
+
+    database.register_user(target_id)
+    database.change_balance(
+        target_id,
+        amount,
+        "admin_give",
+        admin_id
+    )
+
+    return jsonify({
+        "success": True,
+        "message": f"Выдано {amount} DC",
+        "balance": database.get_balance(target_id)
+    })

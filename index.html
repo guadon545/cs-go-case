@@ -8,200 +8,45 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    background: #080c16;
-    color: white;
-    font-family: Arial, sans-serif;
-    padding-bottom: 90px;
-}
-
-.header {
-    padding: 22px 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #10182a;
-    border-bottom: 1px solid #202c44;
-}
-
-.logo {
-    font-size: 22px;
-    font-weight: 900;
-    letter-spacing: 1px;
-}
-
-.logo span {
-    color: #498cff;
-}
-
-.profile {
-    background: #1c2940;
-    padding: 9px 13px;
-    border-radius: 12px;
-    color: #91baff;
-}
-
-.container {
-    padding: 18px;
-}
-
-.balance {
-    background: linear-gradient(135deg, #142b50, #253b70, #17213e);
-    border: 1px solid #4169ad;
-    border-radius: 18px;
-    padding: 22px;
-    margin-bottom: 23px;
-    text-align: center;
-}
-
-.balance-label {
-    color: #a8bddf;
-    font-size: 12px;
-    letter-spacing: 2px;
-}
-
-.balance-number {
-    font-size: 35px;
-    font-weight: 900;
-    margin: 12px 0 5px;
-}
-
-.balance-currency {
-    color: #76aaff;
-    font-size: 13px;
-}
-
-.section-title {
-    font-size: 20px;
-    margin: 20px 0 15px;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.card {
-    background: #121b2d;
-    border: 1px solid #263550;
-    border-radius: 15px;
-    padding: 16px 10px;
-    text-align: center;
-    cursor: pointer;
-    transition: .15s;
-}
-
-.card:active {
-    transform: scale(.96);
-}
-
-.card-icon {
-    font-size: 42px;
-    margin-bottom: 12px;
-}
-
-.card-name {
-    font-weight: bold;
-    font-size: 15px;
-}
-
-.card-description {
-    color: #8797b2;
-    font-size: 11px;
-    margin-top: 6px;
-}
-
-.case-card {
-    background: #121b2d;
-    border: 1px solid #263550;
-    border-radius: 15px;
-    padding: 16px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.case-name {
-    font-weight: bold;
-    margin-bottom: 7px;
-}
-
-.case-price {
-    color: #79aaff;
-    font-size: 13px;
-}
-
-.open-button {
-    background: linear-gradient(135deg, #347cff, #754bff);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 11px 15px;
-    font-weight: bold;
-}
-
-.page {
-    display: none;
-}
-
-.page.active {
-    display: block;
-}
-
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #10182a;
-    border-top: 1px solid #263550;
-    display: flex;
-    justify-content: space-around;
-    padding: 12px 4px 17px;
-}
-
-.nav-button {
-    background: none;
-    border: none;
-    color: #8291aa;
-    font-size: 11px;
-    cursor: pointer;
-}
-
-.nav-button.active {
-    color: #65a0ff;
-}
-
-.nav-icon {
-    display: block;
-    font-size: 21px;
-    margin-bottom: 5px;
-}
-
-.placeholder {
-    background: #121b2d;
-    border: 1px solid #263550;
-    border-radius: 15px;
-    padding: 25px;
-    text-align: center;
-    color: #aabbd4;
-    line-height: 1.7;
-}
-
-.small-note {
-    color: #72839e;
-    font-size: 11px;
-    text-align: center;
-    margin-top: 18px;
-}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:90px}
+.header{padding:22px 18px;display:flex;justify-content:space-between;align-items:center;background:#10182a;border-bottom:1px solid #202c44}
+.logo{font-size:22px;font-weight:900;letter-spacing:1px}
+.logo span{color:#498cff}
+.profile{background:#1c2940;padding:9px 13px;border-radius:12px;color:#91baff}
+.container{padding:18px}
+.balance{background:linear-gradient(135deg,#142b50,#253b70,#17213e);border:1px solid #4169ad;border-radius:18px;padding:22px;margin-bottom:23px;text-align:center}
+.balance-label{color:#a8bddf;font-size:12px;letter-spacing:2px}
+.balance-number{font-size:35px;font-weight:900;margin:12px 0 5px}
+.balance-currency{color:#76aaff;font-size:13px}
+.section-title{font-size:20px;margin:20px 0 15px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:#121b2d;border:1px solid #263550;border-radius:15px;padding:16px 10px;text-align:center;cursor:pointer}
+.card:active{transform:scale(.96)}
+.card-icon{font-size:42px;margin-bottom:12px}
+.card-name{font-weight:bold;font-size:15px}
+.card-description{color:#8797b2;font-size:11px;margin-top:6px}
+.case-card{background:#121b2d;border:1px solid #263550;border-radius:15px;padding:16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.case-name{font-weight:bold;margin-bottom:7px}
+.case-price{color:#79aaff;font-size:13px}
+.open-button,.action-button{background:linear-gradient(135deg,#347cff,#754bff);color:white;border:none;border-radius:10px;padding:11px 15px;font-weight:bold;cursor:pointer}
+.page{display:none}
+.page.active{display:block}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#10182a;border-top:1px solid #263550;display:flex;justify-content:space-around;padding:12px 4px 17px;z-index:10}
+.nav-button{background:none;border:none;color:#8291aa;font-size:11px;cursor:pointer}
+.nav-button.active{color:#65a0ff}
+.nav-icon{display:block;font-size:21px;margin-bottom:5px}
+.placeholder{background:#121b2d;border:1px solid #263550;border-radius:15px;padding:25px;text-align:center;color:#aabbd4;line-height:1.7}
+.small-note{color:#72839e;font-size:11px;text-align:center;margin-top:18px}
+.admin-box{background:#121b2d;border:1px solid #4169ad;border-radius:15px;padding:18px;margin-bottom:15px}
+.admin-label{display:block;color:#a8bddf;font-size:13px;margin:14px 0 7px}
+.admin-input{width:100%;background:#080c16;border:1px solid #344767;border-radius:9px;padding:13px;color:white;font-size:16px;outline:none}
+.admin-input:focus{border-color:#498cff}
+.action-button{width:100%;margin-top:17px;font-size:15px}
+.admin-message{margin-top:14px;padding:12px;border-radius:9px;background:#1c2940;color:#a8bddf;font-size:13px;line-height:1.5;display:none;overflow-wrap:anywhere}
+.admin-message.success{display:block;color:#80e6a0}
+.admin-message.error{display:block;color:#ff8585}
+.admin-status{color:#80e6a0;font-size:13px;margin-bottom:12px}
 </style>
 </head>
 
@@ -215,7 +60,6 @@ body {
 <main class="container">
 
 <section class="page active" id="home">
-
     <div class="balance">
         <div class="balance-label">ТВОЙ БАЛАНС</div>
         <div class="balance-number" id="balance">Загрузка...</div>
@@ -223,26 +67,22 @@ body {
     </div>
 
     <h2 class="section-title">🎮 Игровой центр</h2>
-
     <div class="grid">
         <div class="card" onclick="showPage('cases')">
             <div class="card-icon">📦</div>
             <div class="card-name">Кейсы</div>
             <div class="card-description">Открывай и получай скины</div>
         </div>
-
         <div class="card" onclick="showPage('inventory')">
             <div class="card-icon">🔫</div>
             <div class="card-name">Инвентарь</div>
             <div class="card-description">Твои скины и предметы</div>
         </div>
-
         <div class="card" onclick="showPage('upgrade')">
             <div class="card-icon">⚡</div>
             <div class="card-name">Апгрейд</div>
             <div class="card-description">Улучшай свои скины</div>
         </div>
-
         <div class="card" onclick="showPage('contracts')">
             <div class="card-icon">📝</div>
             <div class="card-name">Контракты</div>
@@ -251,13 +91,11 @@ body {
     </div>
 
     <h2 class="section-title">🏆 Дополнительно</h2>
-
     <div class="grid">
         <div class="card" onclick="showPage('rating')">
             <div class="card-icon">🏆</div>
             <div class="card-name">Рейтинг</div>
         </div>
-
         <div class="card" onclick="showPage('profile')">
             <div class="card-icon">👤</div>
             <div class="card-name">Профиль</div>
@@ -267,31 +105,18 @@ body {
 
 <section class="page" id="cases">
     <h2 class="section-title">📦 Магазин кейсов</h2>
-
     <div class="case-card">
-        <div>
-            <div class="case-name">Kilowatt Case</div>
-            <div class="case-price">100 DC</div>
-        </div>
+        <div><div class="case-name">Kilowatt Case</div><div class="case-price">100 DC</div></div>
         <button class="open-button" onclick="openCase('Kilowatt Case')">Открыть</button>
     </div>
-
     <div class="case-card">
-        <div>
-            <div class="case-name">Revolution Case</div>
-            <div class="case-price">250 DC</div>
-        </div>
+        <div><div class="case-name">Revolution Case</div><div class="case-price">250 DC</div></div>
         <button class="open-button" onclick="openCase('Revolution Case')">Открыть</button>
     </div>
-
     <div class="case-card">
-        <div>
-            <div class="case-name">Recoil Case</div>
-            <div class="case-price">400 DC</div>
-        </div>
+        <div><div class="case-name">Recoil Case</div><div class="case-price">400 DC</div></div>
         <button class="open-button" onclick="openCase('Recoil Case')">Открыть</button>
     </div>
-
     <p class="small-note">Открытие кейсов подключим следующим этапом.</p>
 </section>
 
@@ -336,40 +161,82 @@ body {
     </div>
 </section>
 
+<!-- АДМИН-ПАНЕЛЬ -->
+<section class="page" id="admin">
+    <h2 class="section-title">👑 Админ-панель GUADON</h2>
+
+    <div class="admin-box">
+        <div class="admin-status">🟢 Права администратора подтверждены</div>
+        <h3>💰 Выдать DC игроку</h3>
+
+        <label class="admin-label" for="target-id">Telegram ID игрока</label>
+        <input class="admin-input" id="target-id"
+               type="number" placeholder="Например: 123456789">
+
+        <label class="admin-label" for="dc-amount">Количество DC</label>
+        <input class="admin-input" id="dc-amount"
+               type="number" min="1" step="1" placeholder="Например: 500">
+
+        <button class="action-button" id="give-button" onclick="giveDC()">
+            ВЫДАТЬ DC
+        </button>
+
+        <div class="admin-message" id="admin-message"></div>
+    </div>
+
+    <div class="placeholder">
+        🔒 Другие функции админ-панели добавим следующим этапом.
+        <br><br>
+        Управление скинами, банами, кейсами и журнал операций.
+    </div>
+</section>
+
 </main>
 
 <nav class="bottom-nav">
     <button class="nav-button active" onclick="showPage('home',this)">
         <span class="nav-icon">🏠</span>Главная
     </button>
-
     <button class="nav-button" onclick="showPage('cases',this)">
         <span class="nav-icon">📦</span>Кейсы
     </button>
-
     <button class="nav-button" onclick="showPage('inventory',this)">
         <span class="nav-icon">🔫</span>Инвентарь
     </button>
-
     <button class="nav-button" onclick="showPage('profile',this)">
         <span class="nav-icon">👤</span>Профиль
     </button>
+    <button class="nav-button" id="admin-nav" style="display:none"
+            onclick="showPage('admin',this)">
+        <span class="nav-icon">👑</span>Админ
+    </button>
 </nav>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
 <script>
 const tg = window.Telegram.WebApp;
+const API = "https://cs-go-case.onrender.com";
 
 tg.ready();
 tg.expand();
+
+let currentUserId = null;
 
 if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
     const user = tg.initDataUnsafe.user;
     const name = user.first_name || "Игрок";
 
+    currentUserId = user.id;
+
     document.getElementById("username").textContent = name;
     document.getElementById("profile-name").textContent = name;
     document.getElementById("profile-id").textContent =
         "Telegram ID: " + user.id;
+}
+
+function authHeaders() {
+    return {
+        "X-Telegram-Init-Data": tg.initData
+    };
 }
 
 async function loadBalance() {
@@ -381,15 +248,10 @@ async function loadBalance() {
     }
 
     try {
-        const response = await fetch(
-            "https://cs-go-case.onrender.com/api/balance",
-            {
-                method: "GET",
-                headers: {
-                    "X-Telegram-Init-Data": tg.initData
-                }
-            }
-        );
+        const response = await fetch(API + "/api/balance", {
+            method: "GET",
+            headers: authHeaders()
+        });
 
         const data = await response.json();
 
@@ -405,12 +267,37 @@ async function loadBalance() {
     }
 }
 
+async function checkAdmin() {
+    if (!tg.initData) return;
+
+    try {
+        const response = await fetch(API + "/api/admin/status", {
+            method: "GET",
+            headers: authHeaders()
+        });
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        if (data.is_admin === true) {
+            document.getElementById("admin-nav").style.display = "block";
+        }
+
+    } catch (error) {
+        console.error("Ошибка проверки админа:", error);
+    }
+}
+
 function showPage(page, button) {
     document.querySelectorAll(".page").forEach(el => {
         el.classList.remove("active");
     });
 
-    document.getElementById(page).classList.add("active");
+    const selectedPage = document.getElementById(page);
+    if (!selectedPage) return;
+
+    selectedPage.classList.add("active");
 
     document.querySelectorAll(".nav-button").forEach(el => {
         el.classList.remove("active");
@@ -420,13 +307,82 @@ function showPage(page, button) {
         button.classList.add("active");
     } else {
         document.querySelectorAll(".nav-button").forEach(el => {
-            if (el.getAttribute("onclick").includes("'" + page + "'")) {
+            if (el.getAttribute("onclick") &&
+                el.getAttribute("onclick").includes("'" + page + "'")) {
                 el.classList.add("active");
             }
         });
     }
 
     window.scrollTo(0, 0);
+}
+
+function showAdminMessage(message, type) {
+    const box = document.getElementById("admin-message");
+    box.textContent = message;
+    box.className = "admin-message " + type;
+}
+
+async function giveDC() {
+    const targetId = document.getElementById("target-id").value.trim();
+    const amount = document.getElementById("dc-amount").value.trim();
+    const button = document.getElementById("give-button");
+
+    if (!targetId || !amount) {
+        showAdminMessage("Заполни Telegram ID и количество DC.", "error");
+        return;
+    }
+
+    if (!/^\d+$/.test(targetId) || Number(targetId) <= 0) {
+        showAdminMessage("Неверный Telegram ID.", "error");
+        return;
+    }
+
+    if (!/^\d+$/.test(amount) || Number(amount) <= 0) {
+        showAdminMessage("Количество DC должно быть положительным числом.", "error");
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "ОТПРАВКА...";
+
+    try {
+        const response = await fetch(API + "/api/admin/give-dc", {
+            method: "POST",
+            headers: {
+                ...authHeaders(),
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                user_id: Number(targetId),
+                amount: Number(amount)
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Не удалось выдать DC");
+        }
+
+        showAdminMessage(
+            "✅ " + data.message +
+            "\nНовый баланс игрока: " + data.balance + " DC",
+            "success"
+        );
+
+        if (Number(targetId) === Number(currentUserId)) {
+            await loadBalance();
+        }
+
+        document.getElementById("dc-amount").value = "";
+
+    } catch (error) {
+        showAdminMessage("❌ " + error.message, "error");
+    } finally {
+        button.disabled = false;
+        button.textContent = "ВЫДАТЬ DC";
+    }
 }
 
 function openCase(name) {
@@ -437,6 +393,7 @@ function openCase(name) {
 }
 
 loadBalance();
+checkAdmin();
 </script>
 
 </body>

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -255,7 +254,7 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
 </nav>
 
 <script>
-const tg = window.Telegram.WebApp;
+    const tg = window.Telegram.WebApp;
 const API = "https://cs-go-case.onrender.com";
 
 tg.ready();
@@ -353,7 +352,10 @@ function showPage(page,button) {
 
     if (page==="cases") loadCases();
     if (page==="inventory") loadInventory();
-    if (page==="profile") loadHistory();
+    if (page==="profile") {
+        loadHistory();
+        if (window.loadProfile) window.loadProfile();
+    }
     if (page==="craft" && window.initCraft) window.initCraft();
 }
 
@@ -830,6 +832,7 @@ checkAdmin();
 <script src="upgrade.js"></script>
 <script src="clicker.js"></script>
 <script src="craft.js"></script>
+<script src="profile.js"></script>
 
 </body>
 </html>

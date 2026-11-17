@@ -1,5 +1,12 @@
 import os
 
+print("Текущая папка:")
+print(os.getcwd())
+
+print("\nФайлы и папки здесь:")
+print(os.listdir())
+
 os.makedirs("static/js", exist_ok=True)
 
-print("Папки static и js созданы!")
+print("\nПуть к созданной папке:")
+print(os.path.abspath("static/js"))

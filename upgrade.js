@@ -101,9 +101,8 @@
         const sourcePrice = Number(selectedSource.price);
         const targetPrice = Number(selectedTarget.price);
 
-        if (!sourcePrice || !targetPrice || targetPrice <= sourcePrice) {
-            return 0;
-        }
+        if (!sourcePrice || !targetPrice ||
+            targetPrice <= sourcePrice) return 0;
 
         return Math.min(90, sourcePrice / targetPrice * 90);
     }
@@ -122,26 +121,30 @@
 
         const sourceOptions = inventory.map((skin, index) => `
             <option value="${index}">
-                ${escape(skin.name)} — ${Number(skin.price).toLocaleString("ru-RU")} DC
+                ${escape(skin.name)} —
+                ${Number(skin.price).toLocaleString("ru-RU")} DC
                 (x${Number(skin.quantity)})
             </option>
         `).join("");
 
         const targetOptions = targets.map((skin, index) => `
             <option value="${index}">
-                ${escape(skin.name)} — ${Number(skin.price).toLocaleString("ru-RU")} DC
+                ${escape(skin.name)} —
+                ${Number(skin.price).toLocaleString("ru-RU")} DC
             </option>
         `).join("");
 
         root.innerHTML = `
             <div class="up-card">
                 <div class="up-label">🔫 ТВОЙ ИСХОДНЫЙ СКИН</div>
+
                 <select class="up-select" id="upgrade-source">
                     <option value="">Выбери скин из инвентаря</option>
                     ${sourceOptions}
                 </select>
 
                 <div class="up-label">🎯 ЖЕЛАЕМЫЙ СКИН</div>
+
                 <select class="up-select" id="upgrade-target">
                     <option value="">Выбери целевой скин</option>
                     ${targetOptions}
@@ -152,13 +155,17 @@
                 <div class="up-label" style="text-align:center">
                     ШАНС УСПЕХА
                 </div>
+
                 <div class="up-chance" id="upgrade-chance">0%</div>
+
                 <div class="up-info" id="upgrade-info">
                     Сначала выбери два скина.
                 </div>
+
                 <button class="up-button" id="upgrade-button" disabled>
                     ⚡ АПГРЕЙД
                 </button>
+
                 <div class="up-notice" id="upgrade-notice"></div>
             </div>
 
@@ -216,8 +223,8 @@
 
         info.textContent =
             "Исходный: " + Number(selectedSource.price).toLocaleString("ru-RU") +
-            " DC\nЦелевой: " + Number(selectedTarget.price).toLocaleString("ru-RU") +
-            " DC";
+            " DC | Целевой: " +
+            Number(selectedTarget.price).toLocaleString("ru-RU") + " DC";
 
         button.disabled = true;
         button.textContent = "СЕРВЕРНАЯ ЧАСТЬ ЕЩЁ НЕ ПОДКЛЮЧЕНА";
@@ -225,7 +232,6 @@
 
     async function performUpgrade() {
         if (busy || !selectedSource || !selectedTarget) return;
-
         notice("Серверная механика апгрейда пока не подключена.");
     }
 
@@ -241,7 +247,14 @@
                 apiRequest("/api/cases")
             ]);
 
-            inventory = inventoryData.inventory || [];
+            // ВАЖНО: в базе ID называется skin_id, а не id.
+            inventory = (inventoryData.inventory || []).map(skin => ({
+                id: Number(skin.skin_id),
+                name: skin.name,
+                rarity: skin.rarity,
+                price: Number(skin.price),
+                quantity: Number(skin.quantity)
+            }));
 
             const unique = new Map();
 
@@ -278,7 +291,13 @@
 
     function init() {
         const page = document.getElementById("upgrade");
-        if (!page || document.getElementById("upgrade-app")) return;
+        if (!page) return;
+
+        const oldRoot = document.getElementById("upgrade-app");
+
+        if (oldRoot) {
+            oldRoot.remove();
+        }
 
         const placeholder = page.querySelector(".placeholder");
 
@@ -290,13 +309,19 @@
         root.id = "upgrade-app";
         page.appendChild(root);
 
+        selectedSource = null;
+        selectedTarget = null;
+
         loadData();
     }
 
     window.initUpgrade = init;
 
     document.addEventListener("click", event => {
-        const button = event.target.closest('[onclick*="showPage(\'upgrade\'"]');
+        const button = event.target.closest(
+            '[onclick*="showPage(\'upgrade\'"]'
+        );
+
         if (button) {
             setTimeout(init, 100);
         }

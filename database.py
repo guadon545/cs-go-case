@@ -7,6 +7,7 @@ from psycopg.rows import dict_row
 
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
+INVENTORY_LIMIT = 100
 
 
 @contextmanager
@@ -23,7 +24,7 @@ def get_db():
 
 
 def init_db():
-    """Создание основных таблиц PostgreSQL."""
+    """Создание таблиц и безопасное обновление старой базы."""
 
     tables = [
         """
@@ -64,8 +65,7 @@ def init_db():
             user_id BIGINT NOT NULL REFERENCES users(telegram_id),
             skin_id BIGINT NOT NULL REFERENCES skins(id),
             quantity BIGINT DEFAULT 1,
-            acquired_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(user_id, skin_id)
+            acquired_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """,
         """
@@ -111,6 +111,58 @@ def init_db():
     with get_db() as db:
         for sql in tables:
             db.execute(sql)
+
+        # Добавляем ссылку на изображение скина.
+        db.execute("""
+            ALTER TABLE skins
+            ADD COLUMN IF NOT EXISTS image_url TEXT
+        """)
+
+        # Убираем старое ограничение, объединявшее одинаковые скины.
+        db.execute("""
+            DO $$
+            DECLARE constraint_row RECORD;
+            BEGIN
+                FOR constraint_row IN
+                    SELECT conname
+                    FROM pg_constraint
+                    WHERE conrelid = 'inventory'::regclass
+                    AND contype = 'u'
+                LOOP
+                    EXECUTE format(
+                        'ALTER TABLE inventory DROP CONSTRAINT %I',
+                        constraint_row.conname
+                    );
+                END LOOP;
+            END $$;
+        """)
+
+        # Разделяем старые количества на отдельные предметы.
+        db.execute("""
+            INSERT INTO inventory (user_id, skin_id, quantity, acquired_at)
+            SELECT
+                inventory.user_id,
+                inventory.skin_id,
+                1,
+                inventory.acquired_at
+            FROM inventory
+            CROSS JOIN LATERAL generate_series(
+                1,
+                GREATEST(inventory.quantity, 1) - 1
+            ) AS item_number
+            WHERE inventory.quantity > 1
+        """)
+
+        db.execute("""
+            UPDATE inventory
+            SET quantity = 1
+            WHERE quantity IS NULL OR quantity <> 1
+        """)
+
+        db.execute("""
+            CREATE INDEX IF NOT EXISTS inventory_user_idx
+            ON inventory(user_id)
+        """)
 
 
 def register_user(telegram_id, username=None):
@@ -209,13 +261,13 @@ def get_clicker_data(telegram_id):
         return dict(row)
 
 
-def add_skin(name, rarity, price):
+def add_skin(name, rarity, price, image_url=None):
     with get_db() as db:
         row = db.execute("""
-            INSERT INTO skins (name, rarity, price)
-            VALUES (%s, %s, %s)
+            INSERT INTO skins (name, rarity, price, image_url)
+            VALUES (%s, %s, %s, %s)
             RETURNING id
-        """, (name, rarity, int(price))).fetchone()
+        """, (name, rarity, int(price), image_url)).fetchone()
 
         return row["id"]
 
@@ -238,67 +290,136 @@ def get_skin(skin_id):
         return dict(row) if row else None
 
 
+def get_inventory_count(user_id):
+    with get_db() as db:
+        row = db.execute("""
+            SELECT COUNT(*) AS total
+            FROM inventory
+            WHERE user_id = %s
+        """, (user_id,)).fetchone()
+
+        return int(row["total"])
+
+
+def get_inventory_space(user_id):
+    count = get_inventory_count(user_id)
+    return {
+        "used": count,
+        "limit": INVENTORY_LIMIT,
+        "remaining": max(0, INVENTORY_LIMIT - count)
+    }
+
+
 def add_inventory_skin(user_id, skin_id, quantity=1):
+    """Добавляет каждый скин отдельной записью."""
+
     quantity = int(quantity)
 
     if quantity <= 0:
         raise ValueError("Количество должно быть больше нуля")
 
     with get_db() as db:
-        db.execute("""
-            INSERT INTO inventory (user_id, skin_id, quantity)
-            VALUES (%s, %s, %s)
-            ON CONFLICT (user_id, skin_id)
-            DO UPDATE SET quantity =
-                inventory.quantity + EXCLUDED.quantity
-        """, (user_id, skin_id, quantity))
+        # Блокировка пользователя защищает от одновременного
+        # добавления предметов сверх лимита.
+        user = db.execute("""
+            SELECT telegram_id
+            FROM users
+            WHERE telegram_id = %s
+            FOR UPDATE
+        """, (user_id,)).fetchone()
+
+        if not user:
+            raise ValueError("Пользователь не найден")
+
+        row = db.execute("""
+            SELECT COUNT(*) AS total
+            FROM inventory
+            WHERE user_id = %s
+        """, (user_id,)).fetchone()
+
+        current_count = int(row["total"])
+
+        if current_count + quantity > INVENTORY_LIMIT:
+            remaining = max(0, INVENTORY_LIMIT - current_count)
+            raise ValueError(
+                f"Инвентарь заполнен. Свободно мест: {remaining}"
+            )
+
+        skin = db.execute("""
+            SELECT id FROM skins WHERE id = %s
+        """, (skin_id,)).fetchone()
+
+        if not skin:
+            raise ValueError("Скин не найден")
+
+        for _ in range(quantity):
+            db.execute("""
+                INSERT INTO inventory (user_id, skin_id, quantity)
+                VALUES (%s, %s, 1)
+            """, (user_id, skin_id))
 
 
-def remove_inventory_skin(user_id, skin_id, quantity=1):
-    quantity = int(quantity)
-
-    if quantity <= 0:
-        raise ValueError("Количество должно быть больше нуля")
+def remove_inventory_item(user_id, inventory_id):
+    """Удаляет один конкретный предмет из инвентаря."""
 
     with get_db() as db:
         row = db.execute("""
-            SELECT quantity
+            DELETE FROM inventory
+            WHERE id = %s AND user_id = %s
+            RETURNING id
+        """, (inventory_id, user_id)).fetchone()
+
+        return row is not None
+
+
+def remove_inventory_skin(user_id, skin_id, quantity=1):
+    """Совместимость со старым API: удаляет указанное число копий."""
+
+    quantity = int(quantity)
+
+    if quantity <= 0:
+        raise ValueError("Количество должно быть больше нуля")
+
+    with get_db() as db:
+        rows = db.execute("""
+            SELECT id
             FROM inventory
             WHERE user_id = %s AND skin_id = %s
+            ORDER BY acquired_at ASC, id ASC
             FOR UPDATE
-        """, (user_id, skin_id)).fetchone()
+        """, (user_id, skin_id)).fetchall()
 
-        if not row or row["quantity"] < quantity:
+        if len(rows) < quantity:
             return False
 
-        if row["quantity"] == quantity:
-            db.execute("""
-                DELETE FROM inventory
-                WHERE user_id = %s AND skin_id = %s
-            """, (user_id, skin_id))
-        else:
-            db.execute("""
-                UPDATE inventory
-                SET quantity = quantity - %s
-                WHERE user_id = %s AND skin_id = %s
-            """, (quantity, user_id, skin_id))
+        ids = [row["id"] for row in rows[:quantity]]
+
+        db.execute("""
+            DELETE FROM inventory
+            WHERE user_id = %s AND id = ANY(%s)
+        """, (user_id, ids))
 
         return True
 
 
 def get_inventory(user_id):
+    """Возвращает каждый предмет отдельной строкой."""
+
     with get_db() as db:
         rows = db.execute("""
             SELECT
+                inventory.id AS inventory_id,
                 skins.id AS skin_id,
                 skins.name,
                 skins.rarity,
                 skins.price,
-                inventory.quantity
+                skins.image_url,
+                1 AS quantity,
+                inventory.acquired_at
             FROM inventory
             JOIN skins ON skins.id = inventory.skin_id
             WHERE inventory.user_id = %s
-            ORDER BY skins.price DESC
+            ORDER BY inventory.acquired_at DESC, inventory.id DESC
         """, (user_id,)).fetchall()
 
         return [dict(row) for row in rows]

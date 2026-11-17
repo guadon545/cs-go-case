@@ -6,9 +6,11 @@ import json
 import time
 import base64
 import random
+import re
 
 from pathlib import Path
 from urllib.parse import parse_qsl
+from urllib.request import Request, urlopen
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -42,6 +44,85 @@ TELEGRAM_PUBLIC_KEY = bytes.fromhex(
 )
 
 INVENTORY_LIMIT = 100
+
+# ==========================================
+# CS2 SKIN IMAGES
+# ==========================================
+
+SKIN_IMAGES_URL = (
+    "https://raw.githubusercontent.com/"
+    "ByMykel/CSGO-API/main/public/api/en/skins.json"
+)
+
+SKIN_IMAGE_MAP = {}
+
+
+def normalize_skin_name(name):
+    name = str(name or "").casefold()
+
+    name = re.sub(r"stattrak™?", "", name)
+    name = name.replace("★", "")
+    name = " ".join(name.split())
+
+    return name.strip()
+
+
+def load_skin_images():
+    global SKIN_IMAGE_MAP
+
+    try:
+        print("LOADING CS2 SKIN IMAGES...")
+
+        req = Request(
+            SKIN_IMAGES_URL,
+            headers={"User-Agent": "GUADON-COIN/1.0"}
+        )
+
+        with urlopen(req, timeout=20) as response:
+            skins = json.loads(
+                response.read().decode("utf-8")
+            )
+
+        image_map = {}
+
+        for skin in skins:
+            name = skin.get("name")
+            image = skin.get("image")
+
+            if not name or not image:
+                continue
+
+            if not image.startswith("https://"):
+                continue
+
+            normalized = normalize_skin_name(name)
+
+            if normalized:
+                image_map.setdefault(normalized, image)
+
+        SKIN_IMAGE_MAP = image_map
+
+        print(
+            "CS2 IMAGES LOADED:",
+            len(SKIN_IMAGE_MAP)
+        )
+
+        return True
+
+    except Exception as error:
+        print(
+            "CS2 IMAGE LOAD ERROR:",
+            type(error).__name__,
+            str(error)
+        )
+
+        return False
+
+
+def find_skin_image(name):
+    return SKIN_IMAGE_MAP.get(
+        normalize_skin_name(name)
+    )
 
 
 # ==========================================
@@ -211,6 +292,12 @@ def init_catalog():
     if len(cases_data) != 9:
         raise ValueError("Catalog must contain exactly 9 cases")
 
+    # Загружаем изображения CS2.
+    load_skin_images()
+
+    matched_images = 0
+    total_skins = 0
+
     for case in cases_data:
         items = case.get("items", [])
 
@@ -329,7 +416,15 @@ def init_catalog():
             """, (case_id,))
 
             for item in case_data["items"]:
-                image_url = item.get("image_url")
+                total_skins += 1
+
+                image_url = (
+                    item.get("image_url")
+                    or find_skin_image(item["name"])
+                )
+
+                if image_url:
+                    matched_images += 1
 
                 skin = db.execute("""
                     SELECT id
@@ -379,6 +474,12 @@ def init_catalog():
                 ))
 
     print("CATALOG LOADED:", len(cases_data), "cases")
+    print(
+        "SKIN IMAGES MATCHED:",
+        matched_images,
+        "/",
+        total_skins
+    )
 
 
 init_catalog()
@@ -398,7 +499,8 @@ def health():
     return jsonify({
         "status": "ok",
         "catalog": "loaded",
-        "inventory_limit": INVENTORY_LIMIT
+        "inventory_limit": INVENTORY_LIMIT,
+        "skin_images": len(SKIN_IMAGE_MAP)
     })
 
 
@@ -840,7 +942,6 @@ def open_case():
             if player["is_banned"]:
                 return jsonify({"error": "Аккаунт заблокирован"}), 403
 
-            # Проверяем вместимость до списания баланса.
             inventory_row = db.execute("""
                 SELECT COUNT(*) AS total
                 FROM inventory
@@ -936,7 +1037,6 @@ def open_case():
             for selected in selected_items:
                 skin_id = selected["id"]
 
-                # Каждая копия получает собственную запись.
                 inventory_item = db.execute("""
                     INSERT INTO inventory
                     (user_id, skin_id, quantity)
@@ -1039,19 +1139,20 @@ def sell_skin():
 
     try:
         inventory_id = data.get("inventory_id")
-
-        # Временная совместимость со старым интерфейсом:
-        # если он отправил skin_id, продаём только одну копию.
         skin_id = data.get("skin_id")
 
         if inventory_id is not None:
             inventory_id = int(inventory_id)
+
             if inventory_id <= 0:
                 raise ValueError()
+
         elif skin_id is not None:
             skin_id = int(skin_id)
+
             if skin_id <= 0:
                 raise ValueError()
+
         else:
             raise ValueError()
 
@@ -1088,6 +1189,7 @@ def sell_skin():
                       AND inventory.user_id = %s
                     FOR UPDATE OF inventory
                 """, (inventory_id, user_id)).fetchone()
+
             else:
                 item = db.execute("""
                     SELECT
@@ -1118,7 +1220,6 @@ def sell_skin():
                     "error": "Цена скина слишком мала"
                 }), 400
 
-            # Удаляем только одну конкретную запись.
             db.execute("""
                 DELETE FROM inventory
                 WHERE id = %s AND user_id = %s

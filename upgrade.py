@@ -1,4 +1,3 @@
-
 import secrets
 
 from flask import Blueprint, request, jsonify
@@ -36,12 +35,11 @@ def create_upgrade_blueprint(authorized_user):
 
         try:
             with database.get_db() as db:
-                db.execute("BEGIN IMMEDIATE")
-
                 player = db.execute("""
                     SELECT is_banned
                     FROM users
-                    WHERE telegram_id = ?
+                    WHERE telegram_id = %s
+                    FOR UPDATE
                 """, (user_id,)).fetchone()
 
                 if not player:
@@ -57,13 +55,13 @@ def create_upgrade_blueprint(authorized_user):
                 source = db.execute("""
                     SELECT id, name, rarity, price
                     FROM skins
-                    WHERE id = ?
+                    WHERE id = %s
                 """, (source_id,)).fetchone()
 
                 target = db.execute("""
                     SELECT id, name, rarity, price
                     FROM skins
-                    WHERE id = ?
+                    WHERE id = %s
                 """, (target_id,)).fetchone()
 
                 if not source or not target:
@@ -82,7 +80,8 @@ def create_upgrade_blueprint(authorized_user):
                 item = db.execute("""
                     SELECT quantity
                     FROM inventory
-                    WHERE user_id = ? AND skin_id = ?
+                    WHERE user_id = %s AND skin_id = %s
+                    FOR UPDATE
                 """, (user_id, source_id)).fetchone()
 
                 if not item or item["quantity"] < 1:
@@ -101,41 +100,41 @@ def create_upgrade_blueprint(authorized_user):
                 if item["quantity"] == 1:
                     db.execute("""
                         DELETE FROM inventory
-                        WHERE user_id = ? AND skin_id = ?
+                        WHERE user_id = %s AND skin_id = %s
                     """, (user_id, source_id))
                 else:
                     db.execute("""
                         UPDATE inventory
                         SET quantity = quantity - 1
-                        WHERE user_id = ? AND skin_id = ?
+                        WHERE user_id = %s AND skin_id = %s
                     """, (user_id, source_id))
 
                 if won:
                     db.execute("""
                         INSERT INTO inventory
                         (user_id, skin_id, quantity)
-                        VALUES (?, ?, 1)
-                        ON CONFLICT(user_id, skin_id)
-                        DO UPDATE SET quantity = quantity + 1
+                        VALUES (%s, %s, 1)
+                        ON CONFLICT (user_id, skin_id)
+                        DO UPDATE SET quantity =
+                            inventory.quantity + EXCLUDED.quantity
                     """, (user_id, target_id))
 
-                    # Записываем успешный апгрейд.
                     db.execute("""
-                        INSERT OR IGNORE INTO profile_stats (user_id)
-                        VALUES (?)
+                        INSERT INTO profile_stats (user_id)
+                        VALUES (%s)
+                        ON CONFLICT (user_id) DO NOTHING
                     """, (user_id,))
 
                     db.execute("""
                         UPDATE profile_stats
                         SET successful_upgrades = successful_upgrades + 1
-                        WHERE user_id = ?
+                        WHERE user_id = %s
                     """, (user_id,))
 
-                    # Сохраняем полученный предмет в истории.
                     db.execute("""
                         INSERT INTO item_history
                         (user_id, skin_id, skin_name, skin_price, source)
-                        VALUES (?, ?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s, %s)
                     """, (
                         user_id,
                         target["id"],
@@ -173,3 +172,4 @@ def create_upgrade_blueprint(authorized_user):
             }), 500
 
     return upgrade_bp
+

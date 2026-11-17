@@ -54,6 +54,62 @@
             }[select?.value || "normal"];
         },
 
+        getChance() {
+            return Number(
+                document.querySelector("#upgradeChanceGroup .selected")
+                    ?.dataset.chance || 30
+            );
+        },
+
+        expectedMultiplier() {
+            if (this.mode() === "multiplier") {
+                return this.multiplier();
+            }
+
+            return 100 / this.getChance();
+        },
+
+        getTargetPriceRange(sourcePrice) {
+            const expected = sourcePrice * this.expectedMultiplier();
+
+            return {
+                min: expected * 0.75,
+                max: expected * 1.25
+            };
+        },
+
+        createChanceButtons() {
+            const oldInput = document.getElementById("upgradeChance");
+
+            if (!oldInput || document.getElementById("upgradeChanceGroup")) {
+                return;
+            }
+
+            const group = document.createElement("div");
+            group.id = "upgradeChanceGroup";
+            group.className = "tabs";
+            group.innerHTML = `
+                <button type="button" data-chance="30" class="selected">30%</button>
+                <button type="button" data-chance="50">50%</button>
+                <button type="button" data-chance="75">75%</button>
+            `;
+
+            oldInput.replaceWith(group);
+
+            group.querySelectorAll("[data-chance]").forEach(button => {
+                button.addEventListener("click", () => {
+                    this.sound("click");
+
+                    group.querySelectorAll("button").forEach(item =>
+                        item.classList.remove("selected")
+                    );
+
+                    button.classList.add("selected");
+                    this.updateTargets();
+                });
+            });
+        },
+
         async load() {
             const sourceSelect = document.getElementById("upgradeSource");
             if (!sourceSelect) return;
@@ -64,6 +120,7 @@
                 this.inventory = data.inventory || [];
                 this.catalog = data.catalog || [];
 
+                this.createChanceButtons();
                 this.renderSources();
                 this.bind();
                 this.updateTargets();
@@ -80,10 +137,13 @@
             if (!this.inventory.length) {
                 select.innerHTML =
                     '<option value="">Инвентарь пуст</option>';
+
                 document.getElementById("upgradeTarget").innerHTML =
                     '<option value="">Нет доступных NFT</option>';
+
                 document.getElementById("upgradeInfo").textContent =
                     "Сначала получи NFT из кейса";
+
                 return;
             }
 
@@ -104,16 +164,21 @@
 
             if (modes && !modes.dataset.bound) {
                 modes.dataset.bound = "1";
+
                 modes.querySelectorAll("[data-mode]").forEach(button => {
                     button.addEventListener("click", () => {
                         this.sound("click");
+
                         modes.querySelectorAll("button")
                             .forEach(x => x.classList.remove("selected"));
+
                         button.classList.add("selected");
 
                         const percent = button.dataset.mode === "chance";
+
                         document.getElementById("multiplierTabs").style.display =
                             percent ? "none" : "flex";
+
                         document.getElementById("chanceControls").style.display =
                             percent ? "block" : "none";
 
@@ -129,55 +194,33 @@
                     .forEach(button => {
                         button.addEventListener("click", () => {
                             this.sound("click");
+
                             multipliers.querySelectorAll("button")
                                 .forEach(x => x.classList.remove("selected"));
+
                             button.classList.add("selected");
                             this.updateTargets();
                         });
                     });
             }
 
-            ["upgradeSource", "upgradeBackground", "upgradeChance"]
-                .forEach(id => {
-                    const element = document.getElementById(id);
-                    if (element && !element.dataset.bound) {
-                        element.dataset.bound = "1";
-                        element.addEventListener("change", () =>
-                            this.updateTargets()
-                        );
-                        element.addEventListener("input", () =>
-                            this.updateTargets()
-                        );
-                    }
-                });
+            ["upgradeSource", "upgradeBackground"].forEach(id => {
+                const element = document.getElementById(id);
+
+                if (element && !element.dataset.bound) {
+                    element.dataset.bound = "1";
+                    element.addEventListener("change", () =>
+                        this.updateTargets()
+                    );
+                }
+            });
 
             const button = document.getElementById("upgradeButton");
+
             if (button && !button.dataset.bound) {
                 button.dataset.bound = "1";
                 button.addEventListener("click", () => this.perform());
             }
-        },
-
-        getChance() {
-            const value = Number(
-                document.getElementById("upgradeChance")?.value || 20
-            );
-            return Math.max(5, Math.min(90, value));
-        },
-
-        getTargetPriceRange(sourcePrice) {
-            if (this.mode() === "multiplier") {
-                const expected = sourcePrice * this.multiplier();
-                return {
-                    min: expected * 0.75,
-                    max: expected * 1.25
-                };
-            }
-
-            return {
-                min: sourcePrice * 2,
-                max: sourcePrice * 10
-            };
         },
 
         updateTargets() {
@@ -188,6 +231,8 @@
             if (!source) {
                 targetSelect.innerHTML =
                     '<option value="">Сначала выбери исходный NFT</option>';
+
+                targetSelect.disabled = true;
                 info.textContent = "Выбери NFT для начала";
                 return;
             }
@@ -201,32 +246,49 @@
                 return price >= range.min && price <= range.max;
             });
 
-            targetSelect.innerHTML =
-                '<option value="">Выбери награду</option>' +
-                targets.map(item => `
-                    <option value="${item.id}">
-                        ${this.escape(item.name)} ·
-                        ${this.money(Number(item.base_price) * bgMultiplier)}
-                    </option>
-                `).join("");
-
-            const modeText = this.mode() === "multiplier"
-                ? `Множитель x${this.multiplier()}`
-                : `Шанс победы ${this.getChance()}%`;
-
-            info.innerHTML = `
-                Твой NFT: <b>${this.escape(source.name)}</b><br>
-                Стоимость: <b>${this.money(sourcePrice)}</b><br>
-                ${modeText}<br>
-                Допустимая стоимость награды:
-                <b>${this.money(range.min)} – ${this.money(range.max)}</b>
-                <br>Подходящих NFT: <b>${targets.length}</b>
-            `;
-
             if (!targets.length) {
                 targetSelect.innerHTML =
                     '<option value="">Нет подходящих NFT</option>';
+
+                targetSelect.disabled = true;
+
+                info.textContent =
+                    "Нет NFT подходящей стоимости для выбранных настроек.";
+
+                return;
             }
+
+            // Сервер всё равно повторно проверит стоимость награды.
+            const selected = targets[
+                Math.floor(Math.random() * targets.length)
+            ];
+
+            const selectedPrice =
+                Number(selected.base_price) * bgMultiplier;
+
+            targetSelect.innerHTML = `
+                <option value="${selected.id}">
+                    ${this.escape(selected.name)} ·
+                    ${this.money(selectedPrice)}
+                </option>
+            `;
+
+            targetSelect.disabled = true;
+
+            const modeText = this.mode() === "multiplier"
+                ? `Множитель x${this.multiplier()} · шанс ${this.multiplier() === 2 ? 50 : this.multiplier() === 5 ? 30 : 10}%`
+                : `Шанс победы ${this.getChance()}% · ориентир x${(100 / this.getChance()).toFixed(2)}`;
+
+            info.innerHTML = `
+                Твой NFT: <b>${this.escape(source.name)}</b><br>
+                Стоимость ставки: <b>${this.money(sourcePrice)}</b><br>
+                ${modeText}<br>
+                Фон награды: <b>${this.escape(document.getElementById("upgradeBackground").value)}</b><br>
+                <hr>
+                Случайная награда: <b>${this.escape(selected.name)}</b><br>
+                Стоимость награды: <b>${this.money(selectedPrice)}</b><br>
+                <span class="muted">Подходящих вариантов: ${targets.length}</span>
+            `;
         },
 
         async perform() {
@@ -241,7 +303,7 @@
             }
 
             if (!targetId) {
-                app.notice("Выбери NFT, который хочешь получить");
+                app.notice("Не удалось подобрать награду");
                 return;
             }
 
@@ -263,6 +325,7 @@
             }
 
             this.busy = true;
+
             const button = document.getElementById("upgradeButton");
             button.disabled = true;
 
@@ -359,9 +422,7 @@
                                 : "🎁"}
                         </div>
                         <h3>${this.escape(reward.name)}</h3>
-                        <p class="muted">
-                            ${this.escape(reward.background)}
-                        </p>
+                        <p class="muted">${this.escape(reward.background)}</p>
                         <h2 style="color:#bba8ff;margin:12px 0">
                             ${this.money(reward.price)}
                         </h2>
@@ -372,9 +433,7 @@
                         <p class="muted">
                             ${this.escape(result.lost?.name || "")}
                         </p>
-                        <p class="muted small">
-                            Попробуй ещё раз!
-                        </p>
+                        <p class="muted small">Попробуй ещё раз!</p>
                     `}
 
                     <p class="muted small" style="margin:15px 0">

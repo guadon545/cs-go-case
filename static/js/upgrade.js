@@ -12,8 +12,11 @@
 
         escape(value) {
             return String(value ?? "").replace(/[&<>"']/g, c => ({
-                "&": "&amp;", "<": "&lt;", ">": "&gt;",
-                '"': "&quot;", "'": "&#039;"
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;"
             })[c]);
         },
 
@@ -46,6 +49,7 @@
 
         backgroundMultiplier() {
             const select = document.getElementById("upgradeBackground");
+
             return {
                 normal: 1,
                 gold: 3,
@@ -62,11 +66,9 @@
         },
 
         expectedMultiplier() {
-            if (this.mode() === "multiplier") {
-                return this.multiplier();
-            }
-
-            return 100 / this.getChance();
+            return this.mode() === "multiplier"
+                ? this.multiplier()
+                : 100 / this.getChance();
         },
 
         getTargetPriceRange(sourcePrice) {
@@ -81,13 +83,15 @@
         createChanceButtons() {
             const oldInput = document.getElementById("upgradeChance");
 
-            if (!oldInput || document.getElementById("upgradeChanceGroup")) {
+            if (!oldInput ||
+                document.getElementById("upgradeChanceGroup")) {
                 return;
             }
 
             const group = document.createElement("div");
             group.id = "upgradeChanceGroup";
             group.className = "tabs";
+
             group.innerHTML = `
                 <button type="button" data-chance="30" class="selected">30%</button>
                 <button type="button" data-chance="50">50%</button>
@@ -127,22 +131,31 @@
             } catch (error) {
                 sourceSelect.innerHTML =
                     '<option value="">Ошибка загрузки инвентаря</option>';
-                app.notice(error.message || "Не удалось загрузить апгрейдер");
+
+                app.notice(
+                    error.message || "Не удалось загрузить апгрейдер"
+                );
             }
         },
 
         renderSources() {
             const select = document.getElementById("upgradeSource");
+            const target = document.getElementById("upgradeTarget");
+            const info = document.getElementById("upgradeInfo");
 
             if (!this.inventory.length) {
                 select.innerHTML =
                     '<option value="">Инвентарь пуст</option>';
 
-                document.getElementById("upgradeTarget").innerHTML =
-                    '<option value="">Нет доступных NFT</option>';
+                if (target) {
+                    target.innerHTML =
+                        '<option value="">Нет доступных NFT</option>';
+                    target.disabled = true;
+                }
 
-                document.getElementById("upgradeInfo").textContent =
-                    "Сначала получи NFT из кейса";
+                if (info) {
+                    info.textContent = "Сначала получи NFT из кейса";
+                }
 
                 return;
             }
@@ -169,18 +182,21 @@
                     button.addEventListener("click", () => {
                         this.sound("click");
 
-                        modes.querySelectorAll("button")
-                            .forEach(x => x.classList.remove("selected"));
+                        modes.querySelectorAll("button").forEach(x =>
+                            x.classList.remove("selected")
+                        );
 
                         button.classList.add("selected");
 
                         const percent = button.dataset.mode === "chance";
 
-                        document.getElementById("multiplierTabs").style.display =
-                            percent ? "none" : "flex";
+                        document.getElementById(
+                            "multiplierTabs"
+                        ).style.display = percent ? "none" : "flex";
 
-                        document.getElementById("chanceControls").style.display =
-                            percent ? "block" : "none";
+                        document.getElementById(
+                            "chanceControls"
+                        ).style.display = percent ? "block" : "none";
 
                         this.updateTargets();
                     });
@@ -196,7 +212,9 @@
                             this.sound("click");
 
                             multipliers.querySelectorAll("button")
-                                .forEach(x => x.classList.remove("selected"));
+                                .forEach(x =>
+                                    x.classList.remove("selected")
+                                );
 
                             button.classList.add("selected");
                             this.updateTargets();
@@ -209,6 +227,7 @@
 
                 if (element && !element.dataset.bound) {
                     element.dataset.bound = "1";
+
                     element.addEventListener("change", () =>
                         this.updateTargets()
                     );
@@ -228,11 +247,13 @@
             const targetSelect = document.getElementById("upgradeTarget");
             const info = document.getElementById("upgradeInfo");
 
-            if (!source) {
+            if (targetSelect) {
                 targetSelect.innerHTML =
-                    '<option value="">Сначала выбери исходный NFT</option>';
-
+                    '<option value="">Награда выбирается случайно сервером</option>';
                 targetSelect.disabled = true;
+            }
+
+            if (!source) {
                 info.textContent = "Выбери NFT для начала";
                 return;
             }
@@ -246,48 +267,31 @@
                 return price >= range.min && price <= range.max;
             });
 
-            if (!targets.length) {
-                targetSelect.innerHTML =
-                    '<option value="">Нет подходящих NFT</option>';
-
-                targetSelect.disabled = true;
-
-                info.textContent =
-                    "Нет NFT подходящей стоимости для выбранных настроек.";
-
-                return;
-            }
-
-            // Сервер всё равно повторно проверит стоимость награды.
-            const selected = targets[
-                Math.floor(Math.random() * targets.length)
-            ];
-
-            const selectedPrice =
-                Number(selected.base_price) * bgMultiplier;
-
-            targetSelect.innerHTML = `
-                <option value="${selected.id}">
-                    ${this.escape(selected.name)} ·
-                    ${this.money(selectedPrice)}
-                </option>
-            `;
-
-            targetSelect.disabled = true;
-
             const modeText = this.mode() === "multiplier"
-                ? `Множитель x${this.multiplier()} · шанс ${this.multiplier() === 2 ? 50 : this.multiplier() === 5 ? 30 : 10}%`
-                : `Шанс победы ${this.getChance()}% · ориентир x${(100 / this.getChance()).toFixed(2)}`;
+                ? `Множитель x${this.multiplier()} · шанс ${
+                    this.multiplier() === 2 ? 50 :
+                    this.multiplier() === 5 ? 30 : 10
+                }%`
+                : `Шанс победы ${this.getChance()}% · ориентир x${
+                    (100 / this.getChance()).toFixed(2)
+                }`;
 
             info.innerHTML = `
                 Твой NFT: <b>${this.escape(source.name)}</b><br>
                 Стоимость ставки: <b>${this.money(sourcePrice)}</b><br>
                 ${modeText}<br>
-                Фон награды: <b>${this.escape(document.getElementById("upgradeBackground").value)}</b><br>
+                Фон награды: <b>${this.escape(
+                    document.getElementById("upgradeBackground").value
+                )}</b><br>
                 <hr>
-                Случайная награда: <b>${this.escape(selected.name)}</b><br>
-                Стоимость награды: <b>${this.money(selectedPrice)}</b><br>
-                <span class="muted">Подходящих вариантов: ${targets.length}</span>
+                Диапазон стоимости награды:
+                <b>${this.money(range.min)} – ${this.money(range.max)}</b><br>
+                <span class="muted">
+                    Предварительно подходящих NFT: ${targets.length}
+                </span><br>
+                <span class="muted">
+                    Конкретную награду случайно выберет сервер.
+                </span>
             `;
         },
 
@@ -295,15 +299,9 @@
             if (this.busy) return;
 
             const source = this.source();
-            const targetId = document.getElementById("upgradeTarget").value;
 
             if (!source) {
                 app.notice("Выбери NFT из инвентаря");
-                return;
-            }
-
-            if (!targetId) {
-                app.notice("Не удалось подобрать награду");
                 return;
             }
 
@@ -313,7 +311,6 @@
 
             const payload = {
                 inventory_id: source.inventory_id,
-                target_nft_id: Number(targetId),
                 target_background: background,
                 mode: mode === "chance" ? "percent" : "multiplier"
             };
@@ -342,7 +339,9 @@
                 this.showResult(result);
             } catch (error) {
                 app.closeModal();
-                app.notice(error.message || "Ошибка апгрейда");
+                app.notice(
+                    error.message || "Ошибка апгрейда"
+                );
             } finally {
                 this.busy = false;
                 button.disabled = false;
@@ -374,7 +373,7 @@
                 <div style="text-align:center;padding:20px 5px">
                     <h2>АПГРЕЙД</h2>
                     <div class="upgrade-animation">⚡</div>
-                    <h3>Проверяем результат...</h3>
+                    <h3>Сервер выбирает награду...</h3>
                     <p class="muted small">Удача решает всё</p>
                 </div>
             `);
@@ -390,8 +389,14 @@
             app.showModal(`
                 <style>
                     @keyframes resultPop {
-                        from {opacity:0;transform:scale(.65) translateY(20px)}
-                        to {opacity:1;transform:scale(1) translateY(0)}
+                        from {
+                            opacity:0;
+                            transform:scale(.65) translateY(20px)
+                        }
+                        to {
+                            opacity:1;
+                            transform:scale(1) translateY(0)
+                        }
                     }
                     .upgrade-result {
                         text-align:center;
@@ -417,14 +422,16 @@
 
                     ${won ? `
                         <div class="upgrade-result-art">
-                            ${reward.image_url
+                            ${reward?.image_url
                                 ? `<img src="${this.escape(reward.image_url)}" alt="">`
                                 : "🎁"}
                         </div>
-                        <h3>${this.escape(reward.name)}</h3>
-                        <p class="muted">${this.escape(reward.background)}</p>
+                        <h3>${this.escape(reward?.name || "NFT")}</h3>
+                        <p class="muted">
+                            ${this.escape(reward?.background || "")}
+                        </p>
                         <h2 style="color:#bba8ff;margin:12px 0">
-                            ${this.money(reward.price)}
+                            ${this.money(reward?.price || 0)}
                         </h2>
                         <p class="muted small">NFT добавлен в инвентарь</p>
                     ` : `

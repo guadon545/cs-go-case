@@ -1,59 +1,189 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080b18">
 <title>CS GO CASE</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:90px}
-.header{padding:20px 18px;display:flex;justify-content:space-between;align-items:center;background:#10182a;border-bottom:1px solid #202c44}
-.logo{font-size:22px;font-weight:900}.logo span{color:#498cff}
-.profile{background:#1c2940;padding:9px 13px;border-radius:12px;color:#91baff}
-.container{padding:16px}
-.balance{background:linear-gradient(135deg,#142b50,#253b70,#17213e);border:1px solid #4169ad;border-radius:18px;padding:20px;margin-bottom:22px;text-align:center}
-.balance-label{color:#a8bddf;font-size:12px;letter-spacing:2px}
-.balance-number{font-size:32px;font-weight:900;margin:10px 0}
-.balance-currency{color:#76aaff;font-size:13px}
-.section-title{font-size:20px;margin:20px 0 15px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.card{background:#121b2d;border:1px solid #263550;border-radius:15px;padding:16px 10px;text-align:center;cursor:pointer}
-.card:active{transform:scale(.97)}
-.card-icon{font-size:38px;margin-bottom:10px}
-.card-name{font-weight:bold;font-size:15px}
-.card-description{color:#8797b2;font-size:11px;margin-top:6px}
-.case-card,.skin-card{background:#121b2d;border:1px solid #263550;border-radius:15px;padding:14px;margin-bottom:11px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+:root{
+ --bg:#080b18;
+ --glass:rgba(20,29,55,.62);
+ --border:rgba(126,164,255,.19);
+ --blue:#398cff;
+ --purple:#823cff;
+ --muted:#91a3c4;
+}
+body{
+ background:radial-gradient(ellipse at 50% -15%,#1a2850 0%,#0b1022 42%,var(--bg) 75%);
+ color:#fff;font-family:Arial,sans-serif;
+ padding-bottom:105px;min-height:100vh;
+}
+button{font-family:inherit;cursor:pointer}
+.header{
+ position:sticky;top:0;z-index:20;
+ padding:14px 17px;display:flex;align-items:center;
+ justify-content:space-between;gap:10px;
+ background:rgba(8,12,27,.78);
+ backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+ border-bottom:1px solid rgba(139,169,255,.13);
+}
+.logo{font-size:21px;font-weight:900;letter-spacing:-.7px}
+.logo span{
+ background:linear-gradient(100deg,#55aaff,#a77aff);
+ -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.header-right{display:flex;align-items:center;gap:9px}
+.balance-chip{
+ padding:9px 12px;border:1px solid rgba(104,153,255,.35);
+ border-radius:14px;background:linear-gradient(130deg,rgba(41,91,175,.35),rgba(100,51,180,.25));
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+ font-size:13px;font-weight:900;color:#dceaff;
+}
+.avatar-button{
+ width:39px;height:39px;border-radius:50%;overflow:hidden;
+ border:2px solid rgba(122,166,255,.65);
+ background:linear-gradient(135deg,#347cff,#8b42ff);
+ display:flex;align-items:center;justify-content:center;
+ color:white;font-size:17px;padding:0;
+}
+.avatar-button img{width:100%;height:100%;object-fit:cover;display:none}
+.container{padding:17px 15px;max-width:650px;margin:auto}
+.page{display:none}.page.active{display:block}
+.section-title{font-size:19px;margin:20px 0 14px;font-weight:800}
+.sub-title{font-size:16px;margin:22px 0 12px}
+
+/* GLASS */
+.glass{
+ background:linear-gradient(145deg,rgba(35,52,91,.57),rgba(15,23,46,.68));
+ border:1px solid var(--border);border-radius:19px;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 35px rgba(0,0,0,.16);
+ backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+
+/* GAMES */
+.games-heading{
+ display:flex;align-items:center;justify-content:space-between;
+ margin:8px 2px 15px;
+}
+.games-heading h2{font-size:20px}
+.games-heading span{font-size:11px;color:#8da6d5}
+.game-card{
+ position:relative;overflow:hidden;isolation:isolate;
+ border:1px solid rgba(125,164,255,.25);
+ border-radius:22px;cursor:pointer;
+ background:linear-gradient(145deg,#14264a,#10152b 65%,#171333);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 12px 28px rgba(0,0,0,.25);
+ transition:transform .15s,border-color .15s;
+}
+.game-card:active{transform:scale(.975)}
+.game-card:before{
+ content:"";position:absolute;inset:0;z-index:-1;
+ background:radial-gradient(circle at 80% 75%,rgba(39,113,255,.35),transparent 48%),
+ radial-gradient(circle at 15% 20%,rgba(130,55,255,.24),transparent 45%);
+}
+.game-card:after{
+ content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:linear-gradient(120deg,rgba(255,255,255,.08),transparent 32%,transparent 70%,rgba(111,142,255,.06));
+}
+.mines-card{
+ min-height:205px;padding:20px;margin-bottom:13px;
+ display:flex;align-items:center;
+}
+.game-copy{position:relative;z-index:2;max-width:62%}
+.game-tag{
+ display:inline-block;padding:5px 9px;border-radius:20px;
+ background:rgba(75,132,255,.17);border:1px solid rgba(110,159,255,.3);
+ color:#a9caff;font-size:9px;font-weight:800;letter-spacing:1px;
+ margin-bottom:10px;
+}
+.game-title{font-size:24px;font-weight:900;letter-spacing:.3px}
+.game-description{font-size:11px;color:#a7b8d8;line-height:1.5;margin-top:7px}
+.game-open{
+ display:inline-block;margin-top:15px;padding:9px 14px;border-radius:10px;
+ color:white;font-size:11px;font-weight:800;
+ background:linear-gradient(110deg,#277ff4,#713cf0);
+ box-shadow:0 5px 18px rgba(64,105,255,.25);
+}
+.game-art{
+ position:absolute;right:0;top:0;bottom:0;width:46%;
+ display:flex;align-items:center;justify-content:center;
+}
+.game-art .art-icon{
+ font-size:100px;filter:drop-shadow(0 8px 20px rgba(46,125,255,.65));
+ transform:rotate(-12deg);
+}
+.mines-card .art-icon{font-size:112px;transform:rotate(-17deg)}
+.game-particles{
+ position:absolute;width:145px;height:145px;border-radius:50%;
+ background:radial-gradient(circle,rgba(50,128,255,.38),rgba(105,49,255,.13) 48%,transparent 70%);
+ filter:blur(8px);
+}
+.small-games{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.small-game{min-height:178px;padding:15px 13px}
+.small-game .game-title{font-size:17px}
+.small-game .game-description{font-size:10px}
+.small-game .game-art{
+ top:55px;right:4px;bottom:8px;width:100%;
+ align-items:flex-end;justify-content:flex-end;
+}
+.small-game .art-icon{font-size:72px;transform:rotate(-12deg)}
+.small-game .game-copy{max-width:100%}
+.small-game .game-open{margin-top:9px;padding:8px 10px;font-size:10px}
+.art-upgrade .art-icon{filter:drop-shadow(0 5px 15px #236dff)}
+.art-craft .art-icon{filter:drop-shadow(0 5px 15px #8a40ff)}
+.coming-label{
+ position:absolute;right:12px;top:12px;font-size:9px;
+ color:#c8d8ff;background:rgba(10,17,38,.55);
+ border:1px solid rgba(150,180,255,.2);padding:5px 8px;border-radius:10px;
+}
+
+/* CASES AND OTHER CARDS */
+.case-card,.skin-card{
+ background:var(--glass);border:1px solid var(--border);
+ border-radius:16px;padding:14px;margin-bottom:11px;
+ display:flex;align-items:center;justify-content:space-between;gap:10px;
+ backdrop-filter:blur(14px);
+}
 .case-name,.skin-name{font-weight:bold;margin-bottom:7px;font-size:14px}
-.case-price,.skin-price{color:#79aaff;font-size:13px}
+.case-price,.skin-price{color:#8dbaff;font-size:13px}
 .skin-info{min-width:0;overflow-wrap:anywhere}
 .rarity{font-size:11px;color:#aabbd4;margin-top:5px}
-.open-button,.action-button,.sell-button{background:linear-gradient(135deg,#347cff,#754bff);color:white;border:none;border-radius:10px;padding:11px 13px;font-weight:bold;cursor:pointer}
+.open-button,.action-button,.sell-button{
+ background:linear-gradient(120deg,#347cff,#754bff);
+ color:white;border:none;border-radius:10px;
+ padding:11px 13px;font-weight:bold;
+}
 .open-button:disabled,.action-button:disabled,.sell-button:disabled{opacity:.5;cursor:wait}
-.sell-button{background:linear-gradient(135deg,#148b58,#22b875);font-size:12px}
-.page{display:none}.page.active{display:block}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#10182a;border-top:1px solid #263550;display:flex;justify-content:space-around;padding:11px 4px 16px;z-index:10}
-.nav-button{background:none;border:none;color:#8291aa;font-size:11px;cursor:pointer}
-.nav-button.active{color:#65a0ff}
-.nav-icon{display:block;font-size:21px;margin-bottom:5px}
-.placeholder,.empty{background:#121b2d;border:1px solid #263550;border-radius:15px;padding:22px;text-align:center;color:#aabbd4;line-height:1.7}
+.sell-button{background:linear-gradient(120deg,#148b58,#22b875);font-size:12px}
+.placeholder,.empty{
+ background:var(--glass);border:1px solid var(--border);
+ border-radius:16px;padding:22px;text-align:center;
+ color:#aabbd4;line-height:1.7;
+}
 .small-note{color:#72839e;font-size:11px;text-align:center;margin-top:15px;line-height:1.6}
-.admin-box{background:#121b2d;border:1px solid #4169ad;border-radius:15px;padding:18px;margin-bottom:15px}
-.admin-label{display:block;color:#a8bddf;font-size:13px;margin:14px 0 7px}
-.admin-input{width:100%;background:#080c16;border:1px solid #344767;border-radius:9px;padding:13px;color:white;font-size:16px}
-.action-button{width:100%;margin-top:14px;font-size:15px}
-.take-button{background:linear-gradient(135deg,#bd3c56,#e46b45)}
-.admin-message,.notice{margin-top:14px;padding:12px;border-radius:9px;background:#1c2940;color:#a8bddf;font-size:13px;line-height:1.5;display:none;overflow-wrap:anywhere;white-space:pre-line}
-.admin-message.success,.notice.success{display:block;color:#80e6a0}
-.admin-message.error,.notice.error{display:block;color:#ff8585}
-.admin-status{color:#80e6a0;font-size:13px;margin-bottom:12px}
-.case-menu{background:#101a2c;border:1px solid #30466c;border-radius:17px;padding:15px;margin-top:12px}
-.back-button{background:#202d43;color:#b9cbea;border:1px solid #354b6d;border-radius:9px;padding:10px 13px;margin-bottom:15px}
+.page-title{font-size:21px;font-weight:900;margin:8px 0 17px}
+
+/* CASE OPENING */
+.case-menu{
+ background:var(--glass);border:1px solid var(--border);
+ border-radius:18px;padding:15px;margin-top:12px;
+}
+.back-button{
+ background:rgba(45,65,105,.6);color:#b9cbea;
+ border:1px solid #354b6d;border-radius:9px;padding:10px 13px;margin-bottom:15px;
+}
 .case-menu-title{font-size:21px;font-weight:bold;margin-bottom:7px}
 .case-menu-price{color:#80b2ff;font-size:14px;margin-bottom:17px}
 .items-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.item-card{background:#18263c;border:1px solid #2d405e;border-radius:12px;padding:10px;min-width:0}
+.item-card{
+ background:rgba(24,38,60,.8);border:1px solid #2d405e;
+ border-radius:12px;padding:10px;min-width:0;
+}
 .item-icon{font-size:25px;margin-bottom:7px}
 .item-name{font-size:12px;font-weight:bold;line-height:1.4;overflow-wrap:anywhere}
 .item-rarity{font-size:10px;color:#b9a5ff;margin-top:5px}
@@ -61,14 +191,26 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
 .item-chance{font-size:11px;color:#91d5a9;margin-top:5px}
 .quantity-title{font-size:14px;font-weight:bold;margin:20px 0 10px}
 .quantity-controls{display:flex;align-items:center;justify-content:center;gap:18px}
-.quantity-button{width:43px;height:43px;border:1px solid #4266a0;border-radius:11px;background:#1b3153;color:white;font-size:23px}
+.quantity-button{
+ width:43px;height:43px;border:1px solid #4266a0;border-radius:11px;
+ background:#1b3153;color:white;font-size:23px;
+}
 .quantity-value{font-size:25px;font-weight:bold;min-width:25px;text-align:center}
 .total-price{text-align:center;color:#9bbce9;font-size:13px;margin:13px 0}
-.main-open-button{width:100%;padding:15px;background:linear-gradient(135deg,#347cff,#754bff);border:0;border-radius:12px;color:white;font-size:15px;font-weight:bold}
-.result-box{display:none;background:linear-gradient(135deg,#182e50,#30205a);border:1px solid #668cff;border-radius:17px;padding:17px;margin:15px 0}
+.main-open-button{
+ width:100%;padding:15px;background:linear-gradient(120deg,#347cff,#754bff);
+ border:0;border-radius:12px;color:white;font-size:15px;font-weight:bold;
+}
+.result-box{
+ display:none;background:linear-gradient(135deg,#182e50,#30205a);
+ border:1px solid #668cff;border-radius:17px;padding:17px;margin:15px 0;
+}
 .result-box.show{display:block;animation:appear .3s ease}
 .result-heading{text-align:center;font-weight:bold;font-size:19px;margin-bottom:15px}
-.result-item{background:#101a2c;border:1px solid #35496c;border-radius:12px;padding:12px;margin-bottom:9px}
+.result-item{
+ background:#101a2c;border:1px solid #35496c;border-radius:12px;
+ padding:12px;margin-bottom:9px;
+}
 .result-item-top{display:flex;justify-content:space-between;gap:8px}
 .result-item-name{font-size:13px;font-weight:bold;overflow-wrap:anywhere}
 .result-item-price{font-size:12px;color:#8ebaff;margin-top:6px}
@@ -76,757 +218,733 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
 .result-sold{color:#80e6a0;font-size:12px;margin-top:10px}
 .result-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
 .result-actions button{padding:13px 5px}
-.again-button{background:linear-gradient(135deg,#347cff,#754bff);color:white;border:0;border-radius:10px;font-weight:bold}
-.sell-all-button{background:linear-gradient(135deg,#148b58,#22b875);color:white;border:0;border-radius:10px;font-weight:bold}
-.history-item{background:#121b2d;border:1px solid #263550;border-radius:12px;padding:13px;margin-bottom:9px;font-size:13px;line-height:1.6}
+.again-button{
+ background:linear-gradient(120deg,#347cff,#754bff);
+ color:white;border:0;border-radius:10px;font-weight:bold;
+}
+.sell-all-button{
+ background:linear-gradient(120deg,#148b58,#22b875);
+ color:white;border:0;border-radius:10px;font-weight:bold;
+}
+.history-item{
+ background:var(--glass);border:1px solid var(--border);
+ border-radius:12px;padding:13px;margin-bottom:9px;font-size:13px;line-height:1.6;
+}
 .history-item strong{color:#8bb6ff}
-.sub-title{font-size:16px;margin:22px 0 12px}
+
+/* PROFILE / ADMIN */
+.profile-box{
+ padding:17px;border-radius:17px;
+ background:var(--glass);border:1px solid var(--border);
+}
+#profile-name{font-size:18px;font-weight:bold}
+#profile-id{font-size:12px;color:var(--muted)}
+.admin-box{
+ background:var(--glass);border:1px solid #4169ad;
+ border-radius:15px;padding:18px;margin-bottom:15px;
+}
+.admin-label{display:block;color:#a8bddf;font-size:13px;margin:14px 0 7px}
+.admin-input{
+ width:100%;background:#080c16;border:1px solid #344767;
+ border-radius:9px;padding:13px;color:white;font-size:16px;
+}
+.action-button{width:100%;margin-top:14px;font-size:15px}
+.take-button{background:linear-gradient(135deg,#bd3c56,#e46b45)}
+.admin-message,.notice{
+ margin-top:14px;padding:12px;border-radius:9px;
+ background:#1c2940;color:#a8bddf;font-size:13px;line-height:1.5;
+ display:none;overflow-wrap:anywhere;white-space:pre-line;
+}
+.admin-message.success,.notice.success{display:block;color:#80e6a0}
+.admin-message.error,.notice.error{display:block;color:#ff8585}
+.admin-status{color:#80e6a0;font-size:13px;margin-bottom:12px}
+
+/* BOTTOM NAV */
+.bottom-nav{
+ position:fixed;bottom:10px;left:10px;right:10px;z-index:30;
+ display:flex;justify-content:space-around;align-items:center;
+ padding:9px 3px calc(9px + env(safe-area-inset-bottom));
+ border:1px solid rgba(139,169,255,.2);border-radius:21px;
+ background:rgba(13,20,40,.82);
+ backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);
+ box-shadow:0 8px 30px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.08);
+}
+.nav-button{
+ flex:1;min-width:0;background:none;border:0;color:#8191b2;
+ font-size:9px;padding:5px 0;border-radius:13px;
+}
+.nav-button.active{
+ color:#fff;background:linear-gradient(140deg,rgba(54,125,255,.28),rgba(126,65,255,.22));
+}
+.nav-icon{display:block;font-size:20px;margin-bottom:4px}
+#admin-nav{display:none}
 @keyframes appear{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+@media(min-width:520px){
+ .mines-card{min-height:230px}
+ .game-title{font-size:27px}
+ .small-game{min-height:195px}
+}
 </style>
 </head>
 
 <body>
 
 <header class="header">
-    <div class="logo">CS GO <span>CASE</span></div>
-    <div class="profile">👤 <span id="username">Игрок</span></div>
+ <div class="logo">CS GO <span>CASE</span></div>
+ <div class="header-right">
+  <div class="balance-chip" id="balance">Загрузка...</div>
+  <button class="avatar-button" onclick="showPage('profile')" aria-label="Профиль">
+   <span id="avatar-fallback">👤</span>
+   <img id="telegram-avatar" alt="Аватар">
+  </button>
+ </div>
 </header>
 
 <main class="container">
 
+<!-- ИГРЫ -->
 <section class="page active" id="home">
-    <div class="balance">
-        <div class="balance-label">ТВОЙ БАЛАНС</div>
-        <div class="balance-number" id="balance">Загрузка...</div>
-        <div class="balance-currency">GUADON COIN</div>
-    </div>
+ <div class="games-heading">
+  <h2>Игровой центр</h2>
+  <span>CS GO CASE</span>
+ </div>
 
-    <h2 class="section-title">🎮 Игровой центр</h2>
-    <div class="grid">
-        <div class="card" onclick="showPage('cases')">
-            <div class="card-icon">📦</div>
-            <div class="card-name">Кейсы</div>
-            <div class="card-description">Открывай и получай скины</div>
-        </div>
-        <div class="card" onclick="showPage('inventory')">
-            <div class="card-icon">🔫</div>
-            <div class="card-name">Инвентарь</div>
-            <div class="card-description">Твои скины и предметы</div>
-        </div>
-        <div class="card" onclick="showPage('upgrade')">
-            <div class="card-icon">⚡</div>
-            <div class="card-name">Апгрейд</div>
-            <div class="card-description">Улучшай свои скины</div>
-        </div>
-        <div class="card" onclick="showPage('craft')">
-            <div class="card-icon">⚒️</div>
-            <div class="card-name">Крафт</div>
-            <div class="card-description">Объединяй 5 предметов</div>
-        </div>
-        <div class="card" onclick="showPage('contracts')">
-            <div class="card-icon">📝</div>
-            <div class="card-name">Контракты</div>
-            <div class="card-description">Обменивай 10 предметов</div>
-        </div>
-    </div>
+ <div class="game-card mines-card" onclick="showPage('mines')">
+  <div class="game-copy">
+   <div class="game-tag">НОВАЯ ИГРА</div>
+   <div class="game-title">МИНЫ</div>
+   <div class="game-description">Проверь удачу и забери выигрыш до взрыва</div>
+   <div class="game-open">ИГРАТЬ →</div>
+  </div>
+  <div class="game-art">
+   <div class="game-particles"></div>
+   <div class="art-icon">💣</div>
+  </div>
+ </div>
 
-    <h2 class="section-title">🏆 Дополнительно</h2>
-    <div class="grid">
-        <div class="card" onclick="showPage('rating')">
-            <div class="card-icon">🏆</div>
-            <div class="card-name">Рейтинг</div>
-        </div>
-        <div class="card" onclick="showPage('profile')">
-            <div class="card-icon">👤</div>
-            <div class="card-name">Профиль</div>
-        </div>
-    </div>
+ <div class="small-games">
+  <div class="game-card small-game" onclick="showPage('upgrade')">
+   <div class="game-copy">
+    <div class="game-tag">SKINS</div>
+    <div class="game-title">АПГРЕЙД</div>
+    <div class="game-description">Улучшай свои скины</div>
+    <div class="game-open">УЛУЧШИТЬ →</div>
+   </div>
+   <div class="game-art art-upgrade">
+    <div class="game-particles"></div>
+    <div class="art-icon">🔫</div>
+   </div>
+  </div>
+
+  <div class="game-card small-game" onclick="showPage('craft')">
+   <div class="game-copy">
+    <div class="game-tag">WORKSHOP</div>
+    <div class="game-title">КРАФТ</div>
+    <div class="game-description">Создавай новые скины</div>
+    <div class="game-open">СОЗДАТЬ →</div>
+   </div>
+   <div class="game-art art-craft">
+    <div class="game-particles"></div>
+    <div class="art-icon">⚒️</div>
+   </div>
+  </div>
+ </div>
 </section>
 
+<!-- МИНЫ: ПОКА ЗАГЛУШКА -->
+<section class="page" id="mines">
+ <h2 class="page-title">💣 Мины</h2>
+ <div class="placeholder">
+  <div style="font-size:55px;margin-bottom:12px">💣</div>
+  <b>Игра скоро появится</b><br>
+  Сейчас мы готовим для неё игровую механику.
+ </div>
+</section>
+
+<!-- КЕЙСЫ -->
 <section class="page" id="cases">
-    <h2 class="section-title">📦 Магазин кейсов</h2>
+ <h2 class="page-title">📦 Магазин кейсов</h2>
+ <div id="cases-list"><div class="empty">Загрузка кейсов...</div></div>
 
-    <div id="cases-list">
-        <div class="empty">Загрузка кейсов...</div>
-    </div>
+ <div id="case-menu" class="case-menu" style="display:none">
+  <button class="back-button" onclick="backToCases()">← Назад к кейсам</button>
+  <div class="case-menu-title" id="menu-case-name"></div>
+  <div class="case-menu-price" id="menu-case-price"></div>
+  <h3 class="section-title" style="font-size:16px;margin:10px 0">🎁 Содержимое кейса</h3>
+  <div class="items-grid" id="case-items"></div>
+  <div class="quantity-title">Количество кейсов</div>
+  <div class="quantity-controls">
+   <button class="quantity-button" onclick="changeQuantity(-1)">−</button>
+   <div class="quantity-value" id="quantity-value">1</div>
+   <button class="quantity-button" onclick="changeQuantity(1)">+</button>
+  </div>
+  <div class="total-price" id="total-price"></div>
+  <button class="main-open-button" id="open-selected-button" onclick="openSelectedCase()">ОТКРЫТЬ КЕЙС</button>
+ </div>
 
-    <div id="case-menu" class="case-menu" style="display:none">
-        <button class="back-button" onclick="backToCases()">← Назад к кейсам</button>
-        <div class="case-menu-title" id="menu-case-name"></div>
-        <div class="case-menu-price" id="menu-case-price"></div>
-
-        <h3 class="section-title" style="font-size:16px;margin:10px 0">🎁 Содержимое кейса</h3>
-        <div class="items-grid" id="case-items"></div>
-
-        <div class="quantity-title">Количество кейсов</div>
-        <div class="quantity-controls">
-            <button class="quantity-button" onclick="changeQuantity(-1)">−</button>
-            <div class="quantity-value" id="quantity-value">1</div>
-            <button class="quantity-button" onclick="changeQuantity(1)">+</button>
-        </div>
-
-        <div class="total-price" id="total-price"></div>
-        <button class="main-open-button" id="open-selected-button" onclick="openSelectedCase()">
-            ОТКРЫТЬ КЕЙС
-        </button>
-    </div>
-
-    <div id="case-result" class="result-box">
-        <div class="result-heading">🎉 РЕЗУЛЬТАТ ОТКРЫТИЯ</div>
-        <div id="result-items"></div>
-
-        <div class="result-actions">
-            <button class="again-button" onclick="openAgain()">🔄 ОТКРЫТЬ ЕЩЁ</button>
-            <button class="sell-all-button" id="sell-all-button" onclick="sellAllResults()">💰 ПРОДАТЬ ВСЁ</button>
-        </div>
-    </div>
-
-    <div id="case-notice" class="notice"></div>
+ <div id="case-result" class="result-box">
+  <div class="result-heading">🎉 РЕЗУЛЬТАТ ОТКРЫТИЯ</div>
+  <div id="result-items"></div>
+  <div class="result-actions">
+   <button class="again-button" onclick="openAgain()">🔄 ОТКРЫТЬ ЕЩЁ</button>
+   <button class="sell-all-button" id="sell-all-button" onclick="sellAllResults()">💰 ПРОДАТЬ ВСЁ</button>
+  </div>
+ </div>
+ <div id="case-notice" class="notice"></div>
 </section>
 
-<section class="page" id="inventory">
-    <h2 class="section-title">🔫 Мой инвентарь</h2>
-    <div id="inventory-list">
-        <div class="empty">Загрузка инвентаря...</div>
-    </div>
-    <div id="inventory-notice" class="notice"></div>
-</section>
-
+<!-- АПГРЕЙД -->
 <section class="page" id="upgrade">
-    <h2 class="section-title">⚡ Апгрейд</h2>
-    <div class="placeholder">Выбирай исходный скин и предмет, который хочешь получить.<br><br>Максимальный шанс — 90%.<br>Скоро подключим.</div>
+ <h2 class="page-title">⚡ Апгрейд</h2>
+ <div class="placeholder">Загрузка апгрейда...</div>
 </section>
 
+<!-- КРАФТ -->
 <section class="page" id="craft">
-    <div id="craft-app"></div>
+ <div id="craft-app"></div>
 </section>
 
+<!-- ЗАРАБОТОК -->
+<section class="page" id="clicker">
+ <div class="placeholder">Загрузка заработка...</div>
+</section>
+
+<!-- КОНТРАКТЫ -->
 <section class="page" id="contracts">
-    <h2 class="section-title">📝 Контракты</h2>
-    <div class="placeholder">Выбирай 10 скинов и получай один случайный предмет.<br><br>Скоро подключим.</div>
+ <h2 class="page-title">📝 Контракты</h2>
+ <div class="placeholder">Выбирай 10 скинов и получай один случайный предмет.<br><br>Скоро подключим.</div>
 </section>
 
+<!-- РЕЙТИНГ -->
 <section class="page" id="rating">
-    <h2 class="section-title">🏆 Рейтинг игроков</h2>
-    <div class="placeholder">Здесь появится общий рейтинг игроков.</div>
+ <h2 class="page-title">🏆 Рейтинг игроков</h2>
+ <div class="placeholder">Здесь появится общий рейтинг игроков.</div>
 </section>
 
+<!-- ПРОФИЛЬ И ИНВЕНТАРЬ -->
 <section class="page" id="profile">
-    <h2 class="section-title">👤 Профиль</h2>
-    <div class="placeholder">
-        <div id="profile-name">Игрок</div>
-        <br>
-        <div id="profile-id">Telegram ID: —</div>
-        <br>Проект CS GO CASE
-    </div>
-    <h2 class="section-title">📜 История операций</h2>
-    <div id="history-list"><div class="empty">Загрузка истории...</div></div>
+ <h2 class="page-title">👤 Профиль</h2>
+ <div class="profile-box">
+  <div id="profile-name">Игрок</div>
+  <div id="profile-id" style="margin-top:7px">Telegram ID: —</div>
+  <div style="font-size:11px;color:#8094b8;margin-top:12px">Проект CS GO CASE</div>
+ </div>
+
+ <div id="profile-stats-container"></div>
+
+ <h2 class="section-title">🔫 Мой инвентарь</h2>
+ <div id="inventory-list"><div class="empty">Загрузка инвентаря...</div></div>
+ <div id="inventory-notice" class="notice"></div>
+
+ <h2 class="section-title">📜 История операций</h2>
+ <div id="history-list"><div class="empty">Загрузка истории...</div></div>
 </section>
 
+<!-- АДМИН -->
 <section class="page" id="admin">
-    <h2 class="section-title">👑 Админ-панель GUADON</h2>
-    <div class="admin-box">
-        <div class="admin-status">🟢 Права администратора подтверждены</div>
-        <h3>💰 Управление балансом</h3>
-
-        <label class="admin-label" for="target-id">Telegram ID игрока</label>
-        <input class="admin-input" id="target-id" type="number" placeholder="Telegram ID">
-
-        <label class="admin-label" for="dc-amount">Количество DC</label>
-        <input class="admin-input" id="dc-amount" type="number" min="1" placeholder="Например: 500">
-
-        <button class="action-button" id="give-button" onclick="changeDC('give')">💰 ВЫДАТЬ DC</button>
-        <button class="action-button take-button" id="take-button" onclick="changeDC('take')">💸 ЗАБРАТЬ DC</button>
-        <div class="admin-message" id="admin-message"></div>
-    </div>
-    <div class="placeholder">🔒 Дополнительные функции админ-панели добавим следующим этапом.</div>
+ <h2 class="page-title">👑 Админ-панель</h2>
+ <div class="admin-box">
+  <div class="admin-status">🟢 Права администратора подтверждены</div>
+  <h3>💰 Управление балансом</h3>
+  <label class="admin-label" for="target-id">Telegram ID игрока</label>
+  <input class="admin-input" id="target-id" type="number" placeholder="Telegram ID">
+  <label class="admin-label" for="dc-amount">Количество DC</label>
+  <input class="admin-input" id="dc-amount" type="number" min="1" placeholder="Например: 500">
+  <button class="action-button" id="give-button" onclick="changeDC('give')">💰 ВЫДАТЬ DC</button>
+  <button class="action-button take-button" id="take-button" onclick="changeDC('take')">💸 ЗАБРАТЬ DC</button>
+  <div class="admin-message" id="admin-message"></div>
+ </div>
+ <div class="placeholder">🔒 Дополнительные функции админ-панели добавим следующим этапом.</div>
 </section>
 
 </main>
 
+<!-- НИЖНЯЯ НАВИГАЦИЯ -->
 <nav class="bottom-nav">
-    <button class="nav-button active" onclick="showPage('home',this)"><span class="nav-icon">🏠</span>Главная</button>
-    <button class="nav-button" onclick="showPage('cases',this)"><span class="nav-icon">📦</span>Кейсы</button>
-    <button class="nav-button" onclick="showPage('craft',this)"><span class="nav-icon">⚒️</span>Крафт</button>
-    <button class="nav-button" onclick="showPage('inventory',this)"><span class="nav-icon">🔫</span>Инвентарь</button>
-    <button class="nav-button" onclick="showPage('profile',this)"><span class="nav-icon">👤</span>Профиль</button>
-    <button class="nav-button" id="admin-nav" style="display:none" onclick="showPage('admin',this)"><span class="nav-icon">👑</span>Админ</button>
+ <button class="nav-button active" data-page="home" onclick="showPage('home',this)">
+  <span class="nav-icon">🎮</span>Игры
+ </button>
+ <button class="nav-button" data-page="cases" onclick="showPage('cases',this)">
+  <span class="nav-icon">📦</span>Кейсы
+ </button>
+ <button class="nav-button" data-page="clicker" onclick="showPage('clicker',this)">
+  <span class="nav-icon">💎</span>Заработок
+ </button>
+ <button class="nav-button" id="admin-nav" data-page="admin" onclick="showPage('admin',this)">
+  <span class="nav-icon">👑</span>Админ
+ </button>
+ <button class="nav-button" data-page="profile" onclick="showPage('profile',this)">
+  <span class="nav-icon">👤</span>Профиль
+ </button>
 </nav>
 
 <script>
-    const tg = window.Telegram.WebApp;
-const API = "https://cs-go-case.onrender.com";
+const tg=window.Telegram.WebApp;
+const API="https://cs-go-case.onrender.com";
 
 tg.ready();
 tg.expand();
 
-let currentUserId = null;
-let openingCase = false;
-let sellingSkin = false;
-let casesCache = [];
-let selectedCase = null;
-let selectedQuantity = 1;
-let resultSkins = [];
+let currentUserId=null;
+let openingCase=false;
+let sellingSkin=false;
+let casesCache=[];
+let selectedCase=null;
+let selectedQuantity=1;
+let resultSkins=[];
 
-if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-    const user = tg.initDataUnsafe.user;
-    const name = user.first_name || "Игрок";
-    currentUserId = user.id;
+if(tg.initDataUnsafe&&tg.initDataUnsafe.user){
+ const user=tg.initDataUnsafe.user;
+ const name=user.first_name||"Игрок";
+ currentUserId=user.id;
+ document.getElementById("profile-name").textContent=name;
+ document.getElementById("profile-id").textContent="Telegram ID: "+user.id;
 
-    document.getElementById("username").textContent = name;
-    document.getElementById("profile-name").textContent = name;
-    document.getElementById("profile-id").textContent = "Telegram ID: " + user.id;
+ if(user.photo_url){
+  const avatar=document.getElementById("telegram-avatar");
+  avatar.src=user.photo_url;
+  avatar.style.display="block";
+  document.getElementById("avatar-fallback").style.display="none";
+ }
 }
 
-function authHeaders() {
-    return {"X-Telegram-Init-Data": tg.initData};
+function formatBalance(value){
+ const n=Number(value)||0;
+ if(n>=1000000)return (n/1000000).toFixed(n%1000000===0?0:1).replace(".",",")+"М";
+ if(n>=1000)return (n/1000).toFixed(n%1000===0?0:1).replace(".",",")+"К";
+ return n.toLocaleString("ru-RU");
 }
 
-function escapeHtml(value) {
-    return String(value ?? "").replace(/[&<>"']/g, char => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    })[char]);
+function updateHeaderBalance(value){
+ document.getElementById("balance").textContent=formatBalance(value)+" DC";
 }
 
-function showNotice(id,message,type) {
-    const box = document.getElementById(id);
-    box.textContent = message;
-    box.className = "notice " + type;
+function authHeaders(){return {"X-Telegram-Init-Data":tg.initData}}
+
+function escapeHtml(value){
+ return String(value??"").replace(/[&<>"']/g,char=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+ })[char]);
 }
 
-async function apiRequest(path,options={}) {
-    if (!tg.initData) throw new Error("Открой приложение через Telegram");
-
-    const response = await fetch(API+path,{
-        ...options,
-        headers:{...authHeaders(),...(options.headers||{})}
-    });
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Ошибка сервера");
-    return data;
+function showNotice(id,message,type){
+ const box=document.getElementById(id);
+ box.textContent=message;
+ box.className="notice "+type;
 }
 
-async function loadBalance() {
-    const element = document.getElementById("balance");
-    if (!tg.initData) {
-        element.textContent = "Открой в Telegram";
-        return;
-    }
-
-    try {
-        const data = await apiRequest("/api/balance");
-        element.textContent = data.balance + " DC";
-    } catch(error) {
-        console.error(error);
-        element.textContent = "Ошибка загрузки";
-    }
+async function apiRequest(path,options={}){
+ if(!tg.initData)throw new Error("Открой приложение через Telegram");
+ const response=await fetch(API+path,{
+  ...options,
+  headers:{...authHeaders(),...(options.headers||{})}
+ });
+ const data=await response.json();
+ if(!response.ok)throw new Error(data.error||"Ошибка сервера");
+ return data;
 }
 
-async function checkAdmin() {
-    if (!tg.initData) return;
-    try {
-        const data = await apiRequest("/api/admin/status");
-        if (data.is_admin) document.getElementById("admin-nav").style.display="block";
-    } catch(error) {
-        console.error(error);
-    }
+async function loadBalance(){
+ const element=document.getElementById("balance");
+ if(!tg.initData){element.textContent="Открой в Telegram";return}
+ try{
+  const data=await apiRequest("/api/balance");
+  updateHeaderBalance(data.balance);
+ }catch(error){
+  console.error(error);
+  element.textContent="Ошибка";
+ }
 }
 
-function showPage(page,button) {
-    document.querySelectorAll(".page").forEach(el=>el.classList.remove("active"));
-    const selected = document.getElementById(page);
-    if (!selected) return;
-    selected.classList.add("active");
+async function checkAdmin(){
+ if(!tg.initData)return;
+ try{
+  const data=await apiRequest("/api/admin/status");
+  if(data.is_admin)document.getElementById("admin-nav").style.display="block";
+ }catch(error){console.error(error)}
+}
 
-    document.querySelectorAll(".nav-button").forEach(el=>el.classList.remove("active"));
+function showPage(page,button){
+ document.querySelectorAll(".page").forEach(el=>el.classList.remove("active"));
+ const selected=document.getElementById(page);
+ if(!selected)return;
+ selected.classList.add("active");
 
-    if (button) button.classList.add("active");
-    else {
-        document.querySelectorAll(".nav-button").forEach(el=>{
-            if ((el.getAttribute("onclick")||"").includes("'" + page + "'")) el.classList.add("active");
-        });
-    }
+ document.querySelectorAll(".nav-button").forEach(el=>el.classList.remove("active"));
 
-    window.scrollTo(0,0);
+ if(button){
+  button.classList.add("active");
+ }else{
+  let navPage=page;
+  if(["upgrade","craft","mines","contracts","rating"].includes(page))navPage="home";
+  const nav=document.querySelector('.nav-button[data-page="'+navPage+'"]');
+  if(nav)nav.classList.add("active");
+ }
 
-    if (page==="cases") loadCases();
-    if (page==="inventory") loadInventory();
-    if (page==="profile") {
-        loadHistory();
-        if (window.loadProfile) window.loadProfile();
-    }
-    if (page==="craft" && window.initCraft) window.initCraft();
+ window.scrollTo(0,0);
+
+ if(page==="cases")loadCases();
+ if(page==="profile"){
+  loadInventory();
+  loadHistory();
+ }
+ if(page==="upgrade"&&window.initUpgrade)window.initUpgrade();
+ if(page==="craft"&&window.initCraft)window.initCraft();
+ if(page==="clicker"&&window.loadClicker)window.loadClicker();
 }
 
 // -------------------------
 // CASE MENU
 // -------------------------
-
-async function loadCases() {
-    const list = document.getElementById("cases-list");
-
-    if (casesCache.length) {
-        renderCases();
-        return;
-    }
-
-    try {
-        const data = await apiRequest("/api/cases");
-        casesCache = data.cases || [];
-        renderCases();
-    } catch(error) {
-        list.innerHTML='<div class="empty">Не удалось загрузить кейсы: '+escapeHtml(error.message)+'</div>';
-    }
+async function loadCases(){
+ const list=document.getElementById("cases-list");
+ if(casesCache.length){renderCases();return}
+ try{
+  const data=await apiRequest("/api/cases");
+  casesCache=data.cases||[];
+  renderCases();
+ }catch(error){
+  list.innerHTML='<div class="empty">Не удалось загрузить кейсы: '+escapeHtml(error.message)+'</div>';
+ }
 }
 
-function renderCases() {
-    const list = document.getElementById("cases-list");
-
-    if (!casesCache.length) {
-        list.innerHTML='<div class="empty">Кейсов пока нет.</div>';
-        return;
-    }
-
-    list.innerHTML=casesCache.map(item=>`
-        <div class="case-card">
-            <div>
-                <div class="case-name">📦 ${escapeHtml(item.name)}</div>
-                <div class="case-price">${Number(item.price_dc).toLocaleString("ru-RU")} DC</div>
-                <div class="rarity">${(item.items||[]).length} предметов внутри</div>
-            </div>
-            <button class="open-button" data-select-case="${Number(item.id)}">Выбрать</button>
-        </div>
-    `).join("");
+function renderCases(){
+ const list=document.getElementById("cases-list");
+ if(!casesCache.length){list.innerHTML='<div class="empty">Кейсов пока нет.</div>';return}
+ list.innerHTML=casesCache.map(item=>`
+  <div class="case-card">
+   <div>
+    <div class="case-name">📦 ${escapeHtml(item.name)}</div>
+    <div class="case-price">${Number(item.price_dc).toLocaleString("ru-RU")} DC</div>
+    <div class="rarity">${(item.items||[]).length} предметов внутри</div>
+   </div>
+   <button class="open-button" data-select-case="${Number(item.id)}">Выбрать</button>
+  </div>
+ `).join("");
 }
 
-function selectCase(caseId) {
-    const item = casesCache.find(c=>Number(c.id)===Number(caseId));
-    if (!item) return;
+function selectCase(caseId){
+ const item=casesCache.find(c=>Number(c.id)===Number(caseId));
+ if(!item)return;
+ selectedCase=item;
+ selectedQuantity=1;
+ resultSkins=[];
+ document.getElementById("cases-list").style.display="none";
+ document.getElementById("case-menu").style.display="block";
+ document.getElementById("case-result").classList.remove("show");
+ document.getElementById("case-notice").className="notice";
+ document.getElementById("menu-case-name").textContent=item.name;
+ document.getElementById("menu-case-price").textContent=Number(item.price_dc).toLocaleString("ru-RU")+" DC за открытие";
 
-    selectedCase = item;
-    selectedQuantity = 1;
-    resultSkins = [];
-
-    document.getElementById("cases-list").style.display="none";
-    document.getElementById("case-menu").style.display="block";
-    document.getElementById("case-result").classList.remove("show");
-    document.getElementById("case-notice").className="notice";
-
-    document.getElementById("menu-case-name").textContent=item.name;
-    document.getElementById("menu-case-price").textContent=
-        Number(item.price_dc).toLocaleString("ru-RU")+" DC за открытие";
-
-    const items = document.getElementById("case-items");
-
-    items.innerHTML=(item.items||[]).map(skin=>`
-        <div class="item-card">
-            <div class="item-icon">🔫</div>
-            <div class="item-name">${escapeHtml(skin.name)}</div>
-            <div class="item-rarity">${escapeHtml(skin.rarity)}</div>
-            <div class="item-price">${Number(skin.price).toLocaleString("ru-RU")} DC</div>
-            <div class="item-chance">Шанс: ${Number(skin.chance)}%</div>
-        </div>
-    `).join("");
-
-    updateQuantity();
-    window.scrollTo(0,0);
+ document.getElementById("case-items").innerHTML=(item.items||[]).map(skin=>`
+  <div class="item-card">
+   <div class="item-icon">🔫</div>
+   <div class="item-name">${escapeHtml(skin.name)}</div>
+   <div class="item-rarity">${escapeHtml(skin.rarity)}</div>
+   <div class="item-price">${Number(skin.price).toLocaleString("ru-RU")} DC</div>
+   <div class="item-chance">Шанс: ${Number(skin.chance)}%</div>
+  </div>
+ `).join("");
+ updateQuantity();
+ window.scrollTo(0,0);
 }
 
-function backToCases() {
-    document.getElementById("case-menu").style.display="none";
-    document.getElementById("case-result").classList.remove("show");
-    document.getElementById("cases-list").style.display="block";
-    document.getElementById("case-notice").className="notice";
-    window.scrollTo(0,0);
+function backToCases(){
+ document.getElementById("case-menu").style.display="none";
+ document.getElementById("case-result").classList.remove("show");
+ document.getElementById("cases-list").style.display="block";
+ document.getElementById("case-notice").className="notice";
+ window.scrollTo(0,0);
 }
 
-function changeQuantity(change) {
-    selectedQuantity=Math.max(1,Math.min(5,selectedQuantity+change));
-    updateQuantity();
+function changeQuantity(change){
+ selectedQuantity=Math.max(1,Math.min(5,selectedQuantity+change));
+ updateQuantity();
 }
 
-function updateQuantity() {
-    if (!selectedCase) return;
-    document.getElementById("quantity-value").textContent=selectedQuantity;
-
-    const total=Number(selectedCase.price_dc)*selectedQuantity;
-    document.getElementById("total-price").textContent=
-        "Итого: "+total.toLocaleString("ru-RU")+" DC";
-
-    document.getElementById("open-selected-button").textContent=
-        "ОТКРЫТЬ ЗА "+total.toLocaleString("ru-RU")+" DC";
+function updateQuantity(){
+ if(!selectedCase)return;
+ document.getElementById("quantity-value").textContent=selectedQuantity;
+ const total=Number(selectedCase.price_dc)*selectedQuantity;
+ document.getElementById("total-price").textContent="Итого: "+total.toLocaleString("ru-RU")+" DC";
+ document.getElementById("open-selected-button").textContent="ОТКРЫТЬ ЗА "+total.toLocaleString("ru-RU")+" DC";
 }
 
 // -------------------------
 // OPEN CASES
 // -------------------------
-
-async function openSelectedCase() {
-    if (!selectedCase || openingCase) return;
-
-    openingCase=true;
-    const button=document.getElementById("open-selected-button");
-    button.disabled=true;
-    button.textContent="ОТКРЫВАЕМ...";
-
-    try {
-        const data=await apiRequest("/api/cases/open",{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({
-                case_id:Number(selectedCase.id),
-                count:selectedQuantity
-            })
-        });
-
-        resultSkins=(data.skins || (data.skin?[data.skin]:[])).map(skin=>({
-            ...skin,
-            sold:false
-        }));
-
-        if (!resultSkins.length) throw new Error("Сервер не вернул результат открытия");
-
-        renderResults();
-
-        document.getElementById("case-menu").style.display="none";
-        document.getElementById("case-result").classList.add("show");
-        document.getElementById("case-notice").className="notice";
-
-        await loadBalance();
-        await loadInventory();
-
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-
-        window.scrollTo(0,0);
-
-    } catch(error) {
-        showNotice("case-notice","❌ "+error.message,"error");
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
-    } finally {
-        openingCase=false;
-        button.disabled=false;
-        updateQuantity();
-    }
+async function openSelectedCase(){
+ if(!selectedCase||openingCase)return;
+ openingCase=true;
+ const button=document.getElementById("open-selected-button");
+ button.disabled=true;
+ button.textContent="ОТКРЫВАЕМ...";
+ try{
+  const data=await apiRequest("/api/cases/open",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({case_id:Number(selectedCase.id),count:selectedQuantity})
+  });
+  resultSkins=(data.skins||(data.skin?[data.skin]:[])).map(skin=>({...skin,sold:false}));
+  if(!resultSkins.length)throw new Error("Сервер не вернул результат открытия");
+  renderResults();
+  document.getElementById("case-menu").style.display="none";
+  document.getElementById("case-result").classList.add("show");
+  document.getElementById("case-notice").className="notice";
+  await loadBalance();
+  await loadInventory();
+  if(tg.HapticFeedback)tg.HapticFeedback.notificationOccurred("success");
+  window.scrollTo(0,0);
+ }catch(error){
+  showNotice("case-notice","❌ "+error.message,"error");
+  if(tg.HapticFeedback)tg.HapticFeedback.notificationOccurred("error");
+ }finally{
+  openingCase=false;
+  button.disabled=false;
+  updateQuantity();
+ }
 }
 
-function renderResults() {
-    const list=document.getElementById("result-items");
-
-    list.innerHTML=resultSkins.map((skin,index)=>`
-        <div class="result-item">
-            <div class="result-item-top">
-                <div>
-                    <div class="result-item-name">🎁 ${escapeHtml(skin.name)}</div>
-                    <div class="rarity">${escapeHtml(skin.rarity)}</div>
-                    <div class="result-item-price">
-                        Цена: ${Number(skin.price).toLocaleString("ru-RU")} DC
-                        · Продажа: ${Math.floor(Number(skin.price)*0.9).toLocaleString("ru-RU")} DC
-                    </div>
-                </div>
-            </div>
-            ${skin.sold
-                ? '<div class="result-sold">✓ Продано</div>'
-                : `<button class="sell-button" data-result-sell="${index}">ПРОДАТЬ</button>`
-            }
-        </div>
-    `).join("");
-
-    const allSold=resultSkins.every(s=>s.sold);
-    const sellAll=document.getElementById("sell-all-button");
-    sellAll.disabled=allSold;
-    sellAll.textContent=allSold?"✓ ВСЁ ПРОДАНО":"💰 ПРОДАТЬ ВСЁ";
+function renderResults(){
+ const list=document.getElementById("result-items");
+ list.innerHTML=resultSkins.map((skin,index)=>`
+  <div class="result-item">
+   <div class="result-item-top">
+    <div>
+     <div class="result-item-name">🎁 ${escapeHtml(skin.name)}</div>
+     <div class="rarity">${escapeHtml(skin.rarity)}</div>
+     <div class="result-item-price">
+      Цена: ${Number(skin.price).toLocaleString("ru-RU")} DC
+      · Продажа: ${Math.floor(Number(skin.price)*.9).toLocaleString("ru-RU")} DC
+     </div>
+    </div>
+   </div>
+   ${skin.sold?'<div class="result-sold">✓ Продано</div>':`<button class="sell-button" data-result-sell="${index}">ПРОДАТЬ</button>`}
+  </div>
+ `).join("");
+ const allSold=resultSkins.every(s=>s.sold);
+ const sellAll=document.getElementById("sell-all-button");
+ sellAll.disabled=allSold;
+ sellAll.textContent=allSold?"✓ ВСЁ ПРОДАНО":"💰 ПРОДАТЬ ВСЁ";
 }
 
-async function sellResult(index) {
-    if (sellingSkin) return;
-    const skin=resultSkins[index];
-    if (!skin || skin.sold) return;
-
-    sellingSkin=true;
-
-    try {
-        const data=await apiRequest("/api/skins/sell",{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({skin_id:Number(skin.id),quantity:1})
-        });
-
-        resultSkins[index].sold=true;
-        renderResults();
-        await loadBalance();
-        await loadInventory();
-
-        showNotice("case-notice",
-            "✅ Продано: "+skin.name+"\nПолучено: "+data.received+" DC",
-            "success");
-
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-
-    } catch(error) {
-        showNotice("case-notice","❌ "+error.message,"error");
-    } finally {
-        sellingSkin=false;
-    }
+async function sellResult(index){
+ if(sellingSkin)return;
+ const skin=resultSkins[index];
+ if(!skin||skin.sold)return;
+ sellingSkin=true;
+ try{
+  const data=await apiRequest("/api/skins/sell",{
+   method:"POST",headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({skin_id:Number(skin.id),quantity:1})
+  });
+  resultSkins[index].sold=true;
+  renderResults();
+  await loadBalance();
+  await loadInventory();
+  showNotice("case-notice","✅ Продано: "+skin.name+"\nПолучено: "+data.received+" DC","success");
+  if(tg.HapticFeedback)tg.HapticFeedback.notificationOccurred("success");
+ }catch(error){
+  showNotice("case-notice","❌ "+error.message,"error");
+ }finally{sellingSkin=false}
 }
 
-async function sellAllResults() {
-    if (sellingSkin) return;
-
-    const unsold=resultSkins
-        .map((skin,index)=>({skin,index}))
-        .filter(item=>!item.skin.sold);
-
-    if (!unsold.length) return;
-
-    sellingSkin=true;
-    const button=document.getElementById("sell-all-button");
-    button.disabled=true;
-    button.textContent="ПРОДАЖА...";
-
-    let received=0;
-    let soldCount=0;
-    let errors=[];
-
-    try {
-        for (const item of unsold) {
-            try {
-                const data=await apiRequest("/api/skins/sell",{
-                    method:"POST",
-                    headers:{"Content-Type":"application/json"},
-                    body:JSON.stringify({
-                        skin_id:Number(item.skin.id),
-                        quantity:1
-                    })
-                });
-
-                resultSkins[item.index].sold=true;
-                received+=Number(data.received||0);
-                soldCount++;
-            } catch(error) {
-                errors.push(item.skin.name+": "+error.message);
-            }
-        }
-
-        renderResults();
-        await loadBalance();
-        await loadInventory();
-
-        if (errors.length) {
-            showNotice("case-notice",
-                "Продано предметов: "+soldCount+
-                "\nПолучено: "+received+" DC"+
-                "\nОшибки: "+errors.join("; "),
-                "error");
-        } else {
-            showNotice("case-notice",
-                "✅ Все предметы проданы!\nПолучено: "+received+" DC",
-                "success");
-        }
-
-    } finally {
-        sellingSkin=false;
-        renderResults();
-    }
+async function sellAllResults(){
+ if(sellingSkin)return;
+ const unsold=resultSkins.map((skin,index)=>({skin,index})).filter(item=>!item.skin.sold);
+ if(!unsold.length)return;
+ sellingSkin=true;
+ const button=document.getElementById("sell-all-button");
+ button.disabled=true;
+ button.textContent="ПРОДАЖА...";
+ let received=0,soldCount=0,errors=[];
+ try{
+  for(const item of unsold){
+   try{
+    const data=await apiRequest("/api/skins/sell",{
+     method:"POST",headers:{"Content-Type":"application/json"},
+     body:JSON.stringify({skin_id:Number(item.skin.id),quantity:1})
+    });
+    resultSkins[item.index].sold=true;
+    received+=Number(data.received||0);
+    soldCount++;
+   }catch(error){errors.push(item.skin.name+": "+error.message)}
+  }
+  renderResults();
+  await loadBalance();
+  await loadInventory();
+  if(errors.length){
+   showNotice("case-notice","Продано предметов: "+soldCount+"\nПолучено: "+received+" DC\nОшибки: "+errors.join("; "),"error");
+  }else{
+   showNotice("case-notice","✅ Все предметы проданы!\nПолучено: "+received+" DC","success");
+  }
+ }finally{
+  sellingSkin=false;
+  renderResults();
+ }
 }
 
-function openAgain() {
-    if (!selectedCase) return;
-
-    resultSkins=[];
-    document.getElementById("case-result").classList.remove("show");
-    document.getElementById("case-menu").style.display="block";
-    document.getElementById("case-notice").className="notice";
-    window.scrollTo(0,0);
+function openAgain(){
+ if(!selectedCase)return;
+ resultSkins=[];
+ document.getElementById("case-result").classList.remove("show");
+ document.getElementById("case-menu").style.display="block";
+ document.getElementById("case-notice").className="notice";
+ window.scrollTo(0,0);
 }
 
 // -------------------------
 // INVENTORY
 // -------------------------
-
-async function loadInventory() {
-    const list=document.getElementById("inventory-list");
-
-    try {
-        const data=await apiRequest("/api/inventory");
-
-        if (!data.inventory || !data.inventory.length) {
-            list.innerHTML='<div class="empty">📦 Инвентарь пуст.<br>Открой кейс, чтобы получить первый скин!</div>';
-            return;
-        }
-
-        list.innerHTML=data.inventory.map(skin=>{
-            const price=Math.floor(Number(skin.price)*0.9);
-
-            return `
-                <div class="skin-card">
-                    <div class="skin-info">
-                        <div class="skin-name">${escapeHtml(skin.name)}</div>
-                        <div class="rarity">${escapeHtml(skin.rarity)}</div>
-                        <div class="skin-price">Цена: ${Number(skin.price)} DC</div>
-                        <div class="rarity">Количество: ${Number(skin.quantity)}</div>
-                        <div class="rarity">Продажа: ${price} DC за штуку</div>
-                    </div>
-                    <button class="sell-button" data-sell-id="${Number(skin.skin_id)}">Продать</button>
-                </div>
-            `;
-        }).join("");
-
-    } catch(error) {
-        list.innerHTML='<div class="empty">Ошибка инвентаря: '+escapeHtml(error.message)+'</div>';
-    }
+async function loadInventory(){
+ const list=document.getElementById("inventory-list");
+ try{
+  const data=await apiRequest("/api/inventory");
+  if(!data.inventory||!data.inventory.length){
+   list.innerHTML='<div class="empty">📦 Инвентарь пуст.<br>Открой кейс, чтобы получить первый скин!</div>';
+   return;
+  }
+  list.innerHTML=data.inventory.map(skin=>{
+   const price=Math.floor(Number(skin.price)*.9);
+   return `
+    <div class="skin-card">
+     <div class="skin-info">
+      <div class="skin-name">${escapeHtml(skin.name)}</div>
+      <div class="rarity">${escapeHtml(skin.rarity)}</div>
+      <div class="skin-price">Цена: ${Number(skin.price)} DC</div>
+      <div class="rarity">Количество: ${Number(skin.quantity)}</div>
+      <div class="rarity">Продажа: ${price} DC за штуку</div>
+     </div>
+     <button class="sell-button" data-sell-id="${Number(skin.skin_id)}">Продать</button>
+    </div>
+   `;
+  }).join("");
+ }catch(error){
+  list.innerHTML='<div class="empty">Ошибка инвентаря: '+escapeHtml(error.message)+'</div>';
+ }
 }
 
-async function sellSkin(skinId,button) {
-    if (sellingSkin) return;
-
-    sellingSkin=true;
-    button.disabled=true;
-    button.textContent="Продажа...";
-
-    try {
-        const data=await apiRequest("/api/skins/sell",{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({skin_id:Number(skinId),quantity:1})
-        });
-
-        showNotice("inventory-notice",
-            "✅ "+data.message+"\nПолучено: "+data.received+" DC"+
-            "\nБаланс: "+data.balance+" DC",
-            "success");
-
-        await loadBalance();
-        await loadInventory();
-
-    } catch(error) {
-        showNotice("inventory-notice","❌ "+error.message,"error");
-        button.disabled=false;
-        button.textContent="Продать";
-    } finally {
-        sellingSkin=false;
-    }
+async function sellSkin(skinId,button){
+ if(sellingSkin)return;
+ sellingSkin=true;
+ button.disabled=true;
+ button.textContent="Продажа...";
+ try{
+  const data=await apiRequest("/api/skins/sell",{
+   method:"POST",headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({skin_id:Number(skinId),quantity:1})
+  });
+  showNotice("inventory-notice","✅ "+data.message+"\nПолучено: "+data.received+" DC\nБаланс: "+data.balance+" DC","success");
+  await loadBalance();
+  await loadInventory();
+ }catch(error){
+  showNotice("inventory-notice","❌ "+error.message,"error");
+  button.disabled=false;
+  button.textContent="Продать";
+ }finally{sellingSkin=false}
 }
 
 // -------------------------
 // HISTORY
 // -------------------------
-
-async function loadHistory() {
-    const list=document.getElementById("history-list");
-
-    try {
-        const data=await apiRequest("/api/history");
-        let html="";
-
-        if (data.openings && data.openings.length) {
-            html+='<h3 class="sub-title">📦 Открытия кейсов</h3>';
-            html+=data.openings.map(item=>`
-                <div class="history-item">
-                    🎁 ${escapeHtml(item.case_name)}
-                    <br>Выпало: <strong>${escapeHtml(item.skin_name)}</strong>
-                    <br>Цена открытия: ${Number(item.price_paid)} DC
-                    <br><span class="rarity">${escapeHtml(item.created_at)}</span>
-                </div>
-            `).join("");
-        }
-
-        if (data.sales && data.sales.length) {
-            html+='<h3 class="sub-title">💰 Продажи</h3>';
-            html+=data.sales.map(item=>`
-                <div class="history-item">
-                    💸 ${escapeHtml(item.skin_name)}
-                    <br>Количество: ${Number(item.quantity)}
-                    <br>Получено: <strong>${Number(item.amount_received)} DC</strong>
-                    <br><span class="rarity">${escapeHtml(item.created_at)}</span>
-                </div>
-            `).join("");
-        }
-
-        list.innerHTML=html||'<div class="empty">История пока пуста.</div>';
-
-    } catch(error) {
-        list.innerHTML='<div class="empty">Ошибка истории: '+escapeHtml(error.message)+'</div>';
-    }
+async function loadHistory(){
+ const list=document.getElementById("history-list");
+ try{
+  const data=await apiRequest("/api/history");
+  let html="";
+  if(data.openings&&data.openings.length){
+   html+='<h3 class="sub-title">📦 Открытия кейсов</h3>';
+   html+=data.openings.map(item=>`
+    <div class="history-item">
+     🎁 ${escapeHtml(item.case_name)}
+     <br>Выпало: <strong>${escapeHtml(item.skin_name)}</strong>
+     <br>Цена открытия: ${Number(item.price_paid)} DC
+     <br><span class="rarity">${escapeHtml(item.created_at)}</span>
+    </div>
+   `).join("");
+  }
+  if(data.sales&&data.sales.length){
+   html+='<h3 class="sub-title">💰 Продажи</h3>';
+   html+=data.sales.map(item=>`
+    <div class="history-item">
+     💸 ${escapeHtml(item.skin_name)}
+     <br>Количество: ${Number(item.quantity)}
+     <br>Получено: <strong>${Number(item.amount_received)} DC</strong>
+     <br><span class="rarity">${escapeHtml(item.created_at)}</span>
+    </div>
+   `).join("");
+  }
+  list.innerHTML=html||'<div class="empty">История пока пуста.</div>';
+ }catch(error){
+  list.innerHTML='<div class="empty">Ошибка истории: '+escapeHtml(error.message)+'</div>';
+ }
 }
 
 // -------------------------
 // ADMIN
 // -------------------------
-
-function showAdminMessage(message,type) {
-    const box=document.getElementById("admin-message");
-    box.textContent=message;
-    box.className="admin-message "+type;
+function showAdminMessage(message,type){
+ const box=document.getElementById("admin-message");
+ box.textContent=message;
+ box.className="admin-message "+type;
 }
 
-async function changeDC(action) {
-    const targetId=document.getElementById("target-id").value.trim();
-    const amount=document.getElementById("dc-amount").value.trim();
-    const giveButton=document.getElementById("give-button");
-    const takeButton=document.getElementById("take-button");
+async function changeDC(action){
+ const targetId=document.getElementById("target-id").value.trim();
+ const amount=document.getElementById("dc-amount").value.trim();
+ const giveButton=document.getElementById("give-button");
+ const takeButton=document.getElementById("take-button");
 
-    if (!targetId || !amount) {
-        showAdminMessage("Заполни Telegram ID и количество DC.","error");
-        return;
-    }
-
-    if (!/^\d+$/.test(targetId)||Number(targetId)<=0||
-        !/^\d+$/.test(amount)||Number(amount)<=0) {
-        showAdminMessage("Проверь ID и количество DC.","error");
-        return;
-    }
-
-    giveButton.disabled=true;
-    takeButton.disabled=true;
-
-    try {
-        const endpoint=action==="give"?"/api/admin/give-dc":"/api/admin/take-dc";
-        const data=await apiRequest(endpoint,{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({user_id:Number(targetId),amount:Number(amount)})
-        });
-
-        showAdminMessage("✅ "+data.message+"\nНовый баланс: "+data.balance+" DC","success");
-
-        if (Number(targetId)===Number(currentUserId)) await loadBalance();
-        document.getElementById("dc-amount").value="";
-
-    } catch(error) {
-        showAdminMessage("❌ "+error.message,"error");
-    } finally {
-        giveButton.disabled=false;
-        takeButton.disabled=false;
-    }
+ if(!targetId||!amount){
+  showAdminMessage("Заполни Telegram ID и количество DC.","error");
+  return;
+ }
+ if(!/^\d+$/.test(targetId)||Number(targetId)<=0||!/^\d+$/.test(amount)||Number(amount)<=0){
+  showAdminMessage("Проверь ID и количество DC.","error");
+  return;
+ }
+ giveButton.disabled=true;
+ takeButton.disabled=true;
+ try{
+  const endpoint=action==="give"?"/api/admin/give-dc":"/api/admin/take-dc";
+  const data=await apiRequest(endpoint,{
+   method:"POST",headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({user_id:Number(targetId),amount:Number(amount)})
+  });
+  showAdminMessage("✅ "+data.message+"\nНовый баланс: "+data.balance+" DC","success");
+  if(Number(targetId)===Number(currentUserId))await loadBalance();
+  document.getElementById("dc-amount").value="";
+ }catch(error){
+  showAdminMessage("❌ "+error.message,"error");
+ }finally{
+  giveButton.disabled=false;
+  takeButton.disabled=false;
+ }
 }
 
 // -------------------------
 // CLICK EVENTS
 // -------------------------
-
 document.getElementById("cases-list").addEventListener("click",event=>{
-    const button=event.target.closest("[data-select-case]");
-    if (button) selectCase(button.dataset.selectCase);
+ const button=event.target.closest("[data-select-case]");
+ if(button)selectCase(button.dataset.selectCase);
 });
 
 document.getElementById("result-items").addEventListener("click",event=>{
-    const button=event.target.closest("[data-result-sell]");
-    if (button) sellResult(Number(button.dataset.resultSell));
+ const button=event.target.closest("[data-result-sell]");
+ if(button)sellResult(Number(button.dataset.resultSell));
 });
 
 document.getElementById("inventory-list").addEventListener("click",event=>{
-    const button=event.target.closest("[data-sell-id]");
-    if (button) sellSkin(button.dataset.sellId,button);
+ const button=event.target.closest("[data-sell-id]");
+ if(button)sellSkin(button.dataset.sellId,button);
 });
 
 // -------------------------
 // START
 // -------------------------
-
 loadBalance();
 checkAdmin();
-
 </script>
 
 <script src="upgrade.js"></script>

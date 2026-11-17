@@ -1,0 +1,5 @@
+import os
+
+os.makedirs("static/js", exist_ok=True)
+
+print("Папки static и js созданы!")

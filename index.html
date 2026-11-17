@@ -78,40 +78,45 @@ button{font-family:inherit;cursor:pointer}
 .cases-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .case-tile{
  --case-a:#315d91;--case-b:#172e50;--case-glow:#6cbaff;
- position:relative;overflow:hidden;isolation:isolate;min-width:0;min-height:174px;
- padding:13px 11px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.22);
+ position:relative;overflow:hidden;isolation:isolate;min-width:0;height:174px;
+ padding:0;border-radius:20px;border:1px solid rgba(255,255,255,.22);
  background:linear-gradient(145deg,var(--case-a),var(--case-b));
  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 10px 25px rgba(0,0,0,.2);
  cursor:pointer;transition:transform .18s,border-color .18s;
 }
 .case-tile:active{transform:scale(.97)}
 .case-tile:before{
- content:"";position:absolute;inset:0;z-index:-1;
- background:radial-gradient(circle at 50% 43%,var(--case-glow),transparent 57%),
- linear-gradient(130deg,rgba(255,255,255,.12),transparent 50%);opacity:.45;
+ content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+ background:linear-gradient(0deg,rgba(8,15,30,.72),transparent 40%);
 }
 .case-tile:after{
- content:"";position:absolute;inset:0;z-index:-1;
- background:linear-gradient(120deg,rgba(255,255,255,.13),transparent 35%,transparent 70%,rgba(255,255,255,.06));
+ content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+ background:linear-gradient(120deg,rgba(255,255,255,.12),transparent 35%,transparent 70%,rgba(255,255,255,.05));
 }
-.case-art{height:103px;display:flex;align-items:center;justify-content:center;position:relative}
+.case-art{
+ position:absolute;inset:0;width:100%;height:100%;z-index:0;
+ display:flex;align-items:center;justify-content:center;
+}
 .case-box-image{
- display:block;width:125px;height:100px;object-fit:contain;
- filter:drop-shadow(0 10px 15px rgba(0,0,0,.4));
+ display:block;width:100%;height:100%;object-fit:contain;padding:4px;
+ filter:drop-shadow(0 8px 14px rgba(0,0,0,.4));
 }
-.case-tile-name{font-size:14px;font-weight:900;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.case-tile-price{text-align:center;font-size:12px;font-weight:900;color:#fff;margin-top:6px;text-shadow:0 1px 7px rgba(0,0,0,.5)}
-.case-tile-sub{text-align:center;color:rgba(255,255,255,.7);font-size:9px;margin-top:4px}
+.case-tile-info{
+ position:absolute;z-index:2;left:0;right:0;bottom:0;
+ padding:22px 8px 10px;text-align:center;
+}
+.case-tile-name,.case-tile-sub{display:none}
+.case-tile-price{
+ text-align:center;font-size:13px;font-weight:900;color:#fff;
+ text-shadow:0 2px 7px #000;margin:0;
+}
 .case-tile.elite{
- grid-column:1/-1;min-height:150px;display:grid;grid-template-columns:1fr 1fr;
- align-items:center;padding:13px 19px;
+ grid-column:1/-1;height:174px;min-height:0;display:block;padding:0;
 }
-.case-tile.elite .case-art{height:120px}
-.case-tile.elite .case-box-image{width:165px;height:125px}
-.case-tile.elite .case-tile-name{text-align:left;font-size:19px}
-.case-tile.elite .case-tile-price{text-align:left;font-size:15px}
-.case-tile.elite .case-tile-sub{text-align:left}
-.case-tile.elite .case-tile-info{min-width:0}
+.case-tile.elite .case-art{height:100%}
+.case-tile.elite .case-box-image{width:100%;height:100%}
+.case-tile.elite .case-tile-info{left:0;right:0;bottom:0}
+.case-tile.elite .case-tile-price{text-align:center;font-size:13px}
 
 /* ЦВЕТА КЕЙСОВ */
 .case-starter{--case-a:#4776a7;--case-b:#193b61;--case-glow:#91caff}
@@ -461,9 +466,7 @@ function renderCases(){
       onerror="this.style.display='none'">
     </div>
     <div class="case-tile-info">
-     <div class="case-tile-name">${escapeHtml(item.name)}</div>
      <div class="case-tile-price">${Number(item.price_dc).toLocaleString("ru-RU")} DC</div>
-     <div class="case-tile-sub">${(item.items||[]).length} предметов внутри</div>
     </div>
    </div>`;
  }).join("")+'</div>';

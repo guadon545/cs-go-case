@@ -16,6 +16,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 import database
 from upgrade import create_upgrade_blueprint
+from clicker import create_clicker_blueprint
 
 
 app = Flask(__name__)
@@ -50,7 +51,6 @@ def verify_telegram_data(init_data):
 
     try:
         data = dict(parse_qsl(init_data, keep_blank_values=True))
-
         auth_date = int(data.get("auth_date", "0"))
 
         if auth_date > time.time() + 60:
@@ -137,7 +137,6 @@ def get_telegram_user():
     init_data = request.headers.get(
         "X-Telegram-Init-Data", ""
     )
-
     return verify_telegram_data(init_data)
 
 
@@ -151,7 +150,6 @@ def authorized_user():
         user["id"],
         user.get("username")
     )
-
     return user
 
 
@@ -168,11 +166,15 @@ def admin_user():
 
 
 # ==========================================
-# UPGRADE MODULE
+# MODULES
 # ==========================================
 
 app.register_blueprint(
     create_upgrade_blueprint(authorized_user)
+)
+
+app.register_blueprint(
+    create_clicker_blueprint(authorized_user)
 )
 
 
@@ -191,9 +193,7 @@ for admin_id in ADMIN_IDS.split(","):
 
 def init_catalog():
     if not CATALOG_PATH.exists():
-        raise FileNotFoundError(
-            "catalog.json not found"
-        )
+        raise FileNotFoundError("catalog.json not found")
 
     with open(CATALOG_PATH, "r", encoding="utf-8") as file:
         catalog = json.load(file)
@@ -201,9 +201,7 @@ def init_catalog():
     cases_data = catalog.get("cases", [])
 
     if len(cases_data) != 9:
-        raise ValueError(
-            "Catalog must contain exactly 9 cases"
-        )
+        raise ValueError("Catalog must contain exactly 9 cases")
 
     for case in cases_data:
         items = case.get("items", [])
@@ -238,7 +236,6 @@ def init_catalog():
                 )
 
     with database.get_db() as db:
-
         db.executescript("""
             CREATE TABLE IF NOT EXISTS case_skins (
                 case_id INTEGER NOT NULL,
@@ -272,7 +269,6 @@ def init_catalog():
         """)
 
         for case_data in cases_data:
-
             catalog_id = case_data["id"]
 
             mapping = db.execute("""
@@ -293,7 +289,6 @@ def init_catalog():
                     int(case_data["price_dc"]),
                     case_id
                 ))
-
             else:
                 db.execute("""
                     INSERT INTO cases (name, price_dc)
@@ -313,16 +308,12 @@ def init_catalog():
                     VALUES (?, ?)
                 """, (catalog_id, case_id))
 
-            # Обновляем предметы кейса.
-            # Старые записи истории и инвентаря не трогаем.
-
             db.execute("""
                 DELETE FROM case_skins
                 WHERE case_id = ?
             """, (case_id,))
 
             for item in case_data["items"]:
-
                 skin = db.execute("""
                     SELECT id
                     FROM skins
@@ -341,7 +332,6 @@ def init_catalog():
                         int(item["price_dc"]),
                         skin_id
                     ))
-
                 else:
                     db.execute("""
                         INSERT INTO skins
@@ -418,9 +408,7 @@ def admin_status():
     user = authorized_user()
 
     if not user:
-        return jsonify({
-            "error": "Authorization failed"
-        }), 401
+        return jsonify({"error": "Authorization failed"}), 401
 
     return jsonify({
         "is_admin": database.is_admin(user["id"])
@@ -446,19 +434,11 @@ def admin_give_dc():
         return jsonify({"error": "Неверная сумма или ID"}), 400
 
     database.register_user(target_id)
-
     database.change_balance(
-        target_id,
-        amount,
-        "admin_give",
-        user["id"]
+        target_id, amount, "admin_give", user["id"]
     )
-
     database.log_admin(
-        user["id"],
-        "give_dc",
-        target_id,
-        str(amount)
+        user["id"], "give_dc", target_id, str(amount)
     )
 
     return jsonify({
@@ -487,7 +467,6 @@ def admin_take_dc():
         return jsonify({"error": "Неверная сумма или ID"}), 400
 
     database.register_user(target_id)
-
     current_balance = database.get_balance(target_id)
 
     if amount > current_balance:
@@ -496,17 +475,10 @@ def admin_take_dc():
         }), 400
 
     database.change_balance(
-        target_id,
-        -amount,
-        "admin_take",
-        user["id"]
+        target_id, -amount, "admin_take", user["id"]
     )
-
     database.log_admin(
-        user["id"],
-        "take_dc",
-        target_id,
-        str(amount)
+        user["id"], "take_dc", target_id, str(amount)
     )
 
     return jsonify({
@@ -536,18 +508,12 @@ def admin_give_skin():
         return jsonify({"error": "Неверные данные"}), 400
 
     database.register_user(target_id)
-
     skin = database.get_skin(skin_id)
 
     if not skin:
         return jsonify({"error": "Скин не найден"}), 404
 
-    database.add_inventory_skin(
-        target_id,
-        skin_id,
-        quantity
-    )
-
+    database.add_inventory_skin(target_id, skin_id, quantity)
     database.log_admin(
         user["id"],
         "give_skin",
@@ -572,9 +538,7 @@ def get_cases():
     user = authorized_user()
 
     if not user:
-        return jsonify({
-            "error": "Authorization failed"
-        }), 401
+        return jsonify({"error": "Authorization failed"}), 401
 
     with database.get_db() as db:
         cases = db.execute("""
@@ -606,9 +570,7 @@ def get_cases():
                 ORDER BY case_skins.weight DESC
             """, (case["id"],)).fetchall()
 
-            total_weight = sum(
-                int(item["weight"]) for item in items
-            )
+            total_weight = sum(int(item["weight"]) for item in items)
 
             result.append({
                 "id": case["id"],
@@ -622,8 +584,7 @@ def get_cases():
                         "rarity": item["rarity"],
                         "price": item["price"],
                         "chance": round(
-                            int(item["weight"]) / total_weight * 100,
-                            2
+                            int(item["weight"]) / total_weight * 100, 2
                         ) if total_weight else 0
                     }
                     for item in items
@@ -638,9 +599,7 @@ def get_case_details(case_id):
     user = authorized_user()
 
     if not user:
-        return jsonify({
-            "error": "Authorization failed"
-        }), 401
+        return jsonify({"error": "Authorization failed"}), 401
 
     with database.get_db() as db:
         case = db.execute("""
@@ -671,9 +630,7 @@ def get_case_details(case_id):
             WHERE case_skins.case_id = ?
         """, (case_id,)).fetchall()
 
-        total_weight = sum(
-            int(item["weight"]) for item in items
-        )
+        total_weight = sum(int(item["weight"]) for item in items)
 
         return jsonify({
             "case": {
@@ -688,8 +645,7 @@ def get_case_details(case_id):
                         "rarity": item["rarity"],
                         "price": item["price"],
                         "chance": round(
-                            int(item["weight"]) / total_weight * 100,
-                            2
+                            int(item["weight"]) / total_weight * 100, 2
                         ) if total_weight else 0
                     }
                     for item in items
@@ -703,13 +659,9 @@ def get_skins():
     user = authorized_user()
 
     if not user:
-        return jsonify({
-            "error": "Authorization failed"
-        }), 401
+        return jsonify({"error": "Authorization failed"}), 401
 
-    return jsonify({
-        "skins": database.get_all_skins()
-    })
+    return jsonify({"skins": database.get_all_skins()})
 
 
 # ==========================================
@@ -721,9 +673,7 @@ def inventory():
     user = authorized_user()
 
     if not user:
-        return jsonify({
-            "error": "Authorization failed"
-        }), 401
+        return jsonify({"error": "Authorization failed"}), 401
 
     return jsonify({
         "inventory": database.get_inventory(user["id"])
@@ -739,9 +689,7 @@ def open_case():
     user = authorized_user()
 
     if not user:
-        return jsonify({
-            "error": "Authorization failed"
-        }), 401
+        return jsonify({"error": "Authorization failed"}), 401
 
     user_id = user["id"]
     data = request.get_json(silent=True) or {}
@@ -794,9 +742,7 @@ def open_case():
             total_price = price * count
 
             if price <= 0:
-                return jsonify({
-                    "error": "Некорректная цена кейса"
-                }), 400
+                return jsonify({"error": "Некорректная цена кейса"}), 400
 
             if player["balance"] < total_price:
                 return jsonify({
@@ -826,10 +772,7 @@ def open_case():
 
             selected_items = random.choices(
                 pool,
-                weights=[
-                    int(item["weight"])
-                    for item in pool
-                ],
+                weights=[int(item["weight"]) for item in pool],
                 k=count
             )
 
@@ -838,16 +781,10 @@ def open_case():
                 SET balance = balance - ?
                 WHERE telegram_id = ?
                   AND balance >= ?
-            """, (
-                total_price,
-                user_id,
-                total_price
-            ))
+            """, (total_price, user_id, total_price))
 
             if updated.rowcount != 1:
-                return jsonify({
-                    "error": "Недостаточно DC"
-                }), 400
+                return jsonify({"error": "Недостаточно DC"}), 400
 
             results = []
 
@@ -866,12 +803,7 @@ def open_case():
                     INSERT INTO case_openings
                     (user_id, case_id, skin_id, price_paid)
                     VALUES (?, ?, ?, ?)
-                """, (
-                    user_id,
-                    case_id,
-                    skin_id,
-                    price
-                ))
+                """, (user_id, case_id, skin_id, price))
 
                 results.append({
                     "id": selected["id"],
@@ -888,9 +820,7 @@ def open_case():
             """, (user_id, -total_price))
 
             new_balance = db.execute("""
-                SELECT balance
-                FROM users
-                WHERE telegram_id = ?
+                SELECT balance FROM users WHERE telegram_id = ?
             """, (user_id,)).fetchone()["balance"]
 
         return jsonify({
@@ -905,9 +835,7 @@ def open_case():
 
     except Exception as error:
         print("OPEN CASE ERROR:", type(error).__name__)
-        return jsonify({
-            "error": "Ошибка открытия кейса"
-        }), 500
+        return jsonify({"error": "Ошибка открытия кейса"}), 500
 
 
 # ==========================================
@@ -919,9 +847,7 @@ def sell_skin():
     user = authorized_user()
 
     if not user:
-        return jsonify({
-            "error": "Authorization failed"
-        }), 401
+        return jsonify({"error": "Authorization failed"}), 401
 
     user_id = user["id"]
     data = request.get_json(silent=True) or {}
@@ -1007,17 +933,10 @@ def sell_skin():
                 INSERT INTO skin_sales
                 (user_id, skin_id, quantity, amount_received)
                 VALUES (?, ?, ?, ?)
-            """, (
-                user_id,
-                skin_id,
-                quantity,
-                reward
-            ))
+            """, (user_id, skin_id, quantity, reward))
 
             new_balance = db.execute("""
-                SELECT balance
-                FROM users
-                WHERE telegram_id = ?
+                SELECT balance FROM users WHERE telegram_id = ?
             """, (user_id,)).fetchone()["balance"]
 
         return jsonify({
@@ -1030,9 +949,7 @@ def sell_skin():
 
     except Exception as error:
         print("SELL SKIN ERROR:", type(error).__name__)
-        return jsonify({
-            "error": "Ошибка продажи скина"
-        }), 500
+        return jsonify({"error": "Ошибка продажи скина"}), 500
 
 
 # ==========================================
@@ -1044,9 +961,7 @@ def history():
     user = authorized_user()
 
     if not user:
-        return jsonify({
-            "error": "Authorization failed"
-        }), 401
+        return jsonify({"error": "Authorization failed"}), 401
 
     with database.get_db() as db:
         openings = db.execute("""
@@ -1058,10 +973,8 @@ def history():
                 case_openings.price_paid,
                 case_openings.created_at
             FROM case_openings
-            JOIN cases
-                ON cases.id = case_openings.case_id
-            JOIN skins
-                ON skins.id = case_openings.skin_id
+            JOIN cases ON cases.id = case_openings.case_id
+            JOIN skins ON skins.id = case_openings.skin_id
             WHERE case_openings.user_id = ?
             ORDER BY case_openings.id DESC
             LIMIT 50
@@ -1075,8 +988,7 @@ def history():
                 skin_sales.amount_received,
                 skin_sales.created_at
             FROM skin_sales
-            JOIN skins
-                ON skins.id = skin_sales.skin_id
+            JOIN skins ON skins.id = skin_sales.skin_id
             WHERE skin_sales.user_id = ?
             ORDER BY skin_sales.id DESC
             LIMIT 50
@@ -1094,7 +1006,4 @@ def history():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
-    app.run(
-        host="0.0.0.0",
-        port=port
-    )
+    app.run(host="0.0.0.0", port=port)

@@ -3,7 +3,6 @@
     "use strict";
 
     const API = "https://cs-go-case.onrender.com";
-    const tg = window.Telegram && window.Telegram.WebApp;
 
     let busy = false;
     let clickerLoaded = false;
@@ -11,7 +10,13 @@
     let totalClicks = 0;
     let rewardPerClick = 1;
 
+    function getTelegram() {
+        return window.Telegram && window.Telegram.WebApp;
+    }
+
     async function request(path, options = {}) {
+        const tg = getTelegram();
+
         if (!tg || !tg.initData) {
             throw new Error("Открой приложение через Telegram");
         }
@@ -33,75 +38,11 @@
         return data;
     }
 
-    function addClickerInterface() {
-        const page = document.getElementById("clicker");
-
-        if (!page || page.dataset.clickerReady === "true") return;
-
-        page.dataset.clickerReady = "true";
-
-        page.innerHTML = `
-            <h2 class="page-title">🪙 GUADON COIN</h2>
-
-            <div class="balance">
-                <div class="balance-label">ТВОЙ БАЛАНС</div>
-                <div class="balance-number" id="clicker-balance">
-                    Загрузка...
-                </div>
-                <div class="balance-currency">GUADON COIN</div>
-            </div>
-
-            <div class="clicker-stats">
-                <div class="clicker-stat">
-                    <div class="clicker-stat-label">Всего кликов</div>
-                    <div class="clicker-stat-value" id="clicker-total">—</div>
-                </div>
-
-                <div class="clicker-stat">
-                    <div class="clicker-stat-label">За один клик</div>
-                    <div class="clicker-stat-value" id="clicker-reward">1 DC</div>
-                </div>
-            </div>
-
-            <div class="clicker-area">
-                <div class="clicker-instruction">
-                    НАЖИМАЙ НА МОНЕТУ
-                </div>
-
-                <button id="clicker-button"
-                    class="clicker-main-button"
-                    type="button">
-
-                    <span class="clicker-coin-wrap">
-                        <span class="clicker-coin">
-                            <span class="clicker-coin-face">
-                                <span class="clicker-coin-top">GUADON</span>
-                                <span class="clicker-coin-logo">G</span>
-                                <span class="clicker-coin-bottom">COIN</span>
-                                <span class="clicker-coin-stars">★　 ★</span>
-                            </span>
-                        </span>
-                    </span>
-
-                    <span class="clicker-button-text">
-                        НАЖМИ И ПОЛУЧИ DC
-                    </span>
-
-                    <small id="clicker-button-reward">
-                        +1 GUADON COIN
-                    </small>
-                </button>
-            </div>
-
-            <div id="clicker-message" class="notice"></div>
-
-            <div class="small-note">
-                За каждое успешное нажатие начисляется DC.
-                Между нажатиями действует серверная задержка.
-            </div>
-        `;
+    function addStyles() {
+        if (document.getElementById("clicker-styles")) return;
 
         const style = document.createElement("style");
+        style.id = "clicker-styles";
 
         style.textContent = `
             .clicker-stats {
@@ -321,17 +262,98 @@
             }
         `;
 
-        if (!document.getElementById("clicker-styles")) {
-            style.id = "clicker-styles";
-            document.head.appendChild(style);
+        document.head.appendChild(style);
+    }
+
+    function addClickerInterface() {
+        const page = document.getElementById("clicker");
+
+        if (!page) {
+            console.error("CS GO CASE: страница clicker не найдена");
+            return false;
         }
 
-        document.getElementById("clicker-button")
-            .addEventListener("click", makeClick);
+        // Не создаём интерфейс повторно, если он уже существует.
+        if (document.getElementById("clicker-button")) {
+            return true;
+        }
+
+        page.innerHTML = `
+            <h2 class="page-title">🪙 GUADON COIN</h2>
+
+            <div class="balance">
+                <div class="balance-label">ТВОЙ БАЛАНС</div>
+                <div class="balance-number" id="clicker-balance">
+                    Загрузка...
+                </div>
+                <div class="balance-currency">GUADON COIN</div>
+            </div>
+
+            <div class="clicker-stats">
+                <div class="clicker-stat">
+                    <div class="clicker-stat-label">Всего кликов</div>
+                    <div class="clicker-stat-value" id="clicker-total">—</div>
+                </div>
+
+                <div class="clicker-stat">
+                    <div class="clicker-stat-label">За один клик</div>
+                    <div class="clicker-stat-value" id="clicker-reward">1 DC</div>
+                </div>
+            </div>
+
+            <div class="clicker-area">
+                <div class="clicker-instruction">
+                    НАЖИМАЙ НА МОНЕТУ
+                </div>
+
+                <button id="clicker-button"
+                    class="clicker-main-button"
+                    type="button">
+
+                    <span class="clicker-coin-wrap">
+                        <span class="clicker-coin">
+                            <span class="clicker-coin-face">
+                                <span class="clicker-coin-top">GUADON</span>
+                                <span class="clicker-coin-logo">G</span>
+                                <span class="clicker-coin-bottom">COIN</span>
+                                <span class="clicker-coin-stars">★　 ★</span>
+                            </span>
+                        </span>
+                    </span>
+
+                    <span class="clicker-button-text">
+                        НАЖМИ И ПОЛУЧИ DC
+                    </span>
+
+                    <small id="clicker-button-reward">
+                        +1 GUADON COIN
+                    </small>
+                </button>
+            </div>
+
+            <div id="clicker-message" class="notice"></div>
+
+            <div class="small-note">
+                За каждое успешное нажатие начисляется DC.
+                Между нажатиями действует серверная задержка.
+            </div>
+        `;
+
+        addStyles();
+
+        const button = document.getElementById("clicker-button");
+
+        if (button && button.dataset.clickerBound !== "true") {
+            button.dataset.clickerBound = "true";
+            button.addEventListener("click", makeClick);
+        }
+
+        return true;
     }
 
     function showClickerMessage(message, type) {
         const box = document.getElementById("clicker-message");
+
         if (!box) return;
 
         box.textContent = message;
@@ -343,18 +365,31 @@
         totalClicks = Number(data.total_clicks || 0);
         rewardPerClick = Number(data.reward_per_click || 1);
 
-        document.getElementById("clicker-balance").textContent =
-            balance.toLocaleString("ru-RU") + " DC";
+        const balanceElement = document.getElementById("clicker-balance");
+        const totalElement = document.getElementById("clicker-total");
+        const rewardElement = document.getElementById("clicker-reward");
+        const buttonReward = document.getElementById("clicker-button-reward");
 
-        document.getElementById("clicker-total").textContent =
-            totalClicks.toLocaleString("ru-RU");
+        if (balanceElement) {
+            balanceElement.textContent =
+                balance.toLocaleString("ru-RU") + " DC";
+        }
 
-        document.getElementById("clicker-reward").textContent =
-            rewardPerClick.toLocaleString("ru-RU") + " DC";
+        if (totalElement) {
+            totalElement.textContent =
+                totalClicks.toLocaleString("ru-RU");
+        }
 
-        document.getElementById("clicker-button-reward").textContent =
-            "+" + rewardPerClick.toLocaleString("ru-RU") +
-            " GUADON COIN";
+        if (rewardElement) {
+            rewardElement.textContent =
+                rewardPerClick.toLocaleString("ru-RU") + " DC";
+        }
+
+        if (buttonReward) {
+            buttonReward.textContent =
+                "+" + rewardPerClick.toLocaleString("ru-RU") +
+                " GUADON COIN";
+        }
 
         const headerBalance = document.getElementById("balance");
 
@@ -365,31 +400,40 @@
     }
 
     async function loadClicker() {
+        // Каждый раз проверяем, что интерфейс существует.
+        if (!addClickerInterface()) return;
+
         if (clickerLoaded) return;
 
         try {
             const data = await request("/api/clicker");
+
             renderClicker(data);
             clickerLoaded = true;
 
         } catch (error) {
             showClickerMessage("❌ " + error.message, "error");
 
-            document.getElementById("clicker-balance").textContent =
-                "Ошибка";
+            const balanceElement =
+                document.getElementById("clicker-balance");
+
+            if (balanceElement) {
+                balanceElement.textContent = "Ошибка";
+            }
         }
     }
 
     async function makeClick() {
         if (busy) return;
 
-        busy = true;
-
         const button = document.getElementById("clicker-button");
 
-        button.disabled = true;
-        button.classList.remove("clicker-pop");
+        if (!button) return;
 
+        busy = true;
+        button.disabled = true;
+
+        button.classList.remove("clicker-pop");
         void button.offsetWidth;
         button.classList.add("clicker-pop");
 
@@ -410,6 +454,8 @@
                 "success"
             );
 
+            const tg = getTelegram();
+
             if (tg && tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred("light");
             }
@@ -419,6 +465,7 @@
 
         } finally {
             busy = false;
+
             button.disabled = false;
 
             setTimeout(() => {
@@ -427,12 +474,18 @@
         }
     }
 
+    // Сначала делаем функцию доступной для index.html.
+    window.loadClicker = loadClicker;
+
     function init() {
         addClickerInterface();
-
-        // Эту функцию вызывает showPage() из index.html
-        window.loadClicker = loadClicker;
     }
 
-    init();
+    // Запускаем после загрузки HTML.
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+
 })();

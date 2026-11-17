@@ -80,6 +80,24 @@ def init_db():
             details TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS profile_stats (
+            user_id INTEGER PRIMARY KEY,
+            opened_cases INTEGER DEFAULT 0,
+            successful_upgrades INTEGER DEFAULT 0,
+            FOREIGN KEY(user_id) REFERENCES users(telegram_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS item_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            skin_id INTEGER,
+            skin_name TEXT NOT NULL,
+            skin_price INTEGER DEFAULT 0,
+            source TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(telegram_id)
+        );
         """)
 
         migrations = {
@@ -130,6 +148,11 @@ def register_user(telegram_id, username=None):
             ON CONFLICT(telegram_id)
             DO UPDATE SET username = excluded.username
         """, (telegram_id, username))
+
+        db.execute("""
+            INSERT OR IGNORE INTO profile_stats (user_id)
+            VALUES (?)
+        """, (telegram_id,))
 
 
 def add_admin(telegram_id):
@@ -294,6 +317,91 @@ def get_inventory(user_id):
         """, (user_id,)).fetchall()
 
         return [dict(row) for row in rows]
+
+
+def record_item_history(user_id, skin_id, source):
+    with get_db() as db:
+        skin = db.execute("""
+            SELECT name, price
+            FROM skins
+            WHERE id = ?
+        """, (skin_id,)).fetchone()
+
+        if not skin:
+            return
+
+        db.execute("""
+            INSERT INTO item_history
+            (user_id, skin_id, skin_name, skin_price, source)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            user_id,
+            skin_id,
+            skin["name"],
+            skin["price"],
+            source
+        ))
+
+
+def increment_opened_cases(user_id, amount=1):
+    with get_db() as db:
+        db.execute("""
+            INSERT OR IGNORE INTO profile_stats (user_id)
+            VALUES (?)
+        """, (user_id,))
+
+        db.execute("""
+            UPDATE profile_stats
+            SET opened_cases = opened_cases + ?
+            WHERE user_id = ?
+        """, (int(amount), user_id))
+
+
+def increment_successful_upgrades(user_id):
+    with get_db() as db:
+        db.execute("""
+            INSERT OR IGNORE INTO profile_stats (user_id)
+            VALUES (?)
+        """, (user_id,))
+
+        db.execute("""
+            UPDATE profile_stats
+            SET successful_upgrades = successful_upgrades + 1
+            WHERE user_id = ?
+        """, (user_id,))
+
+
+def get_profile_stats(user_id):
+    with get_db() as db:
+        stats = db.execute("""
+            SELECT
+                users.balance,
+                COALESCE(profile_stats.opened_cases, 0) AS opened_cases,
+                COALESCE(profile_stats.successful_upgrades, 0)
+                    AS successful_upgrades
+            FROM users
+            LEFT JOIN profile_stats
+                ON profile_stats.user_id = users.telegram_id
+            WHERE users.telegram_id = ?
+        """, (user_id,)).fetchone()
+
+        best_item = db.execute("""
+            SELECT skin_name AS name, skin_price AS price, source,
+                   created_at
+            FROM item_history
+            WHERE user_id = ?
+            ORDER BY skin_price DESC, id ASC
+            LIMIT 1
+        """, (user_id,)).fetchone()
+
+        return {
+            "balance": stats["balance"] if stats else 0,
+            "opened_cases": stats["opened_cases"] if stats else 0,
+            "successful_upgrades": (
+                stats["successful_upgrades"] if stats else 0
+            ),
+            "best_item": dict(best_item) if best_item else None
+        }
 
 
 def log_admin(admin_id, action, target_id=None, details=None):

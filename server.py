@@ -15,6 +15,7 @@ from flask_cors import CORS
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 import database
+from upgrade import create_upgrade_blueprint
 
 
 app = Flask(__name__)
@@ -164,6 +165,15 @@ def admin_user():
         return None
 
     return user
+
+
+# ==========================================
+# UPGRADE MODULE
+# ==========================================
+
+app.register_blueprint(
+    create_upgrade_blueprint(authorized_user)
+)
 
 
 # ==========================================
@@ -814,7 +824,6 @@ def open_case():
                     "error": "В кейсе пока нет скинов"
                 }), 400
 
-            # Выбираем все награды.
             selected_items = random.choices(
                 pool,
                 weights=[
@@ -824,7 +833,6 @@ def open_case():
                 k=count
             )
 
-            # Списываем стоимость всех открытий.
             updated = db.execute("""
                 UPDATE users
                 SET balance = balance - ?

@@ -26,10 +26,14 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
 .card-icon{font-size:42px;margin-bottom:12px}
 .card-name{font-weight:bold;font-size:15px}
 .card-description{color:#8797b2;font-size:11px;margin-top:6px}
-.case-card{background:#121b2d;border:1px solid #263550;border-radius:15px;padding:16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
-.case-name{font-weight:bold;margin-bottom:7px}
-.case-price{color:#79aaff;font-size:13px}
-.open-button,.action-button{background:linear-gradient(135deg,#347cff,#754bff);color:white;border:none;border-radius:10px;padding:11px 15px;font-weight:bold;cursor:pointer}
+.case-card,.skin-card{background:#121b2d;border:1px solid #263550;border-radius:15px;padding:15px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.case-name,.skin-name{font-weight:bold;margin-bottom:7px;font-size:14px}
+.case-price,.skin-price{color:#79aaff;font-size:13px}
+.skin-info{min-width:0;overflow-wrap:anywhere}
+.rarity{font-size:11px;color:#aabbd4;margin-top:5px}
+.open-button,.action-button,.sell-button{background:linear-gradient(135deg,#347cff,#754bff);color:white;border:none;border-radius:10px;padding:11px 13px;font-weight:bold;cursor:pointer}
+.open-button:disabled,.action-button:disabled,.sell-button:disabled{opacity:.5;cursor:wait}
+.sell-button{background:linear-gradient(135deg,#148b58,#22b875);font-size:12px}
 .page{display:none}
 .page.active{display:block}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#10182a;border-top:1px solid #263550;display:flex;justify-content:space-around;padding:12px 4px 17px;z-index:10}
@@ -37,17 +41,28 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
 .nav-button.active{color:#65a0ff}
 .nav-icon{display:block;font-size:21px;margin-bottom:5px}
 .placeholder{background:#121b2d;border:1px solid #263550;border-radius:15px;padding:25px;text-align:center;color:#aabbd4;line-height:1.7}
-.small-note{color:#72839e;font-size:11px;text-align:center;margin-top:18px}
+.small-note{color:#72839e;font-size:11px;text-align:center;margin-top:18px;line-height:1.6}
 .admin-box{background:#121b2d;border:1px solid #4169ad;border-radius:15px;padding:18px;margin-bottom:15px}
 .admin-label{display:block;color:#a8bddf;font-size:13px;margin:14px 0 7px}
 .admin-input{width:100%;background:#080c16;border:1px solid #344767;border-radius:9px;padding:13px;color:white;font-size:16px;outline:none}
 .admin-input:focus{border-color:#498cff}
 .action-button{width:100%;margin-top:14px;font-size:15px}
 .take-button{background:linear-gradient(135deg,#bd3c56,#e46b45)}
-.admin-message{margin-top:14px;padding:12px;border-radius:9px;background:#1c2940;color:#a8bddf;font-size:13px;line-height:1.5;display:none;overflow-wrap:anywhere}
-.admin-message.success{display:block;color:#80e6a0}
-.admin-message.error{display:block;color:#ff8585}
+.admin-message,.notice{margin-top:14px;padding:12px;border-radius:9px;background:#1c2940;color:#a8bddf;font-size:13px;line-height:1.5;display:none;overflow-wrap:anywhere;white-space:pre-line}
+.admin-message.success,.notice.success{display:block;color:#80e6a0}
+.admin-message.error,.notice.error{display:block;color:#ff8585}
 .admin-status{color:#80e6a0;font-size:13px;margin-bottom:12px}
+.result-box{display:none;background:linear-gradient(135deg,#182e50,#30205a);border:1px solid #668cff;border-radius:17px;padding:22px;text-align:center;margin:15px 0;animation:appear .35s ease}
+.result-box.show{display:block}
+.result-icon{font-size:55px;margin-bottom:12px}
+.result-name{font-size:19px;font-weight:bold;margin:10px 0}
+.result-rarity{color:#c4b0ff;font-size:13px}
+.result-price{color:#83b6ff;margin-top:8px}
+.empty{padding:22px;text-align:center;background:#121b2d;border:1px solid #263550;border-radius:15px;color:#aabbd4;line-height:1.7}
+.history-item{background:#121b2d;border:1px solid #263550;border-radius:12px;padding:13px;margin-bottom:9px;font-size:13px;line-height:1.6}
+.history-item strong{color:#8bb6ff}
+.sub-title{font-size:16px;margin:22px 0 12px}
+@keyframes appear{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
 </style>
 </head>
 
@@ -106,28 +121,32 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
 
 <section class="page" id="cases">
     <h2 class="section-title">📦 Магазин кейсов</h2>
-    <div class="case-card">
-        <div><div class="case-name">Kilowatt Case</div><div class="case-price">100 DC</div></div>
-        <button class="open-button" onclick="openCase('Kilowatt Case')">Открыть</button>
+    <div id="cases-list">
+        <div class="empty">Загрузка кейсов...</div>
     </div>
-    <div class="case-card">
-        <div><div class="case-name">Revolution Case</div><div class="case-price">250 DC</div></div>
-        <button class="open-button" onclick="openCase('Revolution Case')">Открыть</button>
+
+    <div id="case-result" class="result-box">
+        <div class="result-icon">🎉</div>
+        <div>ТЕБЕ ВЫПАЛО</div>
+        <div class="result-name" id="result-name"></div>
+        <div class="result-rarity" id="result-rarity"></div>
+        <div class="result-price" id="result-price"></div>
     </div>
-    <div class="case-card">
-        <div><div class="case-name">Recoil Case</div><div class="case-price">400 DC</div></div>
-        <button class="open-button" onclick="openCase('Recoil Case')">Открыть</button>
+
+    <div id="case-notice" class="notice"></div>
+
+    <h2 class="section-title">🔫 Каталог скинов</h2>
+    <div id="skins-list">
+        <div class="empty">Загрузка скинов...</div>
     </div>
-    <p class="small-note">Открытие кейсов подключим следующим этапом.</p>
 </section>
 
 <section class="page" id="inventory">
     <h2 class="section-title">🔫 Мой инвентарь</h2>
-    <div class="placeholder">
-        <div style="font-size:45px">📦</div>
-        Здесь будут твои скины CS2.
-        <br>Количество, стоимость и редкость.
+    <div id="inventory-list">
+        <div class="empty">Загрузка инвентаря...</div>
     </div>
+    <div id="inventory-notice" class="notice"></div>
 </section>
 
 <section class="page" id="upgrade">
@@ -135,6 +154,7 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
     <div class="placeholder">
         Выбирай исходный скин и предмет, который хочешь получить.
         <br><br>Максимальный шанс — 90%.
+        <br>Скоро подключим.
     </div>
 </section>
 
@@ -143,6 +163,7 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
     <div class="placeholder">
         Выбирай 10 скинов и получай один случайный предмет.
         <br><br>Контракт может принести прибыль или убыток.
+        <br>Скоро подключим.
     </div>
 </section>
 
@@ -159,6 +180,11 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
         <div id="profile-id">Telegram ID: —</div>
         <br>
         <div>Проект CS GO CASE</div>
+    </div>
+
+    <h2 class="section-title">📜 История операций</h2>
+    <div id="history-list">
+        <div class="empty">Загрузка истории...</div>
     </div>
 </section>
 
@@ -191,9 +217,7 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
     </div>
 
     <div class="placeholder">
-        🔒 Другие функции админ-панели добавим следующим этапом.
-        <br><br>
-        Управление скинами, банами, кейсами и журнал операций.
+        🔒 Дополнительные функции админ-панели добавим следующим этапом.
     </div>
 </section>
 
@@ -226,6 +250,8 @@ tg.ready();
 tg.expand();
 
 let currentUserId = null;
+let openingCase = false;
+let sellingSkin = false;
 
 if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
     const user = tg.initDataUnsafe.user;
@@ -245,31 +271,58 @@ function authHeaders() {
     };
 }
 
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+    })[char]);
+}
+
+function showNotice(id, message, type) {
+    const box = document.getElementById(id);
+    box.textContent = message;
+    box.className = "notice " + type;
+}
+
+async function apiRequest(path, options = {}) {
+    if (!tg.initData) {
+        throw new Error("Открой приложение через Telegram");
+    }
+
+    const response = await fetch(API + path, {
+        ...options,
+        headers: {
+            ...authHeaders(),
+            ...(options.headers || {})
+        }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || "Ошибка сервера");
+    }
+
+    return data;
+}
+
 async function loadBalance() {
-    const balanceElement = document.getElementById("balance");
+    const element = document.getElementById("balance");
 
     if (!tg.initData) {
-        balanceElement.textContent = "Открой в Telegram";
+        element.textContent = "Открой в Telegram";
         return;
     }
 
     try {
-        const response = await fetch(API + "/api/balance", {
-            method: "GET",
-            headers: authHeaders()
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || "Ошибка авторизации");
-        }
-
-        balanceElement.textContent = data.balance + " DC";
-
+        const data = await apiRequest("/api/balance");
+        element.textContent = data.balance + " DC";
     } catch (error) {
         console.error("Ошибка баланса:", error);
-        balanceElement.textContent = "Ошибка загрузки";
+        element.textContent = "Ошибка загрузки";
     }
 }
 
@@ -277,19 +330,11 @@ async function checkAdmin() {
     if (!tg.initData) return;
 
     try {
-        const response = await fetch(API + "/api/admin/status", {
-            method: "GET",
-            headers: authHeaders()
-        });
-
-        if (!response.ok) return;
-
-        const data = await response.json();
+        const data = await apiRequest("/api/admin/status");
 
         if (data.is_admin === true) {
             document.getElementById("admin-nav").style.display = "block";
         }
-
     } catch (error) {
         console.error("Ошибка проверки админа:", error);
     }
@@ -321,7 +366,307 @@ function showPage(page, button) {
     }
 
     window.scrollTo(0, 0);
+
+    if (page === "cases") {
+        loadCases();
+        loadSkins();
+    }
+
+    if (page === "inventory") {
+        loadInventory();
+    }
+
+    if (page === "profile") {
+        loadHistory();
+    }
 }
+
+// -------------------------
+// CASES
+// -------------------------
+
+async function loadCases() {
+    const list = document.getElementById("cases-list");
+
+    try {
+        const data = await apiRequest("/api/cases");
+
+        if (!data.cases || data.cases.length === 0) {
+            list.innerHTML = '<div class="empty">Кейсов пока нет.</div>';
+            return;
+        }
+
+        list.innerHTML = data.cases.map(item => `
+            <div class="case-card">
+                <div>
+                    <div class="case-name">📦 ${escapeHtml(item.name)}</div>
+                    <div class="case-price">${Number(item.price_dc)} DC</div>
+                </div>
+                <button class="open-button"
+                    data-case-id="${Number(item.id)}">
+                    Открыть
+                </button>
+            </div>
+        `).join("");
+
+    } catch (error) {
+        list.innerHTML =
+            '<div class="empty">Не удалось загрузить кейсы: ' +
+            escapeHtml(error.message) + '</div>';
+    }
+}
+
+async function openCase(caseId, button) {
+    if (openingCase) return;
+
+    openingCase = true;
+    button.disabled = true;
+    button.textContent = "Открываем...";
+
+    const resultBox = document.getElementById("case-result");
+    resultBox.classList.remove("show");
+
+    try {
+        const data = await apiRequest("/api/cases/open", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                case_id: Number(caseId)
+            })
+        });
+
+        document.getElementById("result-name").textContent =
+            data.skin.name;
+
+        document.getElementById("result-rarity").textContent =
+            "Редкость: " + data.skin.rarity;
+
+        document.getElementById("result-price").textContent =
+            "Стоимость: " + data.skin.price + " DC";
+
+        resultBox.classList.add("show");
+
+        document.getElementById("case-notice").className = "notice";
+        await loadBalance();
+        await loadInventory();
+
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred("success");
+        }
+
+        if (tg.showAlert) {
+            // Результат уже показан в окне приложения.
+        }
+
+    } catch (error) {
+        showNotice("case-notice", "❌ " + error.message, "error");
+
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred("error");
+        }
+    } finally {
+        openingCase = false;
+        button.disabled = false;
+        button.textContent = "Открыть";
+    }
+}
+
+// -------------------------
+// SKINS CATALOG
+// -------------------------
+
+async function loadSkins() {
+    const list = document.getElementById("skins-list");
+
+    try {
+        const data = await apiRequest("/api/skins");
+
+        if (!data.skins || data.skins.length === 0) {
+            list.innerHTML = '<div class="empty">Скинов пока нет.</div>';
+            return;
+        }
+
+        list.innerHTML = data.skins.map(skin => `
+            <div class="skin-card">
+                <div class="skin-info">
+                    <div class="skin-name">${escapeHtml(skin.name)}</div>
+                    <div class="rarity">${escapeHtml(skin.rarity)}</div>
+                    <div class="skin-price">${Number(skin.price)} DC</div>
+                </div>
+            </div>
+        `).join("");
+
+    } catch (error) {
+        list.innerHTML =
+            '<div class="empty">Ошибка каталога: ' +
+            escapeHtml(error.message) + '</div>';
+    }
+}
+
+// -------------------------
+// INVENTORY
+// -------------------------
+
+async function loadInventory() {
+    const list = document.getElementById("inventory-list");
+
+    try {
+        const data = await apiRequest("/api/inventory");
+
+        if (!data.inventory || data.inventory.length === 0) {
+            list.innerHTML = `
+                <div class="empty">
+                    📦 Инвентарь пуст.
+                    <br>Открой кейс, чтобы получить первый скин!
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = data.inventory.map(skin => {
+            const price = Math.floor(Number(skin.price) * 0.9);
+
+            return `
+                <div class="skin-card">
+                    <div class="skin-info">
+                        <div class="skin-name">${escapeHtml(skin.name)}</div>
+                        <div class="rarity">${escapeHtml(skin.rarity)}</div>
+                        <div class="skin-price">
+                            Цена: ${Number(skin.price)} DC
+                        </div>
+                        <div class="rarity">
+                            Количество: ${Number(skin.quantity)}
+                        </div>
+                        <div class="rarity">
+                            Продажа: ${price} DC за штуку
+                        </div>
+                    </div>
+                    <button class="sell-button"
+                        data-sell-id="${Number(skin.skin_id)}">
+                        Продать
+                    </button>
+                </div>
+            `;
+        }).join("");
+
+    } catch (error) {
+        list.innerHTML =
+            '<div class="empty">Ошибка инвентаря: ' +
+            escapeHtml(error.message) + '</div>';
+    }
+}
+
+async function sellSkin(skinId, button) {
+    if (sellingSkin) return;
+
+    sellingSkin = true;
+    button.disabled = true;
+    button.textContent = "Продажа...";
+
+    try {
+        const data = await apiRequest("/api/skins/sell", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                skin_id: Number(skinId),
+                quantity: 1
+            })
+        });
+
+        showNotice(
+            "inventory-notice",
+            "✅ " + data.message +
+            "\nПолучено: " + data.received + " DC" +
+            "\nБаланс: " + data.balance + " DC",
+            "success"
+        );
+
+        await loadBalance();
+        await loadInventory();
+
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred("success");
+        }
+
+    } catch (error) {
+        showNotice(
+            "inventory-notice",
+            "❌ " + error.message,
+            "error"
+        );
+
+        button.disabled = false;
+        button.textContent = "Продать";
+
+    } finally {
+        sellingSkin = false;
+    }
+}
+
+// -------------------------
+// HISTORY
+// -------------------------
+
+async function loadHistory() {
+    const list = document.getElementById("history-list");
+
+    try {
+        const data = await apiRequest("/api/history");
+
+        let html = "";
+
+        if (data.openings && data.openings.length) {
+            html += '<h3 class="sub-title">📦 Открытия кейсов</h3>';
+
+            html += data.openings.map(item => `
+                <div class="history-item">
+                    🎁 ${escapeHtml(item.case_name)}
+                    <br>
+                    Выпало: <strong>${escapeHtml(item.skin_name)}</strong>
+                    <br>
+                    Цена открытия: ${Number(item.price_paid)} DC
+                    <br>
+                    <span class="rarity">${escapeHtml(item.created_at)}</span>
+                </div>
+            `).join("");
+        }
+
+        if (data.sales && data.sales.length) {
+            html += '<h3 class="sub-title">💰 Продажи</h3>';
+
+            html += data.sales.map(item => `
+                <div class="history-item">
+                    💸 ${escapeHtml(item.skin_name)}
+                    <br>
+                    Количество: ${Number(item.quantity)}
+                    <br>
+                    Получено: <strong>${Number(item.amount_received)} DC</strong>
+                    <br>
+                    <span class="rarity">${escapeHtml(item.created_at)}</span>
+                </div>
+            `).join("");
+        }
+
+        if (!html) {
+            html = '<div class="empty">История пока пуста.</div>';
+        }
+
+        list.innerHTML = html;
+
+    } catch (error) {
+        list.innerHTML =
+            '<div class="empty">Ошибка истории: ' +
+            escapeHtml(error.message) + '</div>';
+    }
+}
+
+// -------------------------
+// ADMIN BALANCE
+// -------------------------
 
 function showAdminMessage(message, type) {
     const box = document.getElementById("admin-message");
@@ -359,10 +704,9 @@ async function changeDC(action) {
             ? "/api/admin/give-dc"
             : "/api/admin/take-dc";
 
-        const response = await fetch(API + endpoint, {
+        const data = await apiRequest(endpoint, {
             method: "POST",
             headers: {
-                ...authHeaders(),
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
@@ -370,12 +714,6 @@ async function changeDC(action) {
                 amount: Number(amount)
             })
         });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || "Операция не выполнена");
-        }
 
         showAdminMessage(
             "✅ " + data.message +
@@ -397,15 +735,31 @@ async function changeDC(action) {
     }
 }
 
-function openCase(name) {
-    tg.showAlert(
-        "Кейс " + name +
-        "\n\nОткрытие пока не подключено. Скоро добавим настоящую систему кейсов!"
-    );
-}
+// -------------------------
+// CLICK EVENTS
+// -------------------------
+
+document.getElementById("cases-list").addEventListener("click", event => {
+    const button = event.target.closest("[data-case-id]");
+    if (!button) return;
+
+    openCase(button.dataset.caseId, button);
+});
+
+document.getElementById("inventory-list").addEventListener("click", event => {
+    const button = event.target.closest("[data-sell-id]");
+    if (!button) return;
+
+    sellSkin(button.dataset.sellId, button);
+});
+
+// -------------------------
+// START
+// -------------------------
 
 loadBalance();
 checkAdmin();
+
 </script>
 
 </body>

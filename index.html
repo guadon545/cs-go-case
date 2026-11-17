@@ -3,1126 +3,480 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#142342">
-<title>CS GO CASE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#090b13">
+<title>NFT CASE</title>
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
- --bg:#142342;--glass:rgba(42,65,105,.68);
- --border:rgba(160,195,255,.25);--blue:#398cff;
- --purple:#8065ff;--muted:#b0c5e8;
+ --bg:#090b13;
+ --panel:rgba(255,255,255,.065);
+ --panel2:rgba(255,255,255,.09);
+ --border:rgba(255,255,255,.10);
+ --text:#fff;
+ --muted:#858b9c;
+ --purple:#9270ff;
+ --blue:#558bff;
+ --green:#48d69a;
+ --red:#ff657c;
 }
 body{
- background:radial-gradient(ellipse at 50% -10%,#527ab4 0%,#294873 38%,#142342 85%);
- color:#fff;font-family:Arial,sans-serif;padding-bottom:105px;min-height:100vh;
+ min-height:100vh;
+ background:
+ radial-gradient(ellipse at 15% 0%,rgba(100,70,220,.20),transparent 42%),
+ radial-gradient(ellipse at 100% 40%,rgba(40,100,210,.12),transparent 45%),
+ var(--bg);
+ color:var(--text);
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ padding-bottom:105px;
+ overflow-x:hidden;
 }
-button{font-family:inherit;cursor:pointer}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+.app{max-width:600px;margin:auto;padding:16px}
 .header{
- position:sticky;top:0;z-index:20;padding:14px 17px;
- display:flex;align-items:center;justify-content:space-between;gap:10px;
- background:rgba(19,35,65,.78);backdrop-filter:blur(25px);
- border-bottom:1px solid rgba(139,169,255,.22);
+ display:flex;align-items:center;justify-content:space-between;
+ margin:5px 0 22px;
 }
-.logo{font-size:21px;font-weight:900;letter-spacing:-.7px}
-.logo span{
- background:linear-gradient(100deg,#75c4ff,#b9a0ff);
- -webkit-background-clip:text;background-clip:text;color:transparent;
+.logo{font-size:22px;font-weight:900;letter-spacing:1px}
+.logo span{color:var(--purple)}
+.balance{
+ background:var(--panel2);border:1px solid var(--border);
+ border-radius:15px;padding:10px 14px;font-weight:800;
 }
-.header-right{display:flex;align-items:center;gap:9px}
-.balance-chip{
- padding:9px 12px;border:1px solid rgba(130,180,255,.45);
- border-radius:14px;background:linear-gradient(130deg,rgba(41,110,205,.45),rgba(100,75,200,.35));
- font-size:13px;font-weight:900;color:#eaf3ff;
+.balance small{color:var(--muted);font-weight:500;margin-right:5px}
+.page{display:none;animation:appear .2s ease}
+.page.active{display:block}
+@keyframes appear{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.page-title{font-size:25px;font-weight:850;margin:8px 0 5px}
+.page-subtitle{font-size:13px;color:var(--muted);margin-bottom:20px}
+.panel{
+ background:var(--panel);border:1px solid var(--border);
+ border-radius:22px;padding:16px;margin-bottom:14px;
+ backdrop-filter:blur(20px);
 }
-.avatar-button{
- width:39px;height:39px;border-radius:50%;overflow:hidden;
- border:2px solid rgba(150,195,255,.75);
- background:linear-gradient(135deg,#347cff,#8b42ff);
- display:flex;align-items:center;justify-content:center;color:white;font-size:17px;padding:0;
+.section-title{font-size:16px;font-weight:800;margin-bottom:13px}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.primary{
+ background:linear-gradient(110deg,#8665f5,#527ff5);
+ border-radius:14px;padding:14px 18px;font-weight:800;
+ width:100%;transition:.15s;
 }
-.avatar-button img{width:100%;height:100%;object-fit:cover;display:none}
-.container{padding:17px 15px;max-width:650px;margin:auto}
-.page{display:none}.page.active{display:block}
-.page-title{font-size:21px;font-weight:900;margin:8px 0 17px}
-.section-title{font-size:19px;margin:20px 0 14px;font-weight:800}
-.sub-title{font-size:16px;margin:22px 0 12px}
-.glass{
- background:linear-gradient(145deg,rgba(55,83,135,.72),rgba(27,47,83,.78));
- border:1px solid var(--border);border-radius:19px;
- box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 12px 35px rgba(0,0,0,.16);
- backdrop-filter:blur(18px);
+.secondary{
+ background:var(--panel2);border:1px solid var(--border);
+ border-radius:13px;padding:12px 15px;font-weight:700;
 }
-
-/* ИГРЫ */
-.game-card{
- position:relative;overflow:hidden;isolation:isolate;
- border:1px solid rgba(145,190,255,.35);border-radius:22px;cursor:pointer;
- background:linear-gradient(145deg,#294c80,#1b3158 65%,#263d70);
- box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 12px 28px rgba(0,0,0,.25);
- transition:transform .15s;
+.danger{background:rgba(255,80,105,.14);color:#ff8294;border:1px solid rgba(255,80,105,.25)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.case-card,.nft-card{
+ background:var(--panel);border:1px solid var(--border);
+ border-radius:18px;padding:12px;min-width:0;
 }
-.game-card:active{transform:scale(.975)}
-.mines-card{height:205px;margin-bottom:13px}
-.small-games{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.small-game{height:178px}
-.game-art{position:absolute;inset:0;width:100%;height:100%;z-index:2}
-.game-art img{width:100%;height:100%;object-fit:cover;transform:scale(1.04);pointer-events:none}
-@media(min-width:520px){.mines-card{height:230px}.small-game{height:195px}}
-
-/* КЕЙСЫ */
-.cases-heading{display:flex;justify-content:space-between;align-items:center;margin:5px 2px 15px}
-.cases-heading span{font-size:11px;color:#b8cbed}
-.cases-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.case-tile{
- --case-a:#315d91;--case-b:#172e50;--case-glow:#6cbaff;
- position:relative;overflow:hidden;isolation:isolate;min-width:0;
- height:210px;padding:0;border-radius:20px;
- border:1px solid rgba(255,255,255,.22);
- background:linear-gradient(145deg,var(--case-a),var(--case-b));
- box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 10px 25px rgba(0,0,0,.2);
- cursor:pointer;transition:transform .18s,border-color .18s;
-}
-.case-tile:active{transform:scale(.97)}
-.case-tile:before{
- content:"";position:absolute;inset:0;z-index:0;
- background:radial-gradient(circle at 50% 43%,var(--case-glow),transparent 57%),
- linear-gradient(130deg,rgba(255,255,255,.12),transparent 50%);opacity:.45;
-}
-.case-tile:after{
- content:"";position:absolute;inset:0;z-index:0;
- background:linear-gradient(120deg,rgba(255,255,255,.13),transparent 35%,transparent 70%,rgba(255,255,255,.06));
-}
-.case-art{
- position:absolute;inset:0;z-index:1;
- width:100%;height:100%;
+.case-art,.nft-art{
+ height:105px;border-radius:13px;margin-bottom:10px;
  display:flex;align-items:center;justify-content:center;
+ background:linear-gradient(145deg,rgba(130,95,255,.24),rgba(45,105,220,.12));
+ font-size:40px;overflow:hidden;
 }
-.case-box-image{
- display:block;width:100%;height:100%;object-fit:contain;
- padding:8px;filter:drop-shadow(0 10px 15px rgba(0,0,0,.4));
+.case-art img,.nft-art img{width:100%;height:100%;object-fit:contain}
+.case-name,.nft-name{font-size:14px;font-weight:800;margin-bottom:5px}
+.case-price,.nft-price{font-size:13px;color:#b9a8ff;font-weight:800}
+.card-button{margin-top:10px;width:100%;padding:10px;border-radius:11px;background:var(--panel2);font-size:12px;font-weight:800}
+.tabs{
+ display:flex;gap:8px;overflow-x:auto;padding-bottom:5px;
+ scrollbar-width:none;
 }
-.case-tile-info{display:none}
-.case-tile.elite{grid-column:1/-1;height:175px;display:block;padding:0}
-.case-tile.elite .case-art{position:absolute;inset:0;width:100%;height:100%}
-.case-tile.elite .case-box-image{width:100%;height:100%;padding:5px}
-.case-tile.elite .case-tile-info{display:none}
-
-/* ЦВЕТА КЕЙСОВ */
-.case-starter{--case-a:#4776a7;--case-b:#193b61;--case-glow:#91caff}
-.case-revolution{--case-a:#8148a1;--case-b:#321d58;--case-glow:#d18cff}
-.case-recoil{--case-a:#a64d43;--case-b:#4b202d;--case-glow:#ff9a75}
-.case-nightmare{--case-a:#65418c;--case-b:#211a43;--case-glow:#bd83ff}
-.case-prisma{--case-a:#8061ba;--case-b:#32265e;--case-glow:#d3a5ff}
-.case-spectrum{--case-a:#287d9c;--case-b:#18304f;--case-glow:#7ce5ff}
-.case-chroma{--case-a:#b16c3e;--case-b:#4c2a26;--case-glow:#ffc17b}
-.case-phantom{--case-a:#4c4d80;--case-b:#20233f;--case-glow:#9b9dff}
-.case-elite{--case-a:#a47c2f;--case-b:#443015;--case-glow:#ffe18b}
-
-/* МЕНЮ КЕЙСА */
-.case-menu{
- display:none;margin-top:12px;padding:16px;border:1px solid var(--border);
- border-radius:23px;background:linear-gradient(145deg,rgba(53,79,125,.8),rgba(20,37,68,.88));
- backdrop-filter:blur(24px);box-shadow:0 15px 40px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.14);
+.tabs button{
+ flex:1;min-width:65px;padding:10px 7px;border-radius:11px;
+ background:var(--panel2);color:var(--muted);font-size:12px;font-weight:700;
 }
-.back-button{background:rgba(255,255,255,.09);color:#e0ecff;border:1px solid rgba(160,195,255,.28);border-radius:12px;padding:10px 14px;margin-bottom:15px}
-.case-menu-hero{
- position:relative;overflow:hidden;text-align:center;border-radius:19px;padding:20px 12px;
- margin-bottom:16px;background:linear-gradient(145deg,var(--case-a,#315d91),var(--case-b,#172e50));
- border:1px solid rgba(255,255,255,.18);
+.tabs button.selected{background:rgba(143,111,255,.22);color:#c8b8ff;border:1px solid rgba(143,111,255,.35)}
+.field{
+ width:100%;background:rgba(0,0,0,.22);border:1px solid var(--border);
+ color:white;border-radius:12px;padding:13px;font-size:14px;outline:none;
 }
-.case-menu-title{font-size:22px;font-weight:900}
-.case-menu-price{font-size:14px;color:#d8eaff;margin-top:7px;font-weight:bold}
-.case-menu-hero .case-box-image{width:180px;height:145px;margin:12px auto 8px}
-.items-heading{font-size:15px;font-weight:900;margin:17px 0 10px}
-.items-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.item-card{min-width:0;padding:11px;border-radius:15px;background:rgba(20,38,68,.55);border:1px solid rgba(153,190,255,.2);overflow:hidden}
-.item-icon{height:76px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
-.item-icon img{width:100%;height:100%;object-fit:contain;padding:4px}
-.item-name{font-size:11px;font-weight:bold;line-height:1.4;overflow-wrap:anywhere}
-.item-rarity{font-size:10px;color:#d0c5ff;margin-top:5px}
-.item-price{font-size:11px;color:#a9ceff;margin-top:5px}
-.item-chance{font-size:10px;color:#91e0ad;margin-top:5px}
-
-/* КОЛИЧЕСТВО */
-.quantity-title{font-size:14px;font-weight:bold;margin:19px 0 10px}
-.quantity-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.quantity-controls{display:flex;align-items:center;gap:9px}
-.quantity-button{width:39px;height:39px;border:1px solid rgba(155,190,255,.35);border-radius:13px;background:rgba(255,255,255,.1);color:white;font-size:22px}
-.quantity-value{font-size:22px;font-weight:900;min-width:26px;text-align:center}
-.quantity-picks{display:flex;gap:6px}
-.quantity-pick{min-width:34px;padding:8px 5px;border-radius:10px;border:1px solid rgba(155,190,255,.25);color:#dceaff;background:rgba(255,255,255,.07);font-size:12px;font-weight:bold}
-.quantity-pick.active{color:white;border-color:#80baff;background:linear-gradient(130deg,#347cff,#7655ff);box-shadow:0 3px 12px rgba(65,120,255,.3)}
-.skip-row{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding:12px 13px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(155,190,255,.17);font-size:12px;color:#d8e7ff}
-.switch{position:relative;width:44px;height:25px;flex-shrink:0}
-.switch input{opacity:0;width:0;height:0}
-.switch-slider{position:absolute;inset:0;border-radius:20px;background:#52627c;transition:.2s}
-.switch-slider:before{content:"";position:absolute;width:19px;height:19px;left:3px;top:3px;border-radius:50%;background:white;transition:.2s}
-.switch input:checked+.switch-slider{background:#398cff}
-.switch input:checked+.switch-slider:before{transform:translateX(19px)}
-.total-price{text-align:center;color:#c7ddff;font-size:13px;margin:15px 0 12px;font-weight:bold}
-.main-open-button{width:100%;padding:15px;background:linear-gradient(110deg,#348aff,#7653ff);border:1px solid rgba(255,255,255,.22);border-radius:15px;color:white;font-size:14px;font-weight:900}
-.main-open-button:disabled{opacity:.5}
-
-/* РУЛЕТКА */
-.roulette-overlay{display:none;position:fixed;inset:0;z-index:100;align-items:center;justify-content:center;padding:17px;background:rgba(5,12,27,.82);backdrop-filter:blur(20px)}
-.roulette-overlay.show{display:flex;animation:fadeIn .25s ease}
-.roulette-panel{width:100%;max-width:520px;padding:18px 13px 20px;border-radius:25px;background:linear-gradient(145deg,rgba(52,78,126,.97),rgba(18,33,61,.98));border:1px solid rgba(160,195,255,.32);box-shadow:0 25px 80px rgba(0,0,0,.5);overflow:hidden}
-.roulette-title{text-align:center;font-size:18px;font-weight:900}
-.roulette-subtitle{text-align:center;color:#b8cbed;font-size:11px;margin-top:6px}
-.roulette-window{position:relative;overflow:hidden;height:135px;margin:22px 0 17px;border-radius:16px;border:1px solid rgba(166,200,255,.3);background:rgba(8,19,39,.65)}
-.roulette-window:before,.roulette-window:after{content:"";position:absolute;top:0;bottom:0;width:45px;z-index:3;pointer-events:none}
-.roulette-window:before{left:0;background:linear-gradient(90deg,rgba(8,19,39,.95),transparent)}
-.roulette-window:after{right:0;background:linear-gradient(270deg,rgba(8,19,39,.95),transparent)}
-.roulette-pointer{position:absolute;z-index:5;left:50%;top:0;bottom:0;width:3px;transform:translateX(-50%);background:#fff;box-shadow:0 0 9px #6dbaff,0 0 20px #398cff}
-.roulette-pointer:before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);border-left:9px solid transparent;border-right:9px solid transparent;border-top:14px solid #fff}
-.roulette-track{position:absolute;left:0;top:0;height:100%;display:flex;align-items:center;gap:8px;padding:0 8px;will-change:transform}
-.roulette-item{flex:0 0 112px;width:112px;height:105px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px;border-radius:12px;background:linear-gradient(145deg,rgba(75,105,153,.75),rgba(27,44,75,.9));border:1px solid rgba(158,190,245,.25);text-align:center}
-.roulette-item .weapon-icon{width:100%;height:58px;display:flex;align-items:center;justify-content:center;margin-bottom:5px}
-.roulette-item .weapon-icon img{width:100%;height:100%;object-fit:contain}
-.roulette-item .weapon-name{font-size:9px;line-height:1.3;font-weight:bold;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.roulette-item .weapon-rarity{font-size:8px;color:#c4b4ff;margin-top:4px}
-.roulette-progress{text-align:center;color:#b8cbed;font-size:11px}
-.roulette-skip{display:block;margin:15px auto 0;padding:9px 15px;border-radius:11px;background:rgba(255,255,255,.08);color:white;border:1px solid rgba(255,255,255,.2);font-size:12px}
-.roulette-status{text-align:center;font-size:12px;color:#d5e5ff;margin-top:12px}
-
-/* РЕЗУЛЬТАТ */
-.result-box{display:none;margin-top:15px;padding:16px;border-radius:21px;background:linear-gradient(145deg,rgba(55,88,145,.82),rgba(27,42,80,.9));border:1px solid rgba(145,190,255,.35)}
-.result-box.show{display:block;animation:appear .35s ease}
-.result-heading{text-align:center;font-weight:900;font-size:19px;margin-bottom:15px}
-.result-item{background:rgba(17,34,62,.68);border:1px solid rgba(150,190,255,.22);border-radius:15px;padding:13px;margin-bottom:9px}
-.result-item-top{display:flex;justify-content:space-between;gap:8px}
-.result-item-name{font-size:13px;font-weight:bold;overflow-wrap:anywhere}
-.result-item-price{font-size:12px;color:#b6d2fa;margin-top:6px}
-.result-item-visual{width:100%;height:105px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;border-radius:12px;background:rgba(5,15,32,.35)}
-.result-item-visual img{width:100%;height:100%;object-fit:contain;padding:5px}
-.result-item button{margin-top:10px;width:100%}
-.result-sold{color:#80e6a0;font-size:12px;margin-top:10px}
-.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
-.result-actions button{padding:13px 5px}
-.again-button,.sell-all-button{color:white;border:0;border-radius:12px;font-weight:bold}
-.again-button{background:linear-gradient(120deg,#347cff,#754bff)}
-.sell-all-button{background:linear-gradient(120deg,#148b58,#22b875)}
-.sell-button{background:linear-gradient(120deg,#148b58,#22b875);color:white;border:none;border-radius:10px;padding:11px 13px;font-weight:bold}
-.sell-button:disabled{opacity:.5}
-
-/* ИЗОБРАЖЕНИЯ И ИНВЕНТАРЬ */
-.skin-visual{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.skin-visual img{width:100%;height:100%;object-fit:contain;padding:5px}
-.skin-visual-fallback{font-size:32px}
-.inventory-capacity{padding:14px;margin-bottom:13px;border-radius:15px;background:rgba(20,38,68,.65);border:1px solid rgba(153,190,255,.25)}
-.inventory-capacity-top{display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:800;margin-bottom:10px}
-.inventory-capacity-count{color:#b9d8ff}
-.inventory-progress{height:9px;border-radius:20px;overflow:hidden;background:rgba(0,0,0,.3)}
-.inventory-progress-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#398cff,#8065ff);transition:width .25s}
-.skin-card{display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:12px;overflow:hidden}
-.skin-card-top{display:flex;align-items:center;gap:12px;min-width:0}
-.skin-image{width:108px;height:83px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(0,0,0,.2);overflow:hidden}
-.skin-image img{width:100%;height:100%;object-fit:contain;padding:5px}
-.skin-image-fallback{font-size:34px}
-.skin-card .skin-info{flex:1;min-width:0}
-.skin-card .skin-name{font-size:13px;line-height:1.4;overflow-wrap:anywhere}
-.skin-card .sell-button{width:100%;padding:12px}
-.rarity-consumer{background:linear-gradient(145deg,#626b79,#303b4b)}
-.rarity-industrial,.rarity-mil-spec{background:linear-gradient(145deg,#326db1,#183c69)}
-.rarity-restricted{background:linear-gradient(145deg,#7954b7,#39245f)}
-.rarity-classified{background:linear-gradient(145deg,#bd579e,#632b64)}
-.rarity-covert{background:linear-gradient(145deg,#b74755,#60232e)}
-.rarity-gold{background:linear-gradient(145deg,#a98532,#594015)}
-
-/* ПРОЧЕЕ */
-.case-card,.skin-card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:11px;display:flex;align-items:center;justify-content:space-between;gap:10px;backdrop-filter:blur(14px)}
-.case-name,.skin-name{font-weight:bold;margin-bottom:7px;font-size:14px}
-.case-price,.skin-price{color:#a9ceff;font-size:13px}
-.skin-info{min-width:0;overflow-wrap:anywhere}
-.rarity{font-size:11px;color:#c0d0e8;margin-top:5px}
-.open-button,.action-button{background:linear-gradient(120deg,#347cff,#754bff);color:white;border:none;border-radius:10px;padding:11px 13px;font-weight:bold}
-.placeholder,.empty{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:22px;text-align:center;color:#d0def5;line-height:1.7}
-.small-note{color:#a6badb;font-size:11px;text-align:center;margin-top:15px;line-height:1.6}
-.history-item{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:9px;font-size:13px;line-height:1.6}
-.history-item strong{color:#b7d2ff}
-.profile-box{padding:17px;border-radius:17px;background:var(--glass);border:1px solid var(--border)}
-#profile-name{font-size:18px;font-weight:bold}
-#profile-id{font-size:12px;color:var(--muted)}
-.admin-box{background:var(--glass);border:1px solid #668ac5;border-radius:15px;padding:18px;margin-bottom:15px}
-.admin-label{display:block;color:#c3d5f1;font-size:13px;margin:14px 0 7px}
-.admin-input{width:100%;background:#172b4b;border:1px solid #6680a8;border-radius:9px;padding:13px;color:white;font-size:16px}
-.action-button{width:100%;margin-top:14px;font-size:15px}
-.take-button{background:linear-gradient(135deg,#bd3c56,#e46b45)}
-.admin-message,.notice{margin-top:14px;padding:12px;border-radius:9px;background:#263d60;color:#d0e0f7;font-size:13px;line-height:1.5;display:none;overflow-wrap:anywhere;white-space:pre-line}
-.admin-message.success,.notice.success{display:block;color:#80e6a0}
-.admin-message.error,.notice.error{display:block;color:#ff9999}
-.admin-status{color:#80e6a0;font-size:13px;margin-bottom:12px}
-
-/* НАВИГАЦИЯ */
-.bottom-nav{position:fixed;bottom:10px;left:10px;right:10px;z-index:30;display:flex;justify-content:space-around;align-items:center;padding:9px 3px calc(9px + env(safe-area-inset-bottom));border:1px solid rgba(150,190,255,.3);border-radius:21px;background:rgba(25,44,78,.88);backdrop-filter:blur(25px);box-shadow:0 8px 30px rgba(0,0,0,.3)}
-.nav-button{flex:1;min-width:0;background:none;border:0;color:#b0c3e2;font-size:9px;padding:5px 0;border-radius:13px}
-.nav-button.active{color:#fff;background:linear-gradient(140deg,rgba(54,125,255,.4),rgba(126,65,255,.3))}
-.nav-icon{display:block;font-size:20px;margin-bottom:4px}
-#admin-nav{display:none}
-@keyframes appear{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.field option{background:#171927}
+.field-label{display:block;font-size:12px;color:var(--muted);margin:13px 0 7px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.stat{
+ background:rgba(255,255,255,.045);border:1px solid var(--border);
+ border-radius:14px;padding:13px;
+}
+.stat strong{display:block;font-size:19px;margin-bottom:4px}
+.stat span{font-size:11px;color:var(--muted)}
+.profile-avatar{
+ width:62px;height:62px;border-radius:20px;
+ background:linear-gradient(135deg,#9270ff,#397ce8);
+ display:flex;align-items:center;justify-content:center;
+ font-size:25px;font-weight:900;
+}
+.game-id{font-size:13px;color:#bbaaff;margin-top:5px}
+.switch{
+ width:48px;height:27px;border-radius:20px;background:#414556;
+ position:relative;transition:.2s;
+}
+.switch:after{
+ content:"";position:absolute;width:21px;height:21px;
+ background:white;border-radius:50%;top:3px;left:3px;transition:.2s;
+}
+.switch.on{background:#8062ed}
+.switch.on:after{left:24px}
+.bottom-nav{
+ position:fixed;z-index:20;bottom:12px;left:50%;transform:translateX(-50%);
+ width:min(570px,calc(100% - 24px));
+ display:flex;gap:5px;padding:8px;
+ border:1px solid rgba(255,255,255,.13);
+ background:rgba(23,25,40,.83);backdrop-filter:blur(25px);
+ border-radius:22px;box-shadow:0 10px 40px #0008;
+}
+.nav-btn{
+ flex:1;min-width:0;padding:9px 3px;border-radius:15px;
+ color:#858b9c;background:transparent;font-size:10px;font-weight:700;
+ display:flex;flex-direction:column;align-items:center;gap:5px;
+}
+.nav-btn .nav-icon{font-size:19px}
+.nav-btn.active{color:white;background:rgba(140,110,255,.20)}
+.notice{
+ display:none;padding:12px;border-radius:12px;margin-bottom:12px;
+ font-size:13px;background:rgba(255,255,255,.08);
+}
+.notice.show{display:block}
+.empty{
+ text-align:center;padding:30px 12px;color:var(--muted);
+ border:1px dashed var(--border);border-radius:16px;font-size:13px;
+}
+.item-select{
+ display:flex;align-items:center;gap:10px;padding:10px;
+ border-radius:13px;background:rgba(255,255,255,.045);
+ border:1px solid var(--border);margin-bottom:8px;
+}
+.item-select input{accent-color:#9270ff;width:18px;height:18px}
+.item-select-info{min-width:0;flex:1}
+.item-select-info strong{display:block;font-size:13px}
+.item-select-info span{font-size:11px;color:var(--muted)}
+.modal{
+ display:none;position:fixed;inset:0;z-index:50;
+ background:rgba(0,0,0,.75);padding:20px;
+ align-items:center;justify-content:center;
+}
+.modal.show{display:flex}
+.modal-box{
+ width:100%;max-width:420px;background:#171a29;
+ border:1px solid var(--border);border-radius:22px;padding:20px;
+ max-height:85vh;overflow:auto;
+}
+.modal-close{float:right;background:var(--panel2);border-radius:10px;padding:7px 11px}
+.result-item{padding:12px;border-radius:13px;background:var(--panel2);margin:8px 0}
+hr{border:0;border-top:1px solid var(--border);margin:14px 0}
+@media(min-width:500px){
+ .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .case-art,.nft-art{height:125px}
+}
 </style>
 </head>
 
 <body>
-<header class="header">
- <div class="logo">CS GO <span>CASE</span></div>
- <div class="header-right">
-  <div class="balance-chip" id="balance">Загрузка...</div>
-  <button class="avatar-button" onclick="showPage('profile')" aria-label="Профиль">
-   <span id="avatar-fallback">👤</span>
-   <img id="telegram-avatar" alt="Аватар">
-  </button>
- </div>
-</header>
+<div class="app">
+ <header class="header">
+  <div class="logo">NFT <span>CASE</span></div>
+  <div class="balance"><small>Баланс</small><span id="balance">0 G</span></div>
+ </header>
 
-<main class="container">
-<section class="page active" id="home">
- <div class="game-card mines-card" onclick="showPage('mines')"><div class="game-art"><img src="mines-blue.png" alt="Мины"></div></div>
- <div class="small-games">
-  <div class="game-card small-game" onclick="showPage('upgrade')"><div class="game-art"><img src="upgrade-blue.png" alt="Апгрейд"></div></div>
-  <div class="game-card small-game" onclick="showPage('craft')"><div class="game-art"><img src="craft-blue.png" alt="Крафт"></div></div>
- </div>
-</section>
+ <div id="notice" class="notice"></div>
 
-<section class="page" id="mines">
- <h2 class="page-title">💣 Мины</h2>
- <div class="placeholder"><div style="font-size:55px;margin-bottom:12px">💣</div><b>Игра скоро появится</b><br>Сейчас мы готовим для неё игровую механику.</div>
-</section>
+ <!-- АПГРЕЙД -->
+ <section id="page-upgrade" class="page active">
+  <h1 class="page-title">Апгрейд NFT</h1>
+  <p class="page-subtitle">Испытай удачу и улучши свой NFT</p>
 
-<section class="page" id="cases">
- <div class="cases-heading"><h2 class="page-title" style="margin:8px 0">Кейсы</h2><span>9 КЕЙСОВ</span></div>
- <div id="cases-list"><div class="empty">Загрузка кейсов...</div></div>
- <div id="case-menu" class="case-menu">
-  <button class="back-button" onclick="backToCases()">← Назад к кейсам</button>
-  <div class="case-menu-hero" id="case-menu-hero">
-   <div class="case-menu-title" id="menu-case-name"></div>
-   <img class="case-box-image" id="menu-case-image" src="cases/starter.png" alt="Коробка кейса">
-   <div class="case-menu-price" id="menu-case-price"></div>
-  </div>
-  <div class="items-heading">🎁 Содержимое кейса</div>
-  <div class="items-grid" id="case-items"></div>
-  <div class="quantity-title">Количество кейсов</div>
-  <div class="quantity-row">
-   <div class="quantity-controls">
-    <button class="quantity-button" onclick="changeQuantity(-1)">−</button>
-    <div class="quantity-value" id="quantity-value">1</div>
-    <button class="quantity-button" onclick="changeQuantity(1)">+</button>
+  <div class="panel">
+   <div class="section-title">Выбери режим</div>
+   <div class="tabs" id="upgradeModes">
+    <button class="selected" data-mode="multiplier">Множитель</button>
+    <button data-mode="chance">Процент</button>
    </div>
-   <div class="quantity-picks">
-    <button class="quantity-pick active" data-quantity="1">×1</button>
-    <button class="quantity-pick" data-quantity="2">×2</button>
-    <button class="quantity-pick" data-quantity="3">×3</button>
-    <button class="quantity-pick" data-quantity="4">×4</button>
-    <button class="quantity-pick" data-quantity="5">×5</button>
+
+   <label class="field-label">Твой NFT</label>
+   <select class="field" id="upgradeSource">
+    <option value="">Загрузка инвентаря...</option>
+   </select>
+
+   <label class="field-label">Множитель</label>
+   <div class="tabs" id="multiplierTabs">
+    <button class="selected" data-multiplier="2">x2</button>
+    <button data-multiplier="3">x3</button>
+    <button data-multiplier="5">x5</button>
+    <button data-multiplier="10">x10</button>
+   </div>
+
+   <div id="chanceControls" style="display:none">
+    <label class="field-label">Шанс победы</label>
+    <input class="field" id="upgradeChance" type="number" min="1" max="50" value="20">
+   </div>
+
+   <label class="field-label">NFT, который хочешь получить</label>
+   <select class="field" id="upgradeTarget">
+    <option value="">Сначала выбери исходный NFT</option>
+   </select>
+
+   <label class="field-label">Фон награды</label>
+   <select class="field" id="upgradeBackground">
+    <option value="normal">Normal x1</option>
+    <option value="gold">Gold x3</option>
+    <option value="onyx_black">Onyx Black x5</option>
+    <option value="black">Black x10</option>
+   </select>
+
+   <div id="upgradeInfo" class="muted small" style="margin:13px 0">Выбери NFT для начала</div>
+   <button class="primary" id="upgradeButton">ПРОКАЧАТЬ NFT</button>
+  </div>
+
+  <div class="panel">
+   <div class="section-title">Как работает апгрейд?</div>
+   <p class="muted small">Выбираешь NFT из инвентаря, задаёшь множитель и выбираешь желаемую награду. При победе получаешь выбранный NFT, при поражении исходный NFT сгорает.</p>
+  </div>
+ </section>
+
+ <!-- КЕЙСЫ -->
+ <section id="page-cases" class="page">
+  <h1 class="page-title">NFT Кейсы</h1>
+  <p class="page-subtitle">Открывай кейсы и собирай коллекцию</p>
+  <div id="casesGrid" class="grid">
+   <div class="empty" style="grid-column:1/-1">Загружаем кейсы...</div>
+  </div>
+ </section>
+
+ <!-- КРАФТ -->
+ <section id="page-craft" class="page">
+  <h1 class="page-title">Крафт NFT</h1>
+  <p class="page-subtitle">Объедини 5 NFT и получи один новый</p>
+
+  <div class="panel">
+   <div class="row">
+    <div class="section-title">Выбери 5 NFT</div>
+    <strong id="craftSelectedCount">0/5</strong>
+   </div>
+   <div id="craftInventory"><div class="empty">Загружаем инвентарь...</div></div>
+   <hr>
+   <div class="row" style="margin-bottom:12px">
+    <span class="muted small">Общая стоимость выбранных NFT</span>
+    <strong id="craftTotal">0 G</strong>
+   </div>
+   <button class="primary" id="craftButton">СОЗДАТЬ NFT</button>
+  </div>
+ </section>
+
+ <!-- ПРОФИЛЬ -->
+ <section id="page-profile" class="page">
+  <h1 class="page-title">Профиль</h1>
+  <p class="page-subtitle">Твоя статистика и коллекция NFT</p>
+
+  <div class="panel">
+   <div class="row">
+    <div class="row" style="justify-content:flex-start">
+     <div class="profile-avatar" id="profileAvatar">N</div>
+     <div>
+      <strong id="profileName">Игрок</strong>
+      <div class="game-id" id="profileGameId">#-----</div>
+     </div>
+    </div>
+    <div style="text-align:right">
+     <div class="muted small">Баланс</div>
+     <strong id="profileBalance">0 G</strong>
+    </div>
    </div>
   </div>
-  <div class="skip-row"><span>Пропустить анимацию</span><label class="switch"><input type="checkbox" id="skip-animation"><span class="switch-slider"></span></label></div>
-  <div class="total-price" id="total-price"></div>
-  <button class="main-open-button" id="open-selected-button" onclick="openSelectedCase()">ОТКРЫТЬ КЕЙС</button>
- </div>
- <div id="case-result" class="result-box">
-  <div class="result-heading">🎉 РЕЗУЛЬТАТ ОТКРЫТИЯ</div>
-  <div id="result-items"></div>
-  <div class="result-actions">
-   <button class="again-button" onclick="openAgain()">🔄 ОТКРЫТЬ ЕЩЁ</button>
-   <button class="sell-all-button" id="sell-all-button" onclick="sellAllResults()">💰 ПРОДАТЬ ВСЁ</button>
+
+  <div class="panel">
+   <div class="section-title">Статистика</div>
+   <div class="stat-grid">
+    <div class="stat"><strong id="statCases">0</strong><span>Открыто кейсов</span></div>
+    <div class="stat"><strong id="statUpgrades">0</strong><span>Апгрейдов</span></div>
+    <div class="stat"><strong id="statWins">0</strong><span>Побед в апгрейде</span></div>
+    <div class="stat"><strong id="statCrafts">0</strong><span>Крафтов</span></div>
+    <div class="stat"><strong id="statSold">0</strong><span>Продано NFT</span></div>
+    <div class="stat"><strong id="statInventory">0</strong><span>NFT в инвентаре</span></div>
+   </div>
   </div>
- </div>
- <div id="case-notice" class="notice"></div>
-</section>
 
-<section class="page" id="upgrade"><h2 class="page-title">⚡ Апгрейд</h2><div class="placeholder">Загрузка апгрейда...</div></section>
-<section class="page" id="craft"><div id="craft-app"></div></section>
-<section class="page" id="clicker"><div class="placeholder">Загрузка заработка...</div></section>
-<section class="page" id="contracts"><h2 class="page-title">📝 Контракты</h2><div class="placeholder">Выбирай 10 скинов и получай один случайный предмет.<br><br>Скоро подключим.</div></section>
-<section class="page" id="rating"><h2 class="page-title">🏆 Рейтинг игроков</h2><div class="placeholder">Здесь появится общий рейтинг игроков.</div></section>
+  <div class="panel">
+   <div class="row">
+    <div class="section-title">Мой инвентарь</div>
+    <button class="secondary small" id="sellAllButton">Продать всё</button>
+   </div>
+   <div id="inventoryGrid" class="grid">
+    <div class="empty" style="grid-column:1/-1">Загружаем NFT...</div>
+   </div>
+  </div>
 
-<section class="page" id="profile">
- <h2 class="page-title">👤 Профиль</h2>
- <div class="profile-box">
-  <div id="profile-name">Игрок</div>
-  <div id="profile-id" style="margin-top:7px">Telegram ID: —</div>
-  <div style="font-size:11px;color:#b0c5e8;margin-top:12px">Проект CS GO CASE</div>
- </div>
- <div id="profile-stats-container"></div>
- <h2 class="section-title">🔫 Мой инвентарь</h2>
- <div id="inventory-list"><div class="empty">Загрузка инвентаря...</div></div>
- <div id="inventory-notice" class="notice"></div>
- <h2 class="section-title">📜 История операций</h2>
- <div id="history-list"><div class="empty">Загрузка истории...</div></div>
-</section>
+  <div class="panel">
+   <div class="section-title">Настройки</div>
+   <div class="row" style="margin-bottom:15px">
+    <div>
+     <strong>Звуки</strong>
+     <div class="muted small">Звуковые эффекты игры</div>
+    </div>
+    <button class="switch" id="soundSwitch" aria-label="Звуки"></button>
+   </div>
+   <div class="row">
+    <div>
+     <strong>Показывать админ-панель</strong>
+     <div class="muted small">Настройка отображения вкладки</div>
+    </div>
+    <button class="switch" id="adminSwitch" aria-label="Админ-панель"></button>
+   </div>
+  </div>
 
-<section class="page" id="admin">
- <h2 class="page-title">👑 Админ-панель</h2>
- <div class="admin-box">
-  <div class="admin-status">🟢 Права администратора подтверждены</div>
-  <h3>💰 Управление балансом</h3>
-  <label class="admin-label" for="target-id">Telegram ID игрока</label>
-  <input class="admin-input" id="target-id" type="number" placeholder="Telegram ID">
-  <label class="admin-label" for="dc-amount">Количество DC</label>
-  <input class="admin-input" id="dc-amount" type="number" min="1" placeholder="Например: 500">
-  <button class="action-button" id="give-button" onclick="changeDC('give')">💰 ВЫДАТЬ DC</button>
-  <button class="action-button take-button" id="take-button" onclick="changeDC('take')">💸 ЗАБРАТЬ DC</button>
-  <div class="admin-message" id="admin-message"></div>
- </div>
- <div class="placeholder">🔒 Дополнительные функции админ-панели добавим следующим этапом.</div>
-</section>
-</main>
+  <div class="panel" id="adminPanel" style="display:none">
+   <div class="section-title">Админ-панель</div>
+   <label class="field-label">Игровой ID игрока</label>
+   <input class="field" id="adminGameId" placeholder="#10001">
+   <label class="field-label">Количество G</label>
+   <input class="field" id="adminAmount" type="number" min="1" placeholder="1000">
+   <div class="row" style="margin-top:10px">
+    <button class="secondary" id="adminGiveG" style="flex:1">Выдать G</button>
+    <button class="secondary danger" id="adminTakeG" style="flex:1">Забрать G</button>
+   </div>
+   <hr>
+   <label class="field-label">Код NFT</label>
+   <input class="field" id="adminNftCode" placeholder="Например nft_001">
+   <label class="field-label">Фон</label>
+   <select class="field" id="adminBackground">
+    <option value="normal">Normal</option>
+    <option value="gold">Gold</option>
+    <option value="onyx_black">Onyx Black</option>
+    <option value="black">Black</option>
+   </select>
+   <button class="primary" id="adminGiveNft" style="margin-top:12px">ВЫДАТЬ NFT</button>
+  </div>
+ </section>
+</div>
 
-<div class="roulette-overlay" id="roulette-overlay">
- <div class="roulette-panel">
-  <div class="roulette-title" id="roulette-title">ОТКРЫТИЕ КЕЙСА</div>
-  <div class="roulette-subtitle" id="roulette-subtitle">Удачи!</div>
-  <div class="roulette-window"><div class="roulette-pointer"></div><div class="roulette-track" id="roulette-track"></div></div>
-  <div class="roulette-progress" id="roulette-progress"></div>
-  <div class="roulette-status" id="roulette-status">Определяем выигрыш...</div>
-  <button class="roulette-skip" id="roulette-skip" onclick="skipCurrentAnimation()">Пропустить анимацию</button>
+<!-- НИЖНЯЯ НАВИГАЦИЯ -->
+<nav class="bottom-nav">
+ <button class="nav-btn active" data-page="upgrade">
+  <span class="nav-icon">⚡</span><span>Апгрейд</span>
+ </button>
+ <button class="nav-btn" data-page="cases">
+  <span class="nav-icon">🎁</span><span>Кейсы</span>
+ </button>
+ <button class="nav-btn" data-page="craft">
+  <span class="nav-icon">🛠</span><span>Крафт</span>
+ </button>
+ <button class="nav-btn" id="adminNav" data-page="profile" style="display:none">
+  <span class="nav-icon">🛡️</span><span>Админ</span>
+ </button>
+ <button class="nav-btn" data-page="profile">
+  <span class="nav-icon">👤</span><span>Профиль</span>
+ </button>
+</nav>
+
+<!-- МОДАЛЬНОЕ ОКНО -->
+<div class="modal" id="modal">
+ <div class="modal-box">
+  <button class="modal-close" id="modalClose">✕</button>
+  <div id="modalContent"></div>
  </div>
 </div>
 
-<nav class="bottom-nav">
- <button class="nav-button active" data-page="home" onclick="showPage('home',this)"><span class="nav-icon">🎮</span>Игры</button>
- <button class="nav-button" data-page="cases" onclick="showPage('cases',this)"><span class="nav-icon">📦</span>Кейсы</button>
- <button class="nav-button" data-page="clicker" onclick="showPage('clicker',this)"><span class="nav-icon">💎</span>Заработок</button>
- <button class="nav-button" id="admin-nav" data-page="admin" onclick="showPage('admin',this)"><span class="nav-icon">👑</span>Админ</button>
- <button class="nav-button" data-page="profile" onclick="showPage('profile',this)"><span class="nav-icon">👤</span>Профиль</button>
-</nav>
-
 <script>
-const tg=window.Telegram.WebApp;
-const API="https://cs-go-case.onrender.com";
-tg.ready();tg.expand();
-
-let currentUserId=null,openingCase=false,sellingSkin=false,casesCache=[];
-let selectedCase=null,selectedQuantity=1,resultSkins=[],animationSkipped=false,animationResolve=null;
-
-const caseStyles={
- starter:"case-starter",revolution:"case-revolution",recoil:"case-recoil",
- nightmare:"case-nightmare",prisma:"case-prisma",spectrum:"case-spectrum",
- chroma:"case-chroma",phantom:"case-phantom",elite:"case-elite"
+window.NFT_CASE = {
+ api: "",
+ currency: "G",
+ inventory: [],
+ catalog: [],
+ cases: [],
+ profile: null,
+ admin: false,
+ sound: true,
+ selectedMode: "multiplier",
+ selectedMultiplier: 2,
+ pendingBatch: null,
+ format(value){
+  return new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(Number(value)||0)+" G";
+ },
+ async request(url,options={}){
+  const tg=window.Telegram?.WebApp;
+  const headers={"Content-Type":"application/json",...(options.headers||{})};
+  if(tg?.initData) headers["X-Telegram-Init-Data"]=tg.initData;
+  const response=await fetch(this.api+url,{...options,headers});
+  let data;
+  try{data=await response.json()}catch{throw new Error("Сервер вернул некорректный ответ")}
+  if(!response.ok||data.success===false) throw new Error(data.error||data.message||"Ошибка запроса");
+  return data;
+ },
+ notice(message){
+  const el=document.getElementById("notice");
+  el.textContent=message;
+  el.classList.add("show");
+  clearTimeout(this.noticeTimer);
+  this.noticeTimer=setTimeout(()=>el.classList.remove("show"),3500);
+ },
+ showModal(html){
+  document.getElementById("modalContent").innerHTML=html;
+  document.getElementById("modal").classList.add("show");
+ },
+ closeModal(){
+  document.getElementById("modal").classList.remove("show");
+ },
+ navigate(page){
+  document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(x=>x.classList.remove("active"));
+  document.getElementById("page-"+page)?.classList.add("active");
+  document.querySelectorAll('.nav-btn[data-page="'+page+'"]').forEach(x=>x.classList.add("active"));
+  if(page==="profile") window.Profile?.load();
+  if(page==="upgrade") window.Upgrade?.load();
+  if(page==="craft") window.Craft?.load();
+  if(page==="cases") window.Cases?.load();
+ },
+ async refresh(){
+  await Promise.allSettled([
+   window.Profile?.load(),
+   window.Upgrade?.load(),
+   window.Craft?.load(),
+   window.Cases?.load()
+  ]);
+ }
 };
 
-if(tg.initDataUnsafe&&tg.initDataUnsafe.user){
- const user=tg.initDataUnsafe.user;
- currentUserId=user.id;
- document.getElementById("profile-name").textContent=user.first_name||"Игрок";
- document.getElementById("profile-id").textContent="Telegram ID: "+user.id;
- if(user.photo_url){
-  const avatar=document.getElementById("telegram-avatar");
-  avatar.src=user.photo_url;avatar.style.display="block";
-  document.getElementById("avatar-fallback").style.display="none";
- }
-}
-
-function formatBalance(value){
- const n=Number(value)||0;
- if(n>=1000000)return (n/1000000).toFixed(n%1000000===0?0:1).replace(".",",")+"М";
- if(n>=1000)return (n/1000).toFixed(n%1000===0?0:1).replace(".",",")+"К";
- return n.toLocaleString("ru-RU");
-}
-function updateHeaderBalance(value){document.getElementById("balance").textContent=formatBalance(value)+" DC"}
-function authHeaders(){return {"X-Telegram-Init-Data":tg.initData}}
-function escapeHtml(value){
- return String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[char]);
-}
-
-/* ИЗОБРАЖЕНИЯ СКИНОВ */
-function skinImage(skin,className=""){
- const url=String(skin?.image_url||"");
- const classes=("skin-visual "+className).trim();
-
- if(!url.startsWith("https://")){
-  return `<div class="${classes} skin-visual-fallback">🔫</div>`;
- }
-
- return `<div class="${classes}">
-  <img src="${escapeHtml(url)}" alt="${escapeHtml(skin?.name||"Скин")}"
-   onerror="this.parentElement.innerHTML='🔫'">
- </div>`;
-}
-
-function getRarityClass(skin){
- const value=String(skin?.rarity||"").toLowerCase();
- const name=String(skin?.name||"").toLowerCase();
-
- if(name.includes("нож")||name.includes("перчат"))return "rarity-gold";
- if(value.includes("тайное"))return "rarity-covert";
- if(value.includes("засекреч"))return "rarity-classified";
- if(value.includes("запрещ"))return "rarity-restricted";
- if(value.includes("армей"))return "rarity-mil-spec";
- if(value.includes("промышлен"))return "rarity-industrial";
-
- return "rarity-consumer";
-}
-
-function showNotice(id,message,type){
- const box=document.getElementById(id);
- box.textContent=message;
- box.className="notice "+type;
-}
-
-async function apiRequest(path,options={}){
- if(!tg.initData)throw new Error("Открой приложение через Telegram");
- const response=await fetch(API+path,{
-  ...options,
-  headers:{...authHeaders(),...(options.headers||{})}
- });
- const data=await response.json();
- if(!response.ok)throw new Error(data.error||"Ошибка сервера");
- return data;
-}
-
-async function loadBalance(){
- const element=document.getElementById("balance");
- if(!tg.initData){element.textContent="Открой в Telegram";return}
- try{
-  const data=await apiRequest("/api/balance");
-  updateHeaderBalance(data.balance);
- }catch(error){
-  console.error(error);
-  element.textContent="Ошибка";
- }
-}
-
-async function checkAdmin(){
- if(!tg.initData)return;
- try{
-  const data=await apiRequest("/api/admin/status");
-  if(data.is_admin)document.getElementById("admin-nav").style.display="block";
- }catch(error){console.error(error)}
-}
-
-function showPage(page,button){
- document.querySelectorAll(".page").forEach(el=>el.classList.remove("active"));
- const selected=document.getElementById(page);
- if(!selected)return;
- selected.classList.add("active");
-
- document.querySelectorAll(".nav-button").forEach(el=>el.classList.remove("active"));
-
- if(button)button.classList.add("active");
- else{
-  let navPage=page;
-  if(["upgrade","craft","mines","contracts","rating"].includes(page))navPage="home";
-  const nav=document.querySelector('.nav-button[data-page="'+navPage+'"]');
-  if(nav)nav.classList.add("active");
- }
-
- window.scrollTo(0,0);
-
- if(page==="cases")loadCases();
- if(page==="profile"){loadInventory();loadHistory()}
- if(page==="upgrade"&&window.initUpgrade)window.initUpgrade();
- if(page==="craft"&&window.initCraft)window.initCraft();
- if(page==="clicker"&&window.loadClicker)window.loadClicker();
-}
-
-/* КАТАЛОГ КЕЙСОВ */
-async function loadCases(){
- const list=document.getElementById("cases-list");
- if(casesCache.length){renderCases();return}
-
- try{
-  const data=await apiRequest("/api/cases");
-  casesCache=data.cases||[];
-  renderCases();
- }catch(error){
-  list.innerHTML='<div class="empty">Не удалось загрузить кейсы: '+escapeHtml(error.message)+'</div>';
- }
-}
-
-function renderCases(){
- const list=document.getElementById("cases-list");
- if(!casesCache.length){
-  list.innerHTML='<div class="empty">Кейсов пока нет.</div>';
-  return;
- }
-
- list.innerHTML='<div class="cases-grid">'+casesCache.map(item=>{
-  const id=String(item.catalog_id||"");
-  const style=caseStyles[id]||"case-starter";
-  const elite=id==="elite";
-
-  return `
-   <div class="case-tile ${style} ${elite?"elite":""}" data-select-case="${Number(item.id)}">
-    <div class="case-art">
-     <img class="case-box-image" src="cases/${id}.png" alt="${escapeHtml(item.name)}"
-      onerror="this.style.display='none'">
-    </div>
-    <div class="case-tile-info">
-     <div class="case-tile-price">${Number(item.price_dc).toLocaleString("ru-RU")} DC</div>
-    </div>
-   </div>`;
- }).join("")+'</div>';
-}
-
-function selectCase(caseId){
- const item=casesCache.find(c=>Number(c.id)===Number(caseId));
- if(!item)return;
-
- selectedCase=item;
- selectedQuantity=1;
- resultSkins=[];
-
- document.getElementById("cases-list").style.display="none";
- document.getElementById("case-menu").style.display="block";
- document.getElementById("case-result").classList.remove("show");
- document.getElementById("case-notice").className="notice";
-
- const id=String(item.catalog_id||"");
- const style=caseStyles[id]||"case-starter";
-
- const hero=document.getElementById("case-menu-hero");
- hero.className="case-menu-hero "+style;
-
- document.getElementById("menu-case-name").textContent=item.name;
- document.getElementById("menu-case-image").src="cases/"+id+".png";
- document.getElementById("menu-case-price").textContent=
-  Number(item.price_dc).toLocaleString("ru-RU")+" DC за открытие";
-
- document.getElementById("case-items").innerHTML=(item.items||[]).map(skin=>`
-  <div class="item-card ${getRarityClass(skin)}">
-   <div class="item-icon">${skinImage(skin)}</div>
-   <div class="item-name">${escapeHtml(skin.name)}</div>
-   <div class="item-rarity">${escapeHtml(skin.rarity)}</div>
-   <div class="item-price">${Number(skin.price).toLocaleString("ru-RU")} DC</div>
-   <div class="item-chance">Шанс: ${Number(skin.chance)}%</div>
-  </div>`).join("");
-
- updateQuantity();
- window.scrollTo(0,0);
-}
-
-function backToCases(){
- document.getElementById("case-menu").style.display="none";
- document.getElementById("case-result").classList.remove("show");
- document.getElementById("cases-list").style.display="block";
- document.getElementById("case-notice").className="notice";
- window.scrollTo(0,0);
-}
-
-function changeQuantity(change){setQuantity(selectedQuantity+change)}
-
-function setQuantity(value){
- selectedQuantity=Math.max(1,Math.min(5,Number(value)||1));
- document.getElementById("quantity-value").textContent=selectedQuantity;
-
- document.querySelectorAll(".quantity-pick").forEach(button=>{
-  button.classList.toggle("active",Number(button.dataset.quantity)===selectedQuantity);
- });
-
- updateQuantity();
-}
-
-function updateQuantity(){
- if(!selectedCase)return;
-
- const total=Number(selectedCase.price_dc)*selectedQuantity;
- document.getElementById("total-price").textContent="Итого: "+total.toLocaleString("ru-RU")+" DC";
- document.getElementById("open-selected-button").textContent=
-  "ОТКРЫТЬ ×"+selectedQuantity+" · "+total.toLocaleString("ru-RU")+" DC";
-}
-
-/* РУЛЕТКА */
-function rarityColor(rarity){
- const value=String(rarity||"").toLowerCase();
- if(value.includes("нож")||value.includes("перчат"))return "#e6a2ff";
- if(value.includes("тайное"))return "#ff6c9b";
- if(value.includes("засекреч"))return "#d58cff";
- if(value.includes("запрещ"))return "#8aa7ff";
- return "#83c8ff";
-}
-
-function rouletteCard(skin){
- return `<div class="roulette-item" style="border-bottom:3px solid ${rarityColor(skin.rarity)}">
-  <div class="weapon-icon">${skinImage(skin)}</div>
-  <div class="weapon-name">${escapeHtml(skin.name)}</div>
-  <div class="weapon-rarity">${escapeHtml(skin.rarity)}</div>
- </div>`;
-}
-
-function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
-
-function skipCurrentAnimation(){
- animationSkipped=true;
- if(animationResolve){
-  animationResolve();
-  animationResolve=null;
- }
-}
-
-async function animateOneSkin(skin,index,total){
- if(document.getElementById("skip-animation").checked){
-  document.getElementById("roulette-status").textContent="Анимация пропущена";
-  await wait(180);
-  return;
- }
-
- animationSkipped=false;
-
- document.getElementById("roulette-title").textContent="ОТКРЫТИЕ КЕЙСА";
- document.getElementById("roulette-subtitle").textContent=selectedCase.name;
- document.getElementById("roulette-progress").textContent="Предмет "+(index+1)+" из "+total;
- document.getElementById("roulette-status").textContent="Рулетка запускается...";
- document.getElementById("roulette-skip").style.display="block";
-
- const track=document.getElementById("roulette-track");
- const pool=selectedCase.items||[];
- const targetIndex=32;
- const cards=[];
-
- for(let i=0;i<45;i++){
-  cards.push(i===targetIndex?skin:(pool[Math.floor(Math.random()*pool.length)]||skin));
- }
-
- track.innerHTML=cards.map(rouletteCard).join("");
- track.style.transition="none";
- track.style.transform="translateX(0px)";
-
- document.getElementById("roulette-overlay").classList.add("show");
-
- await wait(100);
- if(animationSkipped)return;
-
- const windowElement=document.querySelector(".roulette-window");
- const card=track.children[targetIndex];
- if(!card)return;
-
- const distance=windowElement.clientWidth/2-(card.offsetLeft+card.offsetWidth/2);
-
- document.getElementById("roulette-status").textContent="Ищем твой предмет...";
-
- await wait(80);
- if(animationSkipped)return;
-
- track.style.transition="transform 5.2s cubic-bezier(.08,.72,.12,1)";
- track.style.transform="translateX("+distance+"px)";
-
- await new Promise(resolve=>{
-  let finished=false;
-
-  const finish=()=>{
-   if(finished)return;
-   finished=true;
-   animationResolve=null;
-   resolve();
-  };
-
-  animationResolve=finish;
-
-  const onEnd=()=>{
-   track.removeEventListener("transitionend",onEnd);
-   finish();
-  };
-
-  track.addEventListener("transitionend",onEnd);
-  setTimeout(finish,5500);
- });
-
- if(animationSkipped){
-  track.style.transition="transform .15s ease";
-  track.style.transform="translateX("+distance+"px)";
- }
-
- document.getElementById("roulette-status").textContent="Выпал предмет!";
-
- if(tg.HapticFeedback)tg.HapticFeedback.impactOccurred("medium");
-
- await wait(450);
-}
-
-async function playOpeningAnimation(skins){
- if(!skins.length)return;
-
- document.getElementById("roulette-overlay").classList.add("show");
-
- for(let i=0;i<skins.length;i++){
-  await animateOneSkin(skins[i],i,skins.length);
- }
-
- document.getElementById("roulette-overlay").classList.remove("show");
-}
-
-/* ОТКРЫТИЕ КЕЙСОВ */
-async function openSelectedCase(){
- if(!selectedCase||openingCase)return;
-
- openingCase=true;
-
- const button=document.getElementById("open-selected-button");
- button.disabled=true;
- button.textContent="ОТКРЫВАЕМ...";
-
- try{
-  const data=await apiRequest("/api/cases/open",{
-   method:"POST",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({
-    case_id:Number(selectedCase.id),
-    count:selectedQuantity
-   })
-  });
-
-  resultSkins=(data.skins||(data.skin?[data.skin]:[])).map(skin=>({...skin,sold:false}));
-
-  if(!resultSkins.length)throw new Error("Сервер не вернул результат открытия");
-
-  updateHeaderBalance(data.balance);
-
-  document.getElementById("case-menu").style.display="none";
-
-  if(tg.HapticFeedback)tg.HapticFeedback.impactOccurred("medium");
-
-  await playOpeningAnimation(resultSkins);
-
-  renderResults();
-  document.getElementById("case-result").classList.add("show");
-  document.getElementById("case-notice").className="notice";
-
-  await loadBalance();
-  await loadInventory();
-
-  if(tg.HapticFeedback)tg.HapticFeedback.notificationOccurred("success");
-
-  window.scrollTo(0,0);
-
- }catch(error){
-  document.getElementById("roulette-overlay").classList.remove("show");
-  document.getElementById("case-menu").style.display="block";
-
-  showNotice("case-notice","❌ "+error.message,"error");
-
-  if(tg.HapticFeedback)tg.HapticFeedback.notificationOccurred("error");
-
- }finally{
-  openingCase=false;
-  button.disabled=false;
-  updateQuantity();
- }
-}
-
-function renderResults(){
- const list=document.getElementById("result-items");
-
- list.innerHTML=resultSkins.map((skin,index)=>`
-  <div class="result-item">
-   <div class="result-item-visual">${skinImage(skin)}</div>
-   <div class="result-item-top">
-    <div>
-     <div class="result-item-name">🎁 ${escapeHtml(skin.name)}</div>
-     <div class="rarity">${escapeHtml(skin.rarity)}</div>
-     <div class="result-item-price">
-      Цена: ${Number(skin.price).toLocaleString("ru-RU")} DC ·
-      Продажа: ${Math.floor(Number(skin.price)*.9).toLocaleString("ru-RU")} DC
-     </div>
-    </div>
-   </div>
-   ${skin.sold?'<div class="result-sold">✓ Продано</div>':`<button class="sell-button" data-result-sell="${index}">ПРОДАТЬ</button>`}
-  </div>`).join("");
-
- const allSold=resultSkins.every(s=>s.sold);
- const sellAll=document.getElementById("sell-all-button");
-
- sellAll.disabled=allSold;
- sellAll.textContent=allSold?"✓ ВСЁ ПРОДАНО":"💰 ПРОДАТЬ ВСЁ";
-}
-
-async function sellResult(index){
- if(sellingSkin)return;
-
- const skin=resultSkins[index];
- if(!skin||skin.sold)return;
-
- sellingSkin=true;
-
- try{
-  const data=await apiRequest("/api/skins/sell",{
-   method:"POST",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({skin_id:Number(skin.id),quantity:1})
-  });
-
-  resultSkins[index].sold=true;
-  renderResults();
-
-  await loadBalance();
-  await loadInventory();
-
-  showNotice("case-notice","✅ Продано: "+skin.name+"\nПолучено: "+data.received+" DC","success");
-
-  if(tg.HapticFeedback)tg.HapticFeedback.notificationOccurred("success");
-
- }catch(error){
-  showNotice("case-notice","❌ "+error.message,"error");
- }finally{
-  sellingSkin=false;
- }
-}
-
-async function sellAllResults(){
- if(sellingSkin)return;
-
- const unsold=resultSkins.map((skin,index)=>({skin,index})).filter(item=>!item.skin.sold);
- if(!unsold.length)return;
-
- sellingSkin=true;
-
- const button=document.getElementById("sell-all-button");
- button.disabled=true;
- button.textContent="ПРОДАЖА...";
-
- let received=0,soldCount=0,errors=[];
-
- try{
-  for(const item of unsold){
-   try{
-    const data=await apiRequest("/api/skins/sell",{
-     method:"POST",
-     headers:{"Content-Type":"application/json"},
-     body:JSON.stringify({skin_id:Number(item.skin.id),quantity:1})
-    });
-
-    resultSkins[item.index].sold=true;
-    received+=Number(data.received||0);
-    soldCount++;
-
-   }catch(error){
-    errors.push(item.skin.name+": "+error.message);
-   }
-  }
-
-  renderResults();
-  await loadBalance();
-  await loadInventory();
-
-  if(errors.length){
-   showNotice("case-notice","Продано предметов: "+soldCount+"\nПолучено: "+received+" DC\nОшибки: "+errors.join("; "),"error");
-  }else{
-   showNotice("case-notice","✅ Все предметы проданы!\nПолучено: "+received+" DC","success");
-  }
-
- }finally{
-  sellingSkin=false;
-  renderResults();
- }
-}
-
-function openAgain(){
- if(!selectedCase)return;
-
- resultSkins=[];
- document.getElementById("case-result").classList.remove("show");
- document.getElementById("case-menu").style.display="block";
- document.getElementById("case-notice").className="notice";
-
- window.scrollTo(0,0);
-}
-
-/* ИНВЕНТАРЬ */
-async function loadInventory(){
- const list=document.getElementById("inventory-list");
-
- try{
-  const data=await apiRequest("/api/inventory");
-  const inventory=data.inventory||[];
-
-  const count=inventory.reduce((sum,skin)=>sum+Number(skin.quantity||1),0);
-  const limit=100;
-  const percent=Math.min(100,count/limit*100);
-
-  let html=`
-   <div class="inventory-capacity">
-    <div class="inventory-capacity-top">
-     <span>📦 Место в инвентаре</span>
-     <span class="inventory-capacity-count">${count} / ${limit}</span>
-    </div>
-    <div class="inventory-progress">
-     <div class="inventory-progress-fill" style="width:${percent}%"></div>
-    </div>
-   </div>`;
-
-  if(!inventory.length){
-   html+='<div class="empty">📦 Инвентарь пуст.<br>Открой кейс, чтобы получить первый скин!</div>';
-   list.innerHTML=html;
-   return;
-  }
-
-  html+=inventory.map(skin=>{
-   const price=Math.floor(Number(skin.price)*.9);
-
-   return `
-    <div class="skin-card ${getRarityClass(skin)}">
-     <div class="skin-card-top">
-      ${skinImage(skin,"skin-image")}
-      <div class="skin-info">
-       <div class="skin-name">${escapeHtml(skin.name)}</div>
-       <div class="rarity">${escapeHtml(skin.rarity)}</div>
-       <div class="skin-price">Цена: ${Number(skin.price).toLocaleString("ru-RU")} DC</div>
-       <div class="rarity">Количество: ${Number(skin.quantity||1)}</div>
-       <div class="rarity">Продажа: ${price.toLocaleString("ru-RU")} DC за штуку</div>
-      </div>
-     </div>
-     <button class="sell-button" data-sell-id="${Number(skin.skin_id)}">
-      ПРОДАТЬ ЗА ${price.toLocaleString("ru-RU")} DC
-     </button>
-    </div>`;
-  }).join("");
-
-  list.innerHTML=html;
-
- }catch(error){
-  list.innerHTML='<div class="empty">Ошибка инвентаря: '+escapeHtml(error.message)+'</div>';
- }
-}
-
-async function sellSkin(skinId,button){
- if(sellingSkin)return;
-
- sellingSkin=true;
- button.disabled=true;
- button.textContent="Продажа...";
-
- try{
-  const data=await apiRequest("/api/skins/sell",{
-   method:"POST",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({skin_id:Number(skinId),quantity:1})
-  });
-
-  showNotice("inventory-notice","✅ "+data.message+"\nПолучено: "+data.received+" DC\nБаланс: "+data.balance+" DC","success");
-
-  await loadBalance();
-  await loadInventory();
-
- }catch(error){
-  showNotice("inventory-notice","❌ "+error.message,"error");
-  button.disabled=false;
-  button.textContent="ПРОДАТЬ";
- }finally{
-  sellingSkin=false;
- }
-}
-
-/* ИСТОРИЯ */
-async function loadHistory(){
- const list=document.getElementById("history-list");
-
- try{
-  const data=await apiRequest("/api/history");
-  let html="";
-
-  if(data.openings&&data.openings.length){
-   html+='<h3 class="sub-title">📦 Открытия кейсов</h3>';
-   html+=data.openings.map(item=>`
-    <div class="history-item">
-     🎁 ${escapeHtml(item.case_name)}<br>
-     Выпало: <strong>${escapeHtml(item.skin_name)}</strong><br>
-     Цена открытия: ${Number(item.price_paid)} DC<br>
-     <span class="rarity">${escapeHtml(item.created_at)}</span>
-    </div>`).join("");
-  }
-
-  if(data.sales&&data.sales.length){
-   html+='<h3 class="sub-title">💰 Продажи</h3>';
-   html+=data.sales.map(item=>`
-    <div class="history-item">
-     💸 ${escapeHtml(item.skin_name)}<br>
-     Количество: ${Number(item.quantity)}<br>
-     Получено: <strong>${Number(item.amount_received)} DC</strong><br>
-     <span class="rarity">${escapeHtml(item.created_at)}</span>
-    </div>`).join("");
-  }
-
-  list.innerHTML=html||'<div class="empty">История пока пуста.</div>';
-
- }catch(error){
-  list.innerHTML='<div class="empty">Ошибка истории: '+escapeHtml(error.message)+'</div>';
- }
-}
-
-/* АДМИН */
-function showAdminMessage(message,type){
- const box=document.getElementById("admin-message");
- box.textContent=message;
- box.className="admin-message "+type;
-}
-
-async function changeDC(action){
- const targetId=document.getElementById("target-id").value.trim();
- const amount=document.getElementById("dc-amount").value.trim();
-
- const giveButton=document.getElementById("give-button");
- const takeButton=document.getElementById("take-button");
-
- if(!targetId||!amount){
-  showAdminMessage("Заполни Telegram ID и количество DC.","error");
-  return;
- }
-
- if(!/^\d+$/.test(targetId)||Number(targetId)<=0||!/^\d+$/.test(amount)||Number(amount)<=0){
-  showAdminMessage("Проверь ID и количество DC.","error");
-  return;
- }
-
- giveButton.disabled=true;
- takeButton.disabled=true;
-
- try{
-  const endpoint=action==="give"?"/api/admin/give-dc":"/api/admin/take-dc";
-
-  const data=await apiRequest(endpoint,{
-   method:"POST",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({user_id:Number(targetId),amount:Number(amount)})
-  });
-
-  showAdminMessage("✅ "+data.message+"\nНовый баланс: "+data.balance+" DC","success");
-
-  if(Number(targetId)===Number(currentUserId))await loadBalance();
-
-  document.getElementById("dc-amount").value="";
-
- }catch(error){
-  showAdminMessage("❌ "+error.message,"error");
- }finally{
-  giveButton.disabled=false;
-  takeButton.disabled=false;
- }
-}
-
-/* СОБЫТИЯ */
-document.getElementById("cases-list").addEventListener("click",event=>{
- const tile=event.target.closest("[data-select-case]");
- if(tile)selectCase(tile.dataset.selectCase);
+document.querySelectorAll(".nav-btn[data-page]").forEach(btn=>{
+ btn.addEventListener("click",()=>NFT_CASE.navigate(btn.dataset.page));
+});
+document.getElementById("modalClose").onclick=()=>NFT_CASE.closeModal();
+document.getElementById("modal").addEventListener("click",e=>{
+ if(e.target.id==="modal") NFT_CASE.closeModal();
 });
 
-document.querySelectorAll(".quantity-pick").forEach(button=>{
- button.addEventListener("click",()=>setQuantity(button.dataset.quantity));
-});
+const tg=window.Telegram?.WebApp;
+if(tg){
+ tg.ready();
+ tg.expand();
+ try{tg.setHeaderColor("#090b13");tg.setBackgroundColor("#090b13")}catch{}
+}
 
-document.getElementById("result-items").addEventListener("click",event=>{
- const button=event.target.closest("[data-result-sell]");
- if(button)sellResult(Number(button.dataset.resultSell));
+window.addEventListener("load",async()=>{
+ try{
+  await NFT_CASE.refresh();
+  const admin=await NFT_CASE.request("/api/admin/status");
+  NFT_CASE.admin=!!admin.is_admin;
+  document.getElementById("adminSwitch").parentElement.style.display=NFT_CASE.admin?"flex":"none";
+  const showAdmin=NFT_CASE.admin&&localStorage.getItem("nft_show_admin")==="1";
+  document.getElementById("adminNav").style.display=showAdmin?"flex":"none";
+  document.getElementById("adminPanel").style.display=showAdmin?"block":"none";
+ }catch(error){
+  NFT_CASE.notice(error.message);
+ }
 });
-
-document.getElementById("inventory-list").addEventListener("click",event=>{
- const button=event.target.closest("[data-sell-id]");
- if(button)sellSkin(button.dataset.sellId,button);
-});
-
-/* ЗАПУСК */
-loadBalance();
-checkAdmin();
 </script>
 
-<script src="upgrade.js"></script>
-<script src="clicker.js"></script>
-<script src="craft.js"></script>
-<script src="profile.js"></script>
-
+<script src="/static/js/profile.js"></script>
+<script src="/static/js/upgrade.js"></script>
+<script src="/static/js/craft.js"></script>
+<script src="/static/js/cases.js"></script>
 </body>
 </html>

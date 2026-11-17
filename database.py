@@ -30,6 +30,7 @@ def init_db():
             balance INTEGER DEFAULT 0,
             total_clicks INTEGER DEFAULT 0,
             click_level INTEGER DEFAULT 1,
+            last_click_at REAL DEFAULT 0,
             is_banned INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -81,13 +82,13 @@ def init_db():
         );
         """)
 
-        # Добавляем недостающие поля в старые базы
         migrations = {
             "users": {
                 "username": "TEXT",
                 "balance": "INTEGER DEFAULT 0",
                 "total_clicks": "INTEGER DEFAULT 0",
                 "click_level": "INTEGER DEFAULT 1",
+                "last_click_at": "REAL DEFAULT 0",
                 "is_banned": "INTEGER DEFAULT 0",
                 "created_at": "TIMESTAMP"
             },
@@ -112,6 +113,7 @@ def init_db():
                     f"PRAGMA table_info({table})"
                 ).fetchall()
             }
+
             for column, definition in columns.items():
                 if column not in existing:
                     db.execute(
@@ -185,6 +187,24 @@ def change_balance(telegram_id, amount, action, admin_id=None):
         """, (telegram_id, amount, action, admin_id))
 
         return new_balance
+
+
+def get_clicker_data(telegram_id):
+    with get_db() as db:
+        row = db.execute("""
+            SELECT balance, total_clicks, click_level
+            FROM users
+            WHERE telegram_id = ?
+        """, (telegram_id,)).fetchone()
+
+        if not row:
+            return {
+                "balance": 0,
+                "total_clicks": 0,
+                "click_level": 1
+            }
+
+        return dict(row)
 
 
 def add_skin(name, rarity, price):

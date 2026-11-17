@@ -13,6 +13,7 @@
   inventory: [],
   selected: new Set(),
   required: 5,
+  busy: false,
 
   escape(value) {
    return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -53,9 +54,9 @@
   },
 
   getTotal() {
-   return this.getSelectedItems().reduce((sum, item) => {
-    return sum + Number(item.final_price || 0);
-   }, 0);
+   return this.getSelectedItems().reduce((sum, item) =>
+    sum + Number(item.final_price || 0), 0
+   );
   },
 
   render() {
@@ -69,7 +70,8 @@
 
    const button = document.getElementById("craftButton");
 
-   button.disabled = this.selected.size !== this.required;
+   button.disabled =
+    this.busy || this.selected.size !== this.required;
 
    if (!this.inventory.length) {
     container.innerHTML =
@@ -88,6 +90,7 @@
        type="checkbox"
        data-craft-id="${id}"
        ${checked}
+       ${this.busy ? "disabled" : ""}
       >
       <div class="item-select-info">
        <strong>${name}</strong>
@@ -122,6 +125,8 @@
   },
 
   async play() {
+   if (this.busy) return;
+
    if (this.selected.size !== this.required) {
     app.notice(`Выбери ровно ${this.required} NFT`);
     return;
@@ -146,10 +151,15 @@
 
    const button = document.getElementById("craftButton");
 
-   button.disabled = true;
+   this.busy = true;
+   this.render();
    button.textContent = "СОЗДАНИЕ...";
 
    try {
+    if (window.GameSound) {
+     window.GameSound.play("click");
+    }
+
     const result = await app.request("/api/craft", {
      method: "POST",
      body: JSON.stringify({
@@ -160,40 +170,58 @@
     this.selected.clear();
 
     const reward = result.reward || {};
+    const rewardName = this.escape(reward.name || "Новый NFT");
 
-    const rewardName = this.escape(
-     reward.name || "Новый NFT"
-    );
-
-    const rewardPrice = reward.final_price ??
-     reward.price ??
-     reward.reward_price ??
-     0;
+    const rewardPrice = reward.price || 0;
 
     const image = reward.image_url
      ? `<img src="${this.escape(reward.image_url)}" style="width:100%;height:170px;object-fit:contain">`
      : '<div style="font-size:75px;padding:25px">🎁</div>';
 
-    app.showModal(`
-     <div style="clear:both;text-align:center;padding-top:15px">
-      <div style="font-size:45px">✨</div>
+    const modal = `
+     <div class="craft-animation" style="clear:both;text-align:center;padding-top:15px">
+      <div class="craft-glow" style="font-size:55px;animation:craftPulse 1s infinite alternate">
+       ✨
+      </div>
       <h2 style="margin:10px 0;color:#bbaaff">КРАФТ УСПЕШЕН!</h2>
       <p class="muted small">Ты получил новый NFT</p>
-      ${image}
-      <div class="result-item">
-       <strong>${rewardName}</strong>
-       <div class="muted small">
-        ${app.format(rewardPrice)}
+      <div style="animation:craftAppear .6s ease both">
+       ${image}
+       <div class="result-item">
+        <strong>${rewardName}</strong>
+        <div class="muted small">
+         ${app.format(rewardPrice)}
+        </div>
        </div>
       </div>
       <button class="primary" id="craftResultClose">
        ЗАБРАТЬ NFT
       </button>
      </div>
-    `);
+     <style>
+      @keyframes craftPulse {
+       from {transform:scale(.9);filter:brightness(.8)}
+       to {transform:scale(1.15);filter:brightness(1.5)}
+      }
+      @keyframes craftAppear {
+       from {opacity:0;transform:translateY(25px) scale(.85)}
+       to {opacity:1;transform:translateY(0) scale(1)}
+      }
+     </style>
+    `;
+
+    if (window.GameSound) {
+     window.GameSound.play("craft");
+     window.GameSound.play("win");
+    }
+
+    app.showModal(modal);
 
     document.getElementById("craftResultClose").onclick = () => {
      app.closeModal();
+     if (window.GameSound) {
+      window.GameSound.play("click");
+     }
     };
 
     await this.load();
@@ -204,7 +232,8 @@
     app.notice(error.message || "Ошибка крафта");
     await this.load();
    } finally {
-    button.disabled = this.selected.size !== this.required;
+    this.busy = false;
+    this.render();
     button.textContent = "СОЗДАТЬ NFT";
    }
   },

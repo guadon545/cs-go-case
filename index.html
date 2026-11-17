@@ -6,377 +6,234 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#090b13">
 <title>NFT CASE</title>
-
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
- --bg:#090b13;
- --panel:rgba(255,255,255,.065);
- --panel2:rgba(255,255,255,.09);
- --border:rgba(255,255,255,.10);
- --text:#fff;
- --muted:#858b9c;
- --purple:#9270ff;
- --blue:#558bff;
- --green:#48d69a;
- --red:#ff657c;
+ --bg:#090b13;--panel:rgba(255,255,255,.065);
+ --panel2:rgba(255,255,255,.09);--border:rgba(255,255,255,.10);
+ --text:#fff;--muted:#858b9c;--purple:#9270ff;
+ --blue:#558bff;--green:#48d69a;--red:#ff657c;
 }
 body{
  min-height:100vh;
- background:
- radial-gradient(ellipse at 15% 0%,rgba(100,70,220,.20),transparent 42%),
- radial-gradient(ellipse at 100% 40%,rgba(40,100,210,.12),transparent 45%),
- var(--bg);
- color:var(--text);
- font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
- padding-bottom:105px;
- overflow-x:hidden;
+ background:radial-gradient(ellipse at 15% 0%,rgba(100,70,220,.20),transparent 42%),
+ radial-gradient(ellipse at 100% 40%,rgba(40,100,210,.12),transparent 45%),var(--bg);
+ color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ padding-bottom:105px;overflow-x:hidden;
 }
 button{font:inherit;color:inherit;border:0;cursor:pointer}
 button:disabled{opacity:.45;cursor:not-allowed}
 .app{max-width:600px;margin:auto;padding:16px}
-.header{
- display:flex;align-items:center;justify-content:space-between;
- margin:5px 0 22px;
-}
+.header{display:flex;align-items:center;justify-content:space-between;margin:5px 0 22px}
 .logo{font-size:22px;font-weight:900;letter-spacing:1px}
 .logo span{color:var(--purple)}
-.balance{
- background:var(--panel2);border:1px solid var(--border);
- border-radius:15px;padding:10px 14px;font-weight:800;
-}
+.balance{background:var(--panel2);border:1px solid var(--border);border-radius:15px;padding:10px 14px;font-weight:800}
 .balance small{color:var(--muted);font-weight:500;margin-right:5px}
 .page{display:none;animation:appear .2s ease}
 .page.active{display:block}
 @keyframes appear{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 .page-title{font-size:25px;font-weight:850;margin:8px 0 5px}
 .page-subtitle{font-size:13px;color:var(--muted);margin-bottom:20px}
-.panel{
- background:var(--panel);border:1px solid var(--border);
- border-radius:22px;padding:16px;margin-bottom:14px;
- backdrop-filter:blur(20px);
-}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:22px;padding:16px;margin-bottom:14px;backdrop-filter:blur(20px)}
 .section-title{font-size:16px;font-weight:800;margin-bottom:13px}
 .muted{color:var(--muted)}
 .small{font-size:12px}
-.primary{
- background:linear-gradient(110deg,#8665f5,#527ff5);
- border-radius:14px;padding:14px 18px;font-weight:800;
- width:100%;transition:.15s;
-}
-.secondary{
- background:var(--panel2);border:1px solid var(--border);
- border-radius:13px;padding:12px 15px;font-weight:700;
-}
+.primary{background:linear-gradient(110deg,#8665f5,#527ff5);border-radius:14px;padding:14px 18px;font-weight:800;width:100%;transition:.15s}
+.secondary{background:var(--panel2);border:1px solid var(--border);border-radius:13px;padding:12px 15px;font-weight:700}
 .danger{background:rgba(255,80,105,.14);color:#ff8294;border:1px solid rgba(255,80,105,.25)}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
-.case-card,.nft-card{
- background:var(--panel);border:1px solid var(--border);
- border-radius:18px;padding:12px;min-width:0;
-}
-.case-art,.nft-art{
- height:105px;border-radius:13px;margin-bottom:10px;
- display:flex;align-items:center;justify-content:center;
- background:linear-gradient(145deg,rgba(130,95,255,.24),rgba(45,105,220,.12));
- font-size:40px;overflow:hidden;
-}
+.case-card,.nft-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:12px;min-width:0}
+.case-art,.nft-art{height:105px;border-radius:13px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,rgba(130,95,255,.24),rgba(45,105,220,.12));font-size:40px;overflow:hidden}
 .case-art img,.nft-art img{width:100%;height:100%;object-fit:contain}
 .case-name,.nft-name{font-size:14px;font-weight:800;margin-bottom:5px}
 .case-price,.nft-price{font-size:13px;color:#b9a8ff;font-weight:800}
 .card-button{margin-top:10px;width:100%;padding:10px;border-radius:11px;background:var(--panel2);font-size:12px;font-weight:800}
-.tabs{
- display:flex;gap:8px;overflow-x:auto;padding-bottom:5px;
- scrollbar-width:none;
-}
-.tabs button{
- flex:1;min-width:65px;padding:10px 7px;border-radius:11px;
- background:var(--panel2);color:var(--muted);font-size:12px;font-weight:700;
-}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:5px;scrollbar-width:none}
+.tabs button{flex:1;min-width:65px;padding:10px 7px;border-radius:11px;background:var(--panel2);color:var(--muted);font-size:12px;font-weight:700}
 .tabs button.selected{background:rgba(143,111,255,.22);color:#c8b8ff;border:1px solid rgba(143,111,255,.35)}
-.field{
- width:100%;background:rgba(0,0,0,.22);border:1px solid var(--border);
- color:white;border-radius:12px;padding:13px;font-size:14px;outline:none;
-}
+.field{width:100%;background:rgba(0,0,0,.22);border:1px solid var(--border);color:white;border-radius:12px;padding:13px;font-size:14px;outline:none}
 .field option{background:#171927}
 .field-label{display:block;font-size:12px;color:var(--muted);margin:13px 0 7px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
-.stat{
- background:rgba(255,255,255,.045);border:1px solid var(--border);
- border-radius:14px;padding:13px;
-}
+.stat{background:rgba(255,255,255,.045);border:1px solid var(--border);border-radius:14px;padding:13px}
 .stat strong{display:block;font-size:19px;margin-bottom:4px}
 .stat span{font-size:11px;color:var(--muted)}
-.profile-avatar{
- width:62px;height:62px;border-radius:20px;
- background:linear-gradient(135deg,#9270ff,#397ce8);
- display:flex;align-items:center;justify-content:center;
- font-size:25px;font-weight:900;
-}
+.profile-avatar{width:62px;height:62px;border-radius:20px;background:linear-gradient(135deg,#9270ff,#397ce8);display:flex;align-items:center;justify-content:center;font-size:25px;font-weight:900}
 .game-id{font-size:13px;color:#bbaaff;margin-top:5px}
-.switch{
- width:48px;height:27px;border-radius:20px;background:#414556;
- position:relative;transition:.2s;
-}
-.switch:after{
- content:"";position:absolute;width:21px;height:21px;
- background:white;border-radius:50%;top:3px;left:3px;transition:.2s;
-}
+.switch{width:48px;height:27px;border-radius:20px;background:#414556;position:relative;transition:.2s}
+.switch:after{content:"";position:absolute;width:21px;height:21px;background:white;border-radius:50%;top:3px;left:3px;transition:.2s}
 .switch.on{background:#8062ed}
 .switch.on:after{left:24px}
-.bottom-nav{
- position:fixed;z-index:20;bottom:12px;left:50%;transform:translateX(-50%);
- width:min(570px,calc(100% - 24px));
- display:flex;gap:5px;padding:8px;
- border:1px solid rgba(255,255,255,.13);
- background:rgba(23,25,40,.83);backdrop-filter:blur(25px);
- border-radius:22px;box-shadow:0 10px 40px #0008;
-}
-.nav-btn{
- flex:1;min-width:0;padding:9px 3px;border-radius:15px;
- color:#858b9c;background:transparent;font-size:10px;font-weight:700;
- display:flex;flex-direction:column;align-items:center;gap:5px;
-}
+.bottom-nav{position:fixed;z-index:20;bottom:12px;left:50%;transform:translateX(-50%);width:min(570px,calc(100% - 24px));display:flex;gap:5px;padding:8px;border:1px solid rgba(255,255,255,.13);background:rgba(23,25,40,.83);backdrop-filter:blur(25px);border-radius:22px;box-shadow:0 10px 40px #0008}
+.nav-btn{flex:1;min-width:0;padding:9px 3px;border-radius:15px;color:#858b9c;background:transparent;font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:5px}
 .nav-btn .nav-icon{font-size:19px}
 .nav-btn.active{color:white;background:rgba(140,110,255,.20)}
-.notice{
- display:none;padding:12px;border-radius:12px;margin-bottom:12px;
- font-size:13px;background:rgba(255,255,255,.08);
-}
+.notice{display:none;padding:12px;border-radius:12px;margin-bottom:12px;font-size:13px;background:rgba(255,255,255,.08)}
 .notice.show{display:block}
-.empty{
- text-align:center;padding:30px 12px;color:var(--muted);
- border:1px dashed var(--border);border-radius:16px;font-size:13px;
-}
-.item-select{
- display:flex;align-items:center;gap:10px;padding:10px;
- border-radius:13px;background:rgba(255,255,255,.045);
- border:1px solid var(--border);margin-bottom:8px;
-}
+.empty{text-align:center;padding:30px 12px;color:var(--muted);border:1px dashed var(--border);border-radius:16px;font-size:13px}
+.item-select{display:flex;align-items:center;gap:10px;padding:10px;border-radius:13px;background:rgba(255,255,255,.045);border:1px solid var(--border);margin-bottom:8px}
 .item-select input{accent-color:#9270ff;width:18px;height:18px}
 .item-select-info{min-width:0;flex:1}
 .item-select-info strong{display:block;font-size:13px}
 .item-select-info span{font-size:11px;color:var(--muted)}
-.modal{
- display:none;position:fixed;inset:0;z-index:50;
- background:rgba(0,0,0,.75);padding:20px;
- align-items:center;justify-content:center;
-}
+.modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.75);padding:20px;align-items:center;justify-content:center}
 .modal.show{display:flex}
-.modal-box{
- width:100%;max-width:420px;background:#171a29;
- border:1px solid var(--border);border-radius:22px;padding:20px;
- max-height:85vh;overflow:auto;
-}
+.modal-box{width:100%;max-width:420px;background:#171a29;border:1px solid var(--border);border-radius:22px;padding:20px;max-height:85vh;overflow:auto}
 .modal-close{float:right;background:var(--panel2);border-radius:10px;padding:7px 11px}
 .result-item{padding:12px;border-radius:13px;background:var(--panel2);margin:8px 0}
 hr{border:0;border-top:1px solid var(--border);margin:14px 0}
-@media(min-width:500px){
- .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
- .case-art,.nft-art{height:125px}
-}
+@media(min-width:500px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.case-art,.nft-art{height:125px}}
 </style>
 </head>
 
 <body>
 <div class="app">
- <header class="header">
-  <div class="logo">NFT <span>CASE</span></div>
-  <div class="balance"><small>Баланс</small><span id="balance">0 G</span></div>
- </header>
+<header class="header">
+ <div class="logo">NFT <span>CASE</span></div>
+ <div class="balance"><small>Баланс</small><span id="balance">0 G</span></div>
+</header>
 
- <div id="notice" class="notice"></div>
+<div id="notice" class="notice"></div>
 
- <!-- АПГРЕЙД -->
- <section id="page-upgrade" class="page active">
-  <h1 class="page-title">Апгрейд NFT</h1>
-  <p class="page-subtitle">Испытай удачу и улучши свой NFT</p>
-
-  <div class="panel">
-   <div class="section-title">Выбери режим</div>
-   <div class="tabs" id="upgradeModes">
-    <button class="selected" data-mode="multiplier">Множитель</button>
-    <button data-mode="chance">Процент</button>
-   </div>
-
-   <label class="field-label">Твой NFT</label>
-   <select class="field" id="upgradeSource">
-    <option value="">Загрузка инвентаря...</option>
-   </select>
-
-   <label class="field-label">Множитель</label>
-   <div class="tabs" id="multiplierTabs">
-    <button class="selected" data-multiplier="2">x2</button>
-    <button data-multiplier="3">x3</button>
-    <button data-multiplier="5">x5</button>
-    <button data-multiplier="10">x10</button>
-   </div>
-
-   <div id="chanceControls" style="display:none">
-    <label class="field-label">Шанс победы</label>
-    <input class="field" id="upgradeChance" type="number" min="1" max="50" value="20">
-   </div>
-
-   <label class="field-label">NFT, который хочешь получить</label>
-   <select class="field" id="upgradeTarget">
-    <option value="">Сначала выбери исходный NFT</option>
-   </select>
-
-   <label class="field-label">Фон награды</label>
-   <select class="field" id="upgradeBackground">
-    <option value="normal">Normal x1</option>
-    <option value="gold">Gold x3</option>
-    <option value="onyx_black">Onyx Black x5</option>
-    <option value="black">Black x10</option>
-   </select>
-
-   <div id="upgradeInfo" class="muted small" style="margin:13px 0">Выбери NFT для начала</div>
-   <button class="primary" id="upgradeButton">ПРОКАЧАТЬ NFT</button>
+<section id="page-upgrade" class="page active">
+ <h1 class="page-title">Апгрейд NFT</h1>
+ <p class="page-subtitle">Испытай удачу и улучши свой NFT</p>
+ <div class="panel">
+  <div class="section-title">Выбери режим</div>
+  <div class="tabs" id="upgradeModes">
+   <button class="selected" data-mode="multiplier">Множитель</button>
+   <button data-mode="chance">Процент</button>
   </div>
-
-  <div class="panel">
-   <div class="section-title">Как работает апгрейд?</div>
-   <p class="muted small">Выбираешь NFT из инвентаря, задаёшь множитель и выбираешь желаемую награду. При победе получаешь выбранный NFT, при поражении исходный NFT сгорает.</p>
+  <label class="field-label">Твой NFT</label>
+  <select class="field" id="upgradeSource"><option value="">Загрузка инвентаря...</option></select>
+  <label class="field-label">Множитель</label>
+  <div class="tabs" id="multiplierTabs">
+   <button class="selected" data-multiplier="2">x2</button>
+   <button data-multiplier="3">x3</button>
+   <button data-multiplier="5">x5</button>
+   <button data-multiplier="10">x10</button>
   </div>
- </section>
-
- <!-- КЕЙСЫ -->
- <section id="page-cases" class="page">
-  <h1 class="page-title">NFT Кейсы</h1>
-  <p class="page-subtitle">Открывай кейсы и собирай коллекцию</p>
-  <div id="casesGrid" class="grid">
-   <div class="empty" style="grid-column:1/-1">Загружаем кейсы...</div>
+  <div id="chanceControls" style="display:none">
+   <label class="field-label">Шанс победы</label>
+   <input class="field" id="upgradeChance" type="number" min="5" max="90" value="20">
   </div>
- </section>
+  <label class="field-label">NFT, который хочешь получить</label>
+  <select class="field" id="upgradeTarget"><option value="">Сначала выбери исходный NFT</option></select>
+  <label class="field-label">Фон награды</label>
+  <select class="field" id="upgradeBackground">
+   <option value="normal">Normal x1</option>
+   <option value="gold">Gold x3</option>
+   <option value="onyx_black">Onyx Black x5</option>
+   <option value="black">Black x10</option>
+  </select>
+  <div id="upgradeInfo" class="muted small" style="margin:13px 0">Выбери NFT для начала</div>
+  <button class="primary" id="upgradeButton">ПРОКАЧАТЬ NFT</button>
+ </div>
+ <div class="panel">
+  <div class="section-title">Как работает апгрейд?</div>
+  <p class="muted small">Выбираешь NFT из инвентаря, задаёшь множитель и выбираешь желаемую награду. При победе получаешь выбранный NFT, при поражении исходный NFT сгорает.</p>
+ </div>
+</section>
 
- <!-- КРАФТ -->
- <section id="page-craft" class="page">
-  <h1 class="page-title">Крафт NFT</h1>
-  <p class="page-subtitle">Объедини 5 NFT и получи один новый</p>
+<section id="page-cases" class="page">
+ <h1 class="page-title">NFT Кейсы</h1>
+ <p class="page-subtitle">Открывай кейсы и собирай коллекцию</p>
+ <div id="casesGrid" class="grid"><div class="empty" style="grid-column:1/-1">Загружаем кейсы...</div></div>
+</section>
 
-  <div class="panel">
-   <div class="row">
-    <div class="section-title">Выбери 5 NFT</div>
-    <strong id="craftSelectedCount">0/5</strong>
+<section id="page-craft" class="page">
+ <h1 class="page-title">Крафт NFT</h1>
+ <p class="page-subtitle">Объедини 5 NFT и получи один новый</p>
+ <div class="panel">
+  <div class="row"><div class="section-title">Выбери 5 NFT</div><strong id="craftSelectedCount">0/5</strong></div>
+  <div id="craftInventory"><div class="empty">Загружаем инвентарь...</div></div>
+  <hr>
+  <div class="row" style="margin-bottom:12px"><span class="muted small">Общая стоимость выбранных NFT</span><strong id="craftTotal">0 G</strong></div>
+  <button class="primary" id="craftButton">СОЗДАТЬ NFT</button>
+ </div>
+</section>
+
+<section id="page-profile" class="page">
+ <h1 class="page-title">Профиль</h1>
+ <p class="page-subtitle">Твоя статистика и коллекция NFT</p>
+ <div class="panel">
+  <div class="row">
+   <div class="row" style="justify-content:flex-start">
+    <div class="profile-avatar" id="profileAvatar">N</div>
+    <div><strong id="profileName">Игрок</strong><div class="game-id" id="profileGameId">#-----</div></div>
    </div>
-   <div id="craftInventory"><div class="empty">Загружаем инвентарь...</div></div>
-   <hr>
-   <div class="row" style="margin-bottom:12px">
-    <span class="muted small">Общая стоимость выбранных NFT</span>
-    <strong id="craftTotal">0 G</strong>
-   </div>
-   <button class="primary" id="craftButton">СОЗДАТЬ NFT</button>
+   <div style="text-align:right"><div class="muted small">Баланс</div><strong id="profileBalance">0 G</strong></div>
   </div>
- </section>
-
- <!-- ПРОФИЛЬ -->
- <section id="page-profile" class="page">
-  <h1 class="page-title">Профиль</h1>
-  <p class="page-subtitle">Твоя статистика и коллекция NFT</p>
-
-  <div class="panel">
-   <div class="row">
-    <div class="row" style="justify-content:flex-start">
-     <div class="profile-avatar" id="profileAvatar">N</div>
-     <div>
-      <strong id="profileName">Игрок</strong>
-      <div class="game-id" id="profileGameId">#-----</div>
-     </div>
-    </div>
-    <div style="text-align:right">
-     <div class="muted small">Баланс</div>
-     <strong id="profileBalance">0 G</strong>
-    </div>
-   </div>
+ </div>
+ <div class="panel">
+  <div class="section-title">Статистика</div>
+  <div class="stat-grid">
+   <div class="stat"><strong id="statCases">0</strong><span>Открыто кейсов</span></div>
+   <div class="stat"><strong id="statUpgrades">0</strong><span>Апгрейдов</span></div>
+   <div class="stat"><strong id="statWins">0</strong><span>Побед в апгрейде</span></div>
+   <div class="stat"><strong id="statCrafts">0</strong><span>Крафтов</span></div>
+   <div class="stat"><strong id="statSold">0</strong><span>Продано NFT</span></div>
+   <div class="stat"><strong id="statInventory">0</strong><span>NFT в инвентаре</span></div>
   </div>
-
-  <div class="panel">
-   <div class="section-title">Статистика</div>
-   <div class="stat-grid">
-    <div class="stat"><strong id="statCases">0</strong><span>Открыто кейсов</span></div>
-    <div class="stat"><strong id="statUpgrades">0</strong><span>Апгрейдов</span></div>
-    <div class="stat"><strong id="statWins">0</strong><span>Побед в апгрейде</span></div>
-    <div class="stat"><strong id="statCrafts">0</strong><span>Крафтов</span></div>
-    <div class="stat"><strong id="statSold">0</strong><span>Продано NFT</span></div>
-    <div class="stat"><strong id="statInventory">0</strong><span>NFT в инвентаре</span></div>
-   </div>
+ </div>
+ <div class="panel">
+  <div class="row"><div class="section-title">Мой инвентарь</div><button class="secondary small" id="sellAllButton">Продать всё</button></div>
+  <div id="inventoryGrid" class="grid"><div class="empty" style="grid-column:1/-1">Загружаем NFT...</div></div>
+ </div>
+ <div class="panel">
+  <div class="section-title">Настройки</div>
+  <div class="row" style="margin-bottom:15px">
+   <div><strong>Звуки</strong><div class="muted small">Звуковые эффекты игры</div></div>
+   <button class="switch" id="soundSwitch" aria-label="Звуки"></button>
   </div>
-
-  <div class="panel">
-   <div class="row">
-    <div class="section-title">Мой инвентарь</div>
-    <button class="secondary small" id="sellAllButton">Продать всё</button>
-   </div>
-   <div id="inventoryGrid" class="grid">
-    <div class="empty" style="grid-column:1/-1">Загружаем NFT...</div>
-   </div>
+  <div class="row">
+   <div><strong>Показывать админ-панель</strong><div class="muted small">Настройка отображения вкладки</div></div>
+   <button class="switch" id="adminSwitch" aria-label="Админ-панель"></button>
   </div>
+ </div>
+</section>
 
-  <div class="panel">
-   <div class="section-title">Настройки</div>
-   <div class="row" style="margin-bottom:15px">
-    <div>
-     <strong>Звуки</strong>
-     <div class="muted small">Звуковые эффекты игры</div>
-    </div>
-    <button class="switch" id="soundSwitch" aria-label="Звуки"></button>
-   </div>
-   <div class="row">
-    <div>
-     <strong>Показывать админ-панель</strong>
-     <div class="muted small">Настройка отображения вкладки</div>
-    </div>
-    <button class="switch" id="adminSwitch" aria-label="Админ-панель"></button>
-   </div>
+<!-- ОТДЕЛЬНАЯ СТРАНИЦА АДМИНА -->
+<section id="page-admin" class="page">
+ <h1 class="page-title">Админ-панель</h1>
+ <p class="page-subtitle">Управление игроками и NFT</p>
+ <div class="panel" id="adminPanel">
+  <div class="section-title">Управление балансом</div>
+  <label class="field-label">Игровой ID игрока</label>
+  <input class="field" id="adminGameId" placeholder="#10001">
+  <label class="field-label">Количество G</label>
+  <input class="field" id="adminAmount" type="number" min="1" placeholder="1000">
+  <div class="row" style="margin-top:10px">
+   <button class="secondary" id="adminGiveG" style="flex:1">Выдать G</button>
+   <button class="secondary danger" id="adminTakeG" style="flex:1">Забрать G</button>
   </div>
-
-  <div class="panel" id="adminPanel" style="display:none">
-   <div class="section-title">Админ-панель</div>
-   <label class="field-label">Игровой ID игрока</label>
-   <input class="field" id="adminGameId" placeholder="#10001">
-   <label class="field-label">Количество G</label>
-   <input class="field" id="adminAmount" type="number" min="1" placeholder="1000">
-   <div class="row" style="margin-top:10px">
-    <button class="secondary" id="adminGiveG" style="flex:1">Выдать G</button>
-    <button class="secondary danger" id="adminTakeG" style="flex:1">Забрать G</button>
-   </div>
-   <hr>
-   <label class="field-label">Код NFT</label>
-   <input class="field" id="adminNftCode" placeholder="Например nft_001">
-   <label class="field-label">Фон</label>
-   <select class="field" id="adminBackground">
-    <option value="normal">Normal</option>
-    <option value="gold">Gold</option>
-    <option value="onyx_black">Onyx Black</option>
-    <option value="black">Black</option>
-   </select>
-   <button class="primary" id="adminGiveNft" style="margin-top:12px">ВЫДАТЬ NFT</button>
-  </div>
- </section>
+  <hr>
+  <div class="section-title">Выдача NFT</div>
+  <label class="field-label">Код NFT</label>
+  <input class="field" id="adminNftCode" placeholder="Например nft_001">
+  <label class="field-label">Фон</label>
+  <select class="field" id="adminBackground">
+   <option value="normal">Normal</option>
+   <option value="gold">Gold</option>
+   <option value="onyx_black">Onyx Black</option>
+   <option value="black">Black</option>
+  </select>
+  <button class="primary" id="adminGiveNft" style="margin-top:12px">ВЫДАТЬ NFT</button>
+ </div>
+</section>
 </div>
 
-<!-- НИЖНЯЯ НАВИГАЦИЯ -->
 <nav class="bottom-nav">
- <button class="nav-btn active" data-page="upgrade">
-  <span class="nav-icon">⚡</span><span>Апгрейд</span>
- </button>
- <button class="nav-btn" data-page="cases">
-  <span class="nav-icon">🎁</span><span>Кейсы</span>
- </button>
- <button class="nav-btn" data-page="craft">
-  <span class="nav-icon">🛠</span><span>Крафт</span>
- </button>
- <button class="nav-btn" id="adminNav" data-page="profile" style="display:none">
-  <span class="nav-icon">🛡️</span><span>Админ</span>
- </button>
- <button class="nav-btn" data-page="profile">
-  <span class="nav-icon">👤</span><span>Профиль</span>
- </button>
+ <button class="nav-btn active" data-page="upgrade"><span class="nav-icon">⚡</span><span>Апгрейд</span></button>
+ <button class="nav-btn" data-page="cases"><span class="nav-icon">🎁</span><span>Кейсы</span></button>
+ <button class="nav-btn" data-page="craft"><span class="nav-icon">🛠</span><span>Крафт</span></button>
+ <button class="nav-btn" id="adminNav" data-page="admin" style="display:none"><span class="nav-icon">🛡️</span><span>Админ</span></button>
+ <button class="nav-btn" data-page="profile"><span class="nav-icon">👤</span><span>Профиль</span></button>
 </nav>
 
-<!-- МОДАЛЬНОЕ ОКНО -->
 <div class="modal" id="modal">
  <div class="modal-box">
   <button class="modal-close" id="modalClose">✕</button>
@@ -386,20 +243,22 @@ hr{border:0;border-top:1px solid var(--border);margin:14px 0}
 
 <script>
 window.NFT_CASE = {
- api: "",
- currency: "G",
- inventory: [],
- catalog: [],
- cases: [],
- profile: null,
- admin: false,
- sound: true,
- selectedMode: "multiplier",
- selectedMultiplier: 2,
- pendingBatch: null,
+ api:"",
+ currency:"G",
+ inventory:[],
+ catalog:[],
+ cases:[],
+ profile:null,
+ admin:false,
+ sound:true,
+ selectedMode:"multiplier",
+ selectedMultiplier:2,
+ pendingBatch:null,
+
  format(value){
   return new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(Number(value)||0)+" G";
  },
+
  async request(url,options={}){
   const tg=window.Telegram?.WebApp;
   const headers={"Content-Type":"application/json",...(options.headers||{})};
@@ -410,6 +269,7 @@ window.NFT_CASE = {
   if(!response.ok||data.success===false) throw new Error(data.error||data.message||"Ошибка запроса");
   return data;
  },
+
  notice(message){
   const el=document.getElementById("notice");
   el.textContent=message;
@@ -417,23 +277,34 @@ window.NFT_CASE = {
   clearTimeout(this.noticeTimer);
   this.noticeTimer=setTimeout(()=>el.classList.remove("show"),3500);
  },
+
  showModal(html){
   document.getElementById("modalContent").innerHTML=html;
   document.getElementById("modal").classList.add("show");
  },
+
  closeModal(){
   document.getElementById("modal").classList.remove("show");
  },
+
  navigate(page){
+  if(page==="admin"&&!this.admin){
+   this.notice("Нет доступа к админ-панели");
+   return;
+  }
+
   document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach(x=>x.classList.remove("active"));
+
   document.getElementById("page-"+page)?.classList.add("active");
   document.querySelectorAll('.nav-btn[data-page="'+page+'"]').forEach(x=>x.classList.add("active"));
+
   if(page==="profile") window.Profile?.load();
   if(page==="upgrade") window.Upgrade?.load();
   if(page==="craft") window.Craft?.load();
   if(page==="cases") window.Cases?.load();
  },
+
  async refresh(){
   await Promise.allSettled([
    window.Profile?.load(),
@@ -447,6 +318,7 @@ window.NFT_CASE = {
 document.querySelectorAll(".nav-btn[data-page]").forEach(btn=>{
  btn.addEventListener("click",()=>NFT_CASE.navigate(btn.dataset.page));
 });
+
 document.getElementById("modalClose").onclick=()=>NFT_CASE.closeModal();
 document.getElementById("modal").addEventListener("click",e=>{
  if(e.target.id==="modal") NFT_CASE.closeModal();
@@ -462,12 +334,18 @@ if(tg){
 window.addEventListener("load",async()=>{
  try{
   await NFT_CASE.refresh();
+
   const admin=await NFT_CASE.request("/api/admin/status");
   NFT_CASE.admin=!!admin.is_admin;
-  document.getElementById("adminSwitch").parentElement.style.display=NFT_CASE.admin?"flex":"none";
+
+  const adminNav=document.getElementById("adminNav");
+  const adminSwitch=document.getElementById("adminSwitch");
+
+  adminSwitch.parentElement.style.display=NFT_CASE.admin?"flex":"none";
+
   const showAdmin=NFT_CASE.admin&&localStorage.getItem("nft_show_admin")==="1";
-  document.getElementById("adminNav").style.display=showAdmin?"flex":"none";
-  document.getElementById("adminPanel").style.display=showAdmin?"block":"none";
+  adminNav.style.display=showAdmin?"flex":"none";
+  adminSwitch.classList.toggle("on",showAdmin);
  }catch(error){
   NFT_CASE.notice(error.message);
  }

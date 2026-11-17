@@ -17,6 +17,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 import database
 from upgrade import create_upgrade_blueprint
 from clicker import create_clicker_blueprint
+from craft import create_craft_blueprint
 
 
 app = Flask(__name__)
@@ -175,6 +176,10 @@ app.register_blueprint(
 
 app.register_blueprint(
     create_clicker_blueprint(authorized_user)
+)
+
+app.register_blueprint(
+    create_craft_blueprint(authorized_user)
 )
 
 

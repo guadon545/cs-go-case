@@ -57,12 +57,7 @@
   },
 
   renderProfile(profile) {
-   const name =
-    profile.first_name ||
-    profile.username ||
-    "Игрок";
-
-   const avatar = document.getElementById("profileAvatar");
+   const name = profile.first_name || profile.username || "Игрок";
 
    document.getElementById("profileName").textContent = name;
    document.getElementById("profileGameId").textContent =
@@ -74,7 +69,8 @@
    document.getElementById("balance").textContent =
     app.format(profile.balance);
 
-   avatar.textContent = name.trim().charAt(0).toUpperCase() || "N";
+   document.getElementById("profileAvatar").textContent =
+    name.trim().charAt(0).toUpperCase() || "N";
 
    const sound = profile.sound_enabled !== false;
    app.sound = sound;
@@ -88,19 +84,14 @@
 
    document.getElementById("statCases").textContent =
     stats.cases_opened || 0;
-
    document.getElementById("statUpgrades").textContent =
     stats.upgrades_played || 0;
-
    document.getElementById("statWins").textContent =
     stats.upgrades_won || 0;
-
    document.getElementById("statCrafts").textContent =
     stats.crafts_completed || 0;
-
    document.getElementById("statSold").textContent =
     stats.nft_sold || 0;
-
    document.getElementById("statInventory").textContent =
     inventory.length;
   },
@@ -116,9 +107,9 @@
     return;
    }
 
-   const sorted = [...inventory].sort((a, b) => {
-    return Number(b.final_price || 0) - Number(a.final_price || 0);
-   });
+   const sorted = [...inventory].sort((a, b) =>
+    Number(b.final_price || 0) - Number(a.final_price || 0)
+   );
 
    container.innerHTML = sorted.map(item => {
     const id = Number(item.inventory_id);
@@ -146,7 +137,9 @@
    container.querySelectorAll("[data-inventory-id]").forEach(button => {
     button.addEventListener("click", () => {
      const id = Number(button.dataset.inventoryId);
-     const item = inventory.find(x => Number(x.inventory_id) === id);
+     const item = inventory.find(x =>
+      Number(x.inventory_id) === id
+     );
      if (item) this.showItem(item);
     });
    });
@@ -202,8 +195,8 @@
 
      app.closeModal();
      app.notice(`NFT продан. Получено ${app.format(result.earned)}`);
-     await this.load();
 
+     await this.load();
      window.Upgrade?.load();
      window.Craft?.load();
     } catch (error) {
@@ -233,7 +226,6 @@
     );
 
     await this.load();
-
     window.Upgrade?.load();
     window.Craft?.load();
    } catch (error) {
@@ -247,9 +239,7 @@
    try {
     await app.request("/api/profile/settings", {
      method: "POST",
-     body: JSON.stringify({
-      sound_enabled: next
-     })
+     body: JSON.stringify({ sound_enabled: next })
     });
 
     app.sound = next;
@@ -258,6 +248,8 @@
      .classList.toggle("on", next);
 
     app.notice(next ? "Звуки включены" : "Звуки выключены");
+
+    if (next) window.GameSound?.play("click");
    } catch (error) {
     app.notice(error.message);
    }
@@ -280,12 +272,14 @@
    document.getElementById("adminNav").style.display =
     enabled ? "flex" : "none";
 
-   document.getElementById("adminPanel").style.display =
-    enabled ? "block" : "none";
+   if (!enabled &&
+       document.getElementById("page-admin").classList.contains("active")) {
+    app.navigate("profile");
+   }
 
    app.notice(enabled
-    ? "Админ-панель отображается"
-    : "Админ-панель скрыта"
+    ? "Вкладка администратора включена"
+    : "Вкладка администратора скрыта"
    );
   },
 
@@ -313,12 +307,9 @@
     : "/api/admin/take-g";
 
    try {
-    const result = await app.request(endpoint, {
+    await app.request(endpoint, {
      method: "POST",
-     body: JSON.stringify({
-      game_id: gameId,
-      amount
-     })
+     body: JSON.stringify({ game_id: gameId, amount })
     });
 
     app.notice(
@@ -326,10 +317,7 @@
     );
 
     document.getElementById("adminAmount").value = "";
-
-    if (result.balance !== undefined) {
-     await this.load();
-    }
+    await this.load();
    } catch (error) {
     app.notice(error.message);
    }
@@ -362,6 +350,10 @@
 
     app.notice("NFT успешно выдан");
     document.getElementById("adminNftCode").value = "";
+
+    await this.load();
+    window.Upgrade?.load();
+    window.Craft?.load();
    } catch (error) {
     app.notice(error.message);
    }
@@ -395,6 +387,5 @@
  };
 
  window.Profile = Profile;
-
  Profile.init();
 })();

@@ -41,6 +41,8 @@ TELEGRAM_PUBLIC_KEY = bytes.fromhex(
     "59f32ed8b02a56c187fe7d34caed242d"
 )
 
+INVENTORY_LIMIT = 100
+
 
 # ==========================================
 # TELEGRAM AUTHORIZATION
@@ -327,6 +329,8 @@ def init_catalog():
             """, (case_id,))
 
             for item in case_data["items"]:
+                image_url = item.get("image_url")
+
                 skin = db.execute("""
                     SELECT id
                     FROM skins
@@ -338,24 +342,28 @@ def init_catalog():
 
                     db.execute("""
                         UPDATE skins
-                        SET rarity = %s, price = %s
+                        SET rarity = %s,
+                            price = %s,
+                            image_url = COALESCE(%s, image_url)
                         WHERE id = %s
                     """, (
                         item["rarity"],
                         int(item["price_dc"]),
+                        image_url,
                         skin_id
                     ))
 
                 else:
                     skin_row = db.execute("""
                         INSERT INTO skins
-                        (name, rarity, price)
-                        VALUES (%s, %s, %s)
+                        (name, rarity, price, image_url)
+                        VALUES (%s, %s, %s, %s)
                         RETURNING id
                     """, (
                         item["name"],
                         item["rarity"],
-                        int(item["price_dc"])
+                        int(item["price_dc"]),
+                        image_url
                     )).fetchone()
 
                     skin_id = skin_row["id"]
@@ -389,7 +397,8 @@ def home():
 def health():
     return jsonify({
         "status": "ok",
-        "catalog": "loaded"
+        "catalog": "loaded",
+        "inventory_limit": INVENTORY_LIMIT
     })
 
 
@@ -600,7 +609,12 @@ def admin_give_skin():
     if not skin:
         return jsonify({"error": "Скин не найден"}), 404
 
-    database.add_inventory_skin(target_id, skin_id, quantity)
+    try:
+        database.add_inventory_skin(
+            target_id, skin_id, quantity
+        )
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
 
     database.log_admin(
         user["id"],
@@ -613,7 +627,8 @@ def admin_give_skin():
         "success": True,
         "message": "Скин выдан",
         "skin": skin,
-        "quantity": quantity
+        "quantity": quantity,
+        "inventory": database.get_inventory_space(target_id)
     })
 
 
@@ -650,6 +665,7 @@ def get_cases():
                     skins.name,
                     skins.rarity,
                     skins.price,
+                    skins.image_url,
                     case_skins.weight
                 FROM case_skins
                 JOIN skins
@@ -673,6 +689,7 @@ def get_cases():
                         "name": item["name"],
                         "rarity": item["rarity"],
                         "price": item["price"],
+                        "image_url": item["image_url"],
                         "chance": round(
                             int(item["weight"]) / total_weight * 100, 2
                         ) if total_weight else 0
@@ -713,6 +730,7 @@ def get_case_details(case_id):
                 skins.name,
                 skins.rarity,
                 skins.price,
+                skins.image_url,
                 case_skins.weight
             FROM case_skins
             JOIN skins
@@ -736,6 +754,7 @@ def get_case_details(case_id):
                         "name": item["name"],
                         "rarity": item["rarity"],
                         "price": item["price"],
+                        "image_url": item["image_url"],
                         "chance": round(
                             int(item["weight"]) / total_weight * 100, 2
                         ) if total_weight else 0
@@ -769,8 +788,11 @@ def inventory():
     if not user:
         return jsonify({"error": "Authorization failed"}), 401
 
+    user_id = user["id"]
+
     return jsonify({
-        "inventory": database.get_inventory(user["id"])
+        "inventory": database.get_inventory(user_id),
+        "capacity": database.get_inventory_space(user_id)
     })
 
 
@@ -818,6 +840,28 @@ def open_case():
             if player["is_banned"]:
                 return jsonify({"error": "Аккаунт заблокирован"}), 403
 
+            # Проверяем вместимость до списания баланса.
+            inventory_row = db.execute("""
+                SELECT COUNT(*) AS total
+                FROM inventory
+                WHERE user_id = %s
+            """, (user_id,)).fetchone()
+
+            inventory_used = int(inventory_row["total"])
+            inventory_remaining = INVENTORY_LIMIT - inventory_used
+
+            if inventory_remaining < count:
+                return jsonify({
+                    "error": (
+                        "Недостаточно места в инвентаре. "
+                        f"Свободно: {max(0, inventory_remaining)} "
+                        f"из {INVENTORY_LIMIT}"
+                    ),
+                    "inventory_used": inventory_used,
+                    "inventory_limit": INVENTORY_LIMIT,
+                    "inventory_remaining": max(0, inventory_remaining)
+                }), 400
+
             case = db.execute("""
                 SELECT
                     cases.id,
@@ -853,6 +897,7 @@ def open_case():
                     skins.name,
                     skins.rarity,
                     skins.price,
+                    skins.image_url,
                     case_skins.weight
                 FROM case_skins
                 JOIN skins
@@ -891,14 +936,13 @@ def open_case():
             for selected in selected_items:
                 skin_id = selected["id"]
 
-                db.execute("""
+                # Каждая копия получает собственную запись.
+                inventory_item = db.execute("""
                     INSERT INTO inventory
                     (user_id, skin_id, quantity)
                     VALUES (%s, %s, 1)
-                    ON CONFLICT (user_id, skin_id)
-                    DO UPDATE SET quantity =
-                        inventory.quantity + EXCLUDED.quantity
-                """, (user_id, skin_id))
+                    RETURNING id
+                """, (user_id, skin_id)).fetchone()
 
                 db.execute("""
                     INSERT INTO case_openings
@@ -917,17 +961,19 @@ def open_case():
                     VALUES (%s, %s, %s, %s, %s)
                 """, (
                     user_id,
-                    selected["id"],
+                    skin_id,
                     selected["name"],
                     selected["price"],
                     "case"
                 ))
 
                 results.append({
-                    "id": selected["id"],
+                    "inventory_id": inventory_item["id"],
+                    "id": skin_id,
                     "name": selected["name"],
                     "rarity": selected["rarity"],
                     "price": selected["price"],
+                    "image_url": selected["image_url"],
                     "sell_price": int(selected["price"]) * 90 // 100
                 })
 
@@ -962,18 +1008,23 @@ def open_case():
             "total_price": total_price,
             "skins": results,
             "skin": results[0],
-            "balance": new_balance
+            "balance": new_balance,
+            "inventory": {
+                "used": inventory_used + count,
+                "limit": INVENTORY_LIMIT,
+                "remaining": inventory_remaining - count
+            }
         })
 
     except Exception as error:
-        print("OPEN CASE ERROR:", type(error).__name__)
+        print("OPEN CASE ERROR:", type(error).__name__, str(error))
         return jsonify({
             "error": "Ошибка открытия кейса"
         }), 500
 
 
 # ==========================================
-# SELL SKIN
+# SELL ONE INVENTORY ITEM
 # ==========================================
 
 @app.route("/api/skins/sell", methods=["POST"])
@@ -987,12 +1038,24 @@ def sell_skin():
     data = request.get_json(silent=True) or {}
 
     try:
-        skin_id = int(data.get("skin_id"))
-        quantity = int(data.get("quantity", 1))
-    except (TypeError, ValueError):
-        return jsonify({"error": "Неверные данные"}), 400
+        inventory_id = data.get("inventory_id")
 
-    if skin_id <= 0 or quantity <= 0:
+        # Временная совместимость со старым интерфейсом:
+        # если он отправил skin_id, продаём только одну копию.
+        skin_id = data.get("skin_id")
+
+        if inventory_id is not None:
+            inventory_id = int(inventory_id)
+            if inventory_id <= 0:
+                raise ValueError()
+        elif skin_id is not None:
+            skin_id = int(skin_id)
+            if skin_id <= 0:
+                raise ValueError()
+        else:
+            raise ValueError()
+
+    except (TypeError, ValueError):
         return jsonify({"error": "Неверные данные"}), 400
 
     try:
@@ -1011,47 +1074,55 @@ def sell_skin():
             if player["is_banned"]:
                 return jsonify({"error": "Аккаунт заблокирован"}), 403
 
-            skin = db.execute("""
-                SELECT id, name, rarity, price
-                FROM skins
-                WHERE id = %s
-            """, (skin_id,)).fetchone()
+            if inventory_id is not None:
+                item = db.execute("""
+                    SELECT
+                        inventory.id AS inventory_id,
+                        skins.id AS skin_id,
+                        skins.name,
+                        skins.rarity,
+                        skins.price
+                    FROM inventory
+                    JOIN skins ON skins.id = inventory.skin_id
+                    WHERE inventory.id = %s
+                      AND inventory.user_id = %s
+                    FOR UPDATE OF inventory
+                """, (inventory_id, user_id)).fetchone()
+            else:
+                item = db.execute("""
+                    SELECT
+                        inventory.id AS inventory_id,
+                        skins.id AS skin_id,
+                        skins.name,
+                        skins.rarity,
+                        skins.price
+                    FROM inventory
+                    JOIN skins ON skins.id = inventory.skin_id
+                    WHERE inventory.user_id = %s
+                      AND inventory.skin_id = %s
+                    ORDER BY inventory.acquired_at ASC, inventory.id ASC
+                    LIMIT 1
+                    FOR UPDATE OF inventory
+                """, (user_id, skin_id)).fetchone()
 
-            if not skin:
-                return jsonify({"error": "Скин не найден"}), 404
-
-            item = db.execute("""
-                SELECT quantity
-                FROM inventory
-                WHERE user_id = %s AND skin_id = %s
-                FOR UPDATE
-            """, (user_id, skin_id)).fetchone()
-
-            if not item or item["quantity"] < quantity:
+            if not item:
                 return jsonify({
-                    "error": "Недостаточно скинов в инвентаре"
-                }), 400
+                    "error": "Предмет не найден в инвентаре"
+                }), 404
 
-            unit_price = int(skin["price"])
-            reward = unit_price * 90 // 100 * quantity
+            unit_price = int(item["price"])
+            reward = unit_price * 90 // 100
 
             if reward <= 0:
                 return jsonify({
                     "error": "Цена скина слишком мала"
                 }), 400
 
-            if item["quantity"] == quantity:
-                db.execute("""
-                    DELETE FROM inventory
-                    WHERE user_id = %s AND skin_id = %s
-                """, (user_id, skin_id))
-
-            else:
-                db.execute("""
-                    UPDATE inventory
-                    SET quantity = quantity - %s
-                    WHERE user_id = %s AND skin_id = %s
-                """, (quantity, user_id, skin_id))
+            # Удаляем только одну конкретную запись.
+            db.execute("""
+                DELETE FROM inventory
+                WHERE id = %s AND user_id = %s
+            """, (item["inventory_id"], user_id))
 
             db.execute("""
                 UPDATE users
@@ -1068,11 +1139,10 @@ def sell_skin():
             db.execute("""
                 INSERT INTO skin_sales
                 (user_id, skin_id, quantity, amount_received)
-                VALUES (%s, %s, %s, %s)
+                VALUES (%s, %s, 1, %s)
             """, (
                 user_id,
-                skin_id,
-                quantity,
+                item["skin_id"],
                 reward
             ))
 
@@ -1082,16 +1152,28 @@ def sell_skin():
                 WHERE telegram_id = %s
             """, (user_id,)).fetchone()["balance"]
 
+            remaining = db.execute("""
+                SELECT COUNT(*) AS total
+                FROM inventory
+                WHERE user_id = %s
+            """, (user_id,)).fetchone()["total"]
+
         return jsonify({
             "success": True,
-            "message": f"Продано: {skin['name']}",
-            "quantity": quantity,
+            "message": f"Продано: {item['name']}",
+            "inventory_id": item["inventory_id"],
+            "quantity": 1,
             "received": reward,
-            "balance": new_balance
+            "balance": new_balance,
+            "inventory": {
+                "used": int(remaining),
+                "limit": INVENTORY_LIMIT,
+                "remaining": INVENTORY_LIMIT - int(remaining)
+            }
         })
 
     except Exception as error:
-        print("SELL SKIN ERROR:", type(error).__name__)
+        print("SELL SKIN ERROR:", type(error).__name__, str(error))
         return jsonify({
             "error": "Ошибка продажи скина"
         }), 500

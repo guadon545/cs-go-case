@@ -15,13 +15,14 @@ app = Flask(__name__)
 
 CORS(
     app,
-    origins=["https://guadon545.github.io"]
+    origins=["https://guadon545.github.io"],
+    allow_headers=["Content-Type", "X-Telegram-Init-Data"],
+    methods=["GET", "POST", "OPTIONS"]
 )
 
-# Создаём таблицы базы данных
 database.init_db()
 
-# Автоматически добавляем администраторов из Render
+# Автоматическое добавление администратора
 admin_ids = os.getenv("ADMIN_IDS", "")
 
 for admin_id in admin_ids.split(","):
@@ -32,7 +33,12 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
 def verify_telegram_data(init_data):
-    if not BOT_TOKEN or not init_data:
+    if not BOT_TOKEN:
+        print("AUTH DEBUG: BOT_TOKEN missing")
+        return None
+
+    if not init_data:
+        print("AUTH DEBUG: initData missing")
         return None
 
     try:
@@ -40,14 +46,18 @@ def verify_telegram_data(init_data):
         received_hash = data.pop("hash", None)
 
         if not received_hash:
+            print("AUTH DEBUG: hash missing")
             return None
 
         auth_date = int(data.get("auth_date", "0"))
+        age = time.time() - auth_date
 
         if auth_date > time.time() + 60:
+            print("AUTH DEBUG: auth_date in future")
             return None
 
-        if time.time() - auth_date > 86400:
+        if age > 86400:
+            print("AUTH DEBUG: initData expired")
             return None
 
         check_string = "\n".join(
@@ -71,11 +81,17 @@ def verify_telegram_data(init_data):
             calculated_hash,
             received_hash
         ):
+            print("AUTH DEBUG: hash mismatch")
+            print("AUTH DEBUG: fields:", list(data.keys()))
             return None
 
-        return json.loads(data["user"])
+        user = json.loads(data["user"])
 
-    except Exception:
+        print("AUTH DEBUG: success")
+        return user
+
+    except Exception as error:
+        print("AUTH DEBUG: exception:", type(error).__name__)
         return None
 
 
@@ -159,9 +175,12 @@ def admin_give_dc():
         return jsonify({"error": "Неверные данные"}), 400
 
     if target_id <= 0 or amount <= 0:
-        return jsonify({"error": "Сумма и ID должны быть положительными"}), 400
+        return jsonify({
+            "error": "Сумма и ID должны быть положительными"
+        }), 400
 
     database.register_user(target_id)
+
     database.change_balance(
         target_id,
         amount,
@@ -174,3 +193,8 @@ def admin_give_dc():
         "message": f"Выдано {amount} DC",
         "balance": database.get_balance(target_id)
     })
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)

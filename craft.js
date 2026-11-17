@@ -1,10 +1,11 @@
-
 (function () {
     "use strict";
 
     let inventory = [];
     let selectedItems = [];
     let busy = false;
+    let craftResult = null;
+    let statusMessage = "";
 
     const API = "https://cs-go-case.onrender.com";
 
@@ -103,14 +104,32 @@
         font-size: 13px;
         margin-top: 10px;
     }
+    #craft-app .craft-empty {
+        color: #9ba8bd;
+        text-align: center;
+        padding: 25px 10px;
+        background: #111b2c;
+        border-radius: 12px;
+    }
     `;
 
     function money(value) {
         return Number(value || 0).toLocaleString("ru-RU") + " DC";
     }
 
+    function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        })[char]);
+    }
+
     function getHeaders() {
         const tg = window.Telegram && window.Telegram.WebApp;
+
         return {
             "Content-Type": "application/json",
             "X-Telegram-Init-Data": tg ? tg.initData : ""
@@ -127,47 +146,97 @@
         }, 0);
     }
 
+    function renderResult() {
+        if (!craftResult) return "";
+
+        return `
+            <div class="craft-result" style="display:block">
+                <div>🎉 КРАФТ УСПЕШЕН!</div>
+                <div class="craft-multiplier">
+                    ×${escapeHtml(craftResult.multiplier)}
+                </div>
+                <div style="font-weight:bold;margin:8px">
+                    ${escapeHtml(craftResult.name)}
+                </div>
+                <div style="color:#43d9a3">
+                    Стоимость: ${money(craftResult.price)}
+                </div>
+            </div>
+        `;
+    }
+
     function render() {
         const root = getRoot();
         if (!root) return;
 
         const total = getTotal();
 
+        const itemsHtml = inventory.length
+            ? inventory.map((item, index) => {
+                const selectedCount = selectedItems.filter(
+                    x => Number(x.skin_id) === Number(item.skin_id)
+                ).length;
+
+                const available = Number(item.quantity || 0);
+                const selected = selectedCount > 0;
+
+                const disabled =
+                    selectedItems.length >= 5 &&
+                    selectedCount >= available;
+
+                return `
+                    <div class="craft-item
+                        ${selected ? "selected" : ""}
+                        ${disabled ? "disabled" : ""}"
+                        data-index="${index}">
+
+                        <div class="craft-item-name">
+                            ${escapeHtml(item.name)}
+                        </div>
+
+                        <div class="craft-price">
+                            ${money(item.price)}
+                        </div>
+
+                        <div class="craft-count">
+                            В наличии: ${available}
+                            ${selectedCount
+                                ? " | Выбрано: " + selectedCount
+                                : ""}
+                        </div>
+                    </div>
+                `;
+            }).join("")
+            : `<div class="craft-empty">
+                В инвентаре пока нет предметов.
+                <br><br>
+                Открой кейс, чтобы получить скины.
+               </div>`;
+
         root.innerHTML = `
             <div class="craft-title">⚒️ КРАФТ</div>
+
             <div class="craft-subtitle">
                 Выбери ровно 5 предметов и получи один новый предмет.
+                Нажми на выбранный предмет ещё раз, чтобы убрать его.
             </div>
 
             <div class="craft-info">
-                <div>Выбрано: <b>${selectedItems.length} / 5</b></div>
+                <div>
+                    Выбрано:
+                    <b>${selectedItems.length} / 5</b>
+                </div>
+
                 <div style="margin-top:7px">
-                    Общая стоимость: <b style="color:#43d9a3">${money(total)}</b>
+                    Общая стоимость:
+                    <b style="color:#43d9a3">
+                        ${money(total)}
+                    </b>
                 </div>
             </div>
 
             <div class="craft-items">
-                ${inventory.map((item, index) => {
-                    const selectedCount = selectedItems.filter(
-                        x => Number(x.skin_id) === Number(item.skin_id)
-                    ).length;
-
-                    const available = Number(item.quantity || 1);
-                    const selected = selectedCount > 0;
-
-                    return `
-                        <div class="craft-item ${selected ? "selected" : ""} ${
-                            selectedItems.length >= 5 && !selected ? "disabled" : ""
-                        }" data-index="${index}">
-                            <div class="craft-item-name">${escapeHtml(item.name)}</div>
-                            <div class="craft-price">${money(item.price)}</div>
-                            <div class="craft-count">
-                                В наличии: ${available}
-                                ${selectedCount ? " | Выбрано: " + selectedCount : ""}
-                            </div>
-                        </div>
-                    `;
-                }).join("")}
+                ${itemsHtml}
             </div>
 
             <button class="craft-button" id="craft-run"
@@ -175,43 +244,54 @@
                 ${busy ? "КРАФТ..." : "⚒️ СОЗДАТЬ ПРЕДМЕТ"}
             </button>
 
-            <div class="craft-message" id="craft-message"></div>
+            <div class="craft-message" id="craft-message">
+                ${escapeHtml(statusMessage)}
+            </div>
 
-            <div class="craft-result" id="craft-result"></div>
+            ${renderResult()}
         `;
 
         root.querySelectorAll(".craft-item").forEach(element => {
             element.addEventListener("click", () => {
-                if (busy || selectedItems.length >= 5 &&
-                    !selectedItems.some(x =>
-                        Number(x.skin_id) === Number(
-                            inventory[Number(element.dataset.index)].skin_id
-                        )
-                    )) return;
+                if (busy) return;
 
                 const item = inventory[Number(element.dataset.index)];
+
+                if (!item) return;
+
+                const skinId = Number(item.skin_id);
+
+                const selectedIndex = selectedItems.findIndex(
+                    x => Number(x.skin_id) === skinId
+                );
+
+                // Повторное нажатие убирает один выбранный предмет
+                if (selectedIndex !== -1) {
+                    selectedItems.splice(selectedIndex, 1);
+                    render();
+                    return;
+                }
+
+                if (selectedItems.length >= 5) return;
+
                 const selectedCount = selectedItems.filter(
-                    x => Number(x.skin_id) === Number(item.skin_id)
+                    x => Number(x.skin_id) === skinId
                 ).length;
 
-                if (selectedCount >= Number(item.quantity || 1)) return;
+                if (selectedCount >= Number(item.quantity || 0)) {
+                    return;
+                }
 
                 selectedItems.push(item);
                 render();
             });
         });
 
-        root.querySelector("#craft-run").addEventListener("click", runCraft);
-    }
+        const button = root.querySelector("#craft-run");
 
-    function escapeHtml(value) {
-        return String(value ?? "").replace(/[&<>"']/g, char => ({
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#039;"
-        })[char]);
+        if (button) {
+            button.addEventListener("click", runCraft);
+        }
     }
 
     async function loadCraft() {
@@ -222,7 +302,9 @@
 
         try {
             const response = await fetch(API + "/api/craft", {
-                headers: getHeaders()
+                method: "GET",
+                headers: getHeaders(),
+                cache: "no-store"
             });
 
             const data = await response.json();
@@ -231,18 +313,33 @@
                 throw new Error(data.error || "Ошибка загрузки");
             }
 
-            inventory = data.inventory || [];
+            if (!Array.isArray(data.inventory)) {
+                throw new Error("Сервер вернул неверный формат инвентаря");
+            }
+
+            inventory = data.inventory;
             selectedItems = [];
+            statusMessage = "";
+
             render();
 
         } catch (error) {
             root.innerHTML = `
                 <div class="craft-message">
-                    Не удалось загрузить крафт: ${escapeHtml(error.message)}
+                    Не удалось загрузить крафт:
+                    ${escapeHtml(error.message)}
                 </div>
-                <button class="craft-button" id="craft-retry">Повторить</button>
+
+                <button class="craft-button" id="craft-retry">
+                    Повторить
+                </button>
             `;
-            root.querySelector("#craft-retry").onclick = loadCraft;
+
+            const retry = root.querySelector("#craft-retry");
+
+            if (retry) {
+                retry.onclick = loadCraft;
+            }
         }
     }
 
@@ -250,9 +347,8 @@
         if (busy || selectedItems.length !== 5) return;
 
         busy = true;
-        const root = getRoot();
-        const message = root.querySelector("#craft-message");
-        message.textContent = "";
+        statusMessage = "";
+        craftResult = null;
 
         render();
 
@@ -261,7 +357,9 @@
                 method: "POST",
                 headers: getHeaders(),
                 body: JSON.stringify({
-                    items: selectedItems.map(item => Number(item.skin_id))
+                    items: selectedItems.map(item =>
+                        Number(item.skin_id)
+                    )
                 })
             });
 
@@ -271,62 +369,48 @@
                 throw new Error(data.error || "Крафт не выполнен");
             }
 
-            const multiplier = data.multiplier;
-            const reward = data.reward || {};
-            const result = root.querySelector("#craft-result");
+            // Сервер возвращает предмет в data.skin
+            const reward = data.skin || data.reward || {};
 
-            result.style.display = "block";
-            result.innerHTML = `
-                <div>🎉 КРАФТ УСПЕШЕН!</div>
-                <div class="craft-multiplier">×${escapeHtml(multiplier)}</div>
-                <div style="font-weight:bold;margin:8px">
-                    ${escapeHtml(reward.name || "Новый предмет")}
-                </div>
-                <div style="color:#43d9a3">
-                    Стоимость: ${money(reward.price)}
-                </div>
-            `;
+            craftResult = {
+                multiplier: data.multiplier,
+                name: reward.name || "Новый предмет",
+                price: reward.price ?? data.reward_price ?? 0
+            };
 
             selectedItems = [];
-            await loadCraft();
-
-            const updatedResult = root.querySelector("#craft-result");
-            if (updatedResult) {
-                updatedResult.style.display = "block";
-                updatedResult.innerHTML = result.innerHTML;
-            }
 
             if (typeof window.loadBalance === "function") {
                 window.loadBalance();
             }
 
+            busy = false;
+
+            // Загружаем обновлённый инвентарь
+            await loadCraft();
+
+            // Результат остаётся на экране после обновления
+            render();
+
         } catch (error) {
             busy = false;
+            statusMessage = error.message;
             render();
-            const message = root.querySelector("#craft-message");
-            if (message) message.textContent = error.message;
-            return;
         }
-
-        busy = false;
-        render();
-
     }
 
     function initCraft() {
-        if (document.getElementById("craft-style")) return;
+        // Добавляем стили только один раз
+        if (!document.getElementById("craft-style")) {
+            const styleElement = document.createElement("style");
 
-        const styleElement = document.createElement("style");
-        styleElement.id = "craft-style";
-        styleElement.textContent = style;
-        document.head.appendChild(styleElement);
+            styleElement.id = "craft-style";
+            styleElement.textContent = style;
 
-        if (!document.getElementById("craft-app")) {
-            const container = document.createElement("div");
-            container.id = "craft-app";
-            document.body.appendChild(container);
+            document.head.appendChild(styleElement);
         }
 
+        // ВАЖНО: загружаем инвентарь при каждом открытии страницы
         loadCraft();
     }
 

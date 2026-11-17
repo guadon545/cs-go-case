@@ -1,4 +1,3 @@
-
 import os
 import hmac
 import hashlib
@@ -405,6 +404,75 @@ def balance():
 
 
 # ==========================================
+# PROFILE
+# ==========================================
+
+@app.route("/api/profile")
+def profile():
+    user = authorized_user()
+
+    if not user:
+        return jsonify({
+            "error": "Telegram authorization failed"
+        }), 401
+
+    user_id = user["id"]
+
+    try:
+        stats = database.get_profile_stats(user_id)
+
+        with database.get_db() as db:
+            opened_cases = db.execute("""
+                SELECT COUNT(*) AS total
+                FROM case_openings
+                WHERE user_id = ?
+            """, (user_id,)).fetchone()["total"]
+
+            best_item = db.execute("""
+                SELECT name, price, source, created_at
+                FROM (
+                    SELECT
+                        id,
+                        skin_name AS name,
+                        skin_price AS price,
+                        source,
+                        created_at
+                    FROM item_history
+                    WHERE user_id = ?
+
+                    UNION ALL
+
+                    SELECT
+                        co.id,
+                        s.name,
+                        s.price,
+                        'case' AS source,
+                        co.created_at
+                    FROM case_openings co
+                    JOIN skins s ON s.id = co.skin_id
+                    WHERE co.user_id = ?
+                )
+                ORDER BY price DESC, id ASC
+                LIMIT 1
+            """, (user_id, user_id)).fetchone()
+
+        stats["balance"] = database.get_balance(user_id)
+        stats["opened_cases"] = opened_cases
+        stats["best_item"] = dict(best_item) if best_item else None
+
+        return jsonify({
+            "success": True,
+            "profile": stats
+        })
+
+    except Exception as error:
+        print("PROFILE ERROR:", type(error).__name__)
+        return jsonify({
+            "error": "Ошибка загрузки профиля"
+        }), 500
+
+
+# ==========================================
 # ADMIN
 # ==========================================
 
@@ -532,7 +600,7 @@ def admin_give_skin():
         "skin": skin,
         "quantity": quantity
     })
-
+    
 
 # ==========================================
 # CASES AND SKINS
@@ -810,6 +878,19 @@ def open_case():
                     VALUES (?, ?, ?, ?)
                 """, (user_id, case_id, skin_id, price))
 
+                # Сохраняем предмет в постоянную историю профиля.
+                db.execute("""
+                    INSERT INTO item_history
+                    (user_id, skin_id, skin_name, skin_price, source)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (
+                    user_id,
+                    selected["id"],
+                    selected["name"],
+                    selected["price"],
+                    "case"
+                ))
+
                 results.append({
                     "id": selected["id"],
                     "name": selected["name"],
@@ -817,6 +898,18 @@ def open_case():
                     "price": selected["price"],
                     "sell_price": int(selected["price"]) * 90 // 100
                 })
+
+            # Обновляем статистику открытий.
+            db.execute("""
+                INSERT OR IGNORE INTO profile_stats (user_id)
+                VALUES (?)
+            """, (user_id,))
+
+            db.execute("""
+                UPDATE profile_stats
+                SET opened_cases = opened_cases + ?
+                WHERE user_id = ?
+            """, (count, user_id))
 
             db.execute("""
                 INSERT INTO transactions

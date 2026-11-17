@@ -1,1 +1,123 @@
 
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "starter",
+      "name": "Стартовый",
+      "price_dc": 100,
+      "items": [
+        {"name": "Glock-18 | High Beam", "rarity": "Армейское", "price_dc": 30, "chance": 35},
+        {"name": "MP9 | Capillary", "rarity": "Армейское", "price_dc": 40, "chance": 25},
+        {"name": "MAC-10 | Monkeyflage", "rarity": "Армейское", "price_dc": 50, "chance": 20},
+        {"name": "P250 | Cyber Shell", "rarity": "Запрещённое", "price_dc": 100, "chance": 12},
+        {"name": "USP-S | Ticket to Hell", "rarity": "Засекреченное", "price_dc": 250, "chance": 7},
+        {"name": "AK-47 | Slate", "rarity": "Тайное", "price_dc": 1000, "chance": 1}
+      ]
+    },
+    {
+      "id": "revolution",
+      "name": "Революция",
+      "price_dc": 500,
+      "items": [
+        {"name": "UMP-45 | Wild Child", "rarity": "Армейское", "price_dc": 150, "chance": 35},
+        {"name": "P90 | Vent Rush", "rarity": "Армейское", "price_dc": 200, "chance": 25},
+        {"name": "M4A4 | Poly Mag", "rarity": "Запрещённое", "price_dc": 350, "chance": 20},
+        {"name": "Glock-18 | Umbral Rabbit", "rarity": "Засекреченное", "price_dc": 700, "chance": 12},
+        {"name": "M4A1-S | Emphorosaur-S", "rarity": "Тайное", "price_dc": 2000, "chance": 7},
+        {"name": "AK-47 | Head Shot", "rarity": "Тайное", "price_dc": 5000, "chance": 1}
+      ]
+    },
+    {
+      "id": "recoil",
+      "name": "Отдача",
+      "price_dc": 1500,
+      "items": [
+        {"name": "P250 | Visions", "rarity": "Армейское", "price_dc": 400, "chance": 35},
+        {"name": "Dual Berettas | Flora Carnivora", "rarity": "Армейское", "price_dc": 500, "chance": 25},
+        {"name": "Sawed-Off | Kiss♥Love", "rarity": "Запрещённое", "price_dc": 900, "chance": 20},
+        {"name": "USP-S | Printstream", "rarity": "Засекреченное", "price_dc": 2500, "chance": 12},
+        {"name": "AWP | Chromatic Aberration", "rarity": "Тайное", "price_dc": 6000, "chance": 7},
+        {"name": "AK-47 | Ice Coaled", "rarity": "Тайное", "price_dc": 12000, "chance": 1}
+      ]
+    },
+    {
+      "id": "nightmare",
+      "name": "Кошмар",
+      "price_dc": 3000,
+      "items": [
+        {"name": "MP9 | Starlight Protector", "rarity": "Армейское", "price_dc": 800, "chance": 35},
+        {"name": "MAC-10 | Ensnared", "rarity": "Армейское", "price_dc": 1000, "chance": 25},
+        {"name": "USP-S | Purple DDPAT", "rarity": "Запрещённое", "price_dc": 1800, "chance": 20},
+        {"name": "XM1014 | Zombie Offensive", "rarity": "Засекреченное", "price_dc": 4000, "chance": 12},
+        {"name": "AK-47 | Nightwish", "rarity": "Тайное", "price_dc": 10000, "chance": 7},
+        {"name": "MP9 | Starlight Protector (StatTrak)", "rarity": "Тайное", "price_dc": 20000, "chance": 1}
+      ]
+    },
+    {
+      "id": "prisma",
+      "name": "Призма",
+      "price_dc": 7500,
+      "items": [
+        {"name": "AUG | Tom Cat", "rarity": "Армейское", "price_dc": 2000, "chance": 35},
+        {"name": "P2000 | Acid Etched", "rarity": "Армейское", "price_dc": 2500, "chance": 25},
+        {"name": "SSG 08 | Fever Dream", "rarity": "Запрещённое", "price_dc": 4000, "chance": 20},
+        {"name": "AK-47 | Phantom Disruptor", "rarity": "Засекреченное", "price_dc": 9000, "chance": 12},
+        {"name": "M4A1-S | Player Two", "rarity": "Тайное", "price_dc": 25000, "chance": 7},
+        {"name": "Glock-18 | Bullet Queen", "rarity": "Тайное", "price_dc": 50000, "chance": 1}
+      ]
+    },
+    {
+      "id": "spectrum",
+      "name": "Спектр",
+      "price_dc": 15000,
+      "items": [
+        {"name": "MP9 | Goo", "rarity": "Армейское", "price_dc": 4000, "chance": 35},
+        {"name": "SG 553 | Phantom", "rarity": "Армейское", "price_dc": 5000, "chance": 25},
+        {"name": "CZ75-Auto | Tacticat", "rarity": "Запрещённое", "price_dc": 8000, "chance": 20},
+        {"name": "AK-47 | The Empress", "rarity": "Засекреченное", "price_dc": 18000, "chance": 12},
+        {"name": "M4A1-S | Leaded Glass", "rarity": "Тайное", "price_dc": 45000, "chance": 7},
+        {"name": "AK-47 | Bloodsport", "rarity": "Тайное", "price_dc": 90000, "chance": 1}
+      ]
+    },
+    {
+      "id": "chroma",
+      "name": "Хрома",
+      "price_dc": 25000,
+      "items": [
+        {"name": "P250 | Asiimov", "rarity": "Армейское", "price_dc": 7000, "chance": 35},
+        {"name": "XM1014 | Black Tie", "rarity": "Армейское", "price_dc": 9000, "chance": 25},
+        {"name": "AUG | Fleet Flock", "rarity": "Запрещённое", "price_dc": 14000, "chance": 20},
+        {"name": "M4A1-S | Chantico's Fire", "rarity": "Засекреченное", "price_dc": 30000, "chance": 12},
+        {"name": "AWP | Asiimov", "rarity": "Тайное", "price_dc": 75000, "chance": 7},
+        {"name": "M4A1-S | Hyper Beast", "rarity": "Тайное", "price_dc": 150000, "chance": 1}
+      ]
+    },
+    {
+      "id": "phantom",
+      "name": "Фантом",
+      "price_dc": 35000,
+      "items": [
+        {"name": "M249 | Deep Relief", "rarity": "Армейское", "price_dc": 10000, "chance": 35},
+        {"name": "P90 | Cocoa Rampage", "rarity": "Армейское", "price_dc": 12000, "chance": 25},
+        {"name": "Glock-18 | Neo-Noir", "rarity": "Запрещённое", "price_dc": 20000, "chance": 20},
+        {"name": "M4A4 | Cyber Security", "rarity": "Засекреченное", "price_dc": 45000, "chance": 12},
+        {"name": "AWP | Printstream", "rarity": "Тайное", "price_dc": 100000, "chance": 7},
+        {"name": "Glock-18 | Neo-Noir (StatTrak)", "rarity": "Тайное", "price_dc": 200000, "chance": 1}
+      ]
+    },
+    {
+      "id": "elite",
+      "name": "Элитный",
+      "price_dc": 50000,
+      "items": [
+        {"name": "Shadow Daggers | Safari Mesh", "rarity": "Нож", "price_dc": 25000, "chance": 35},
+        {"name": "Navaja Knife | Forest DDPAT", "rarity": "Нож", "price_dc": 35000, "chance": 25},
+        {"name": "Gut Knife | Damascus Steel", "rarity": "Нож", "price_dc": 45000, "chance": 20},
+        {"name": "Huntsman Knife | Lore", "rarity": "Нож", "price_dc": 65000, "chance": 15},
+        {"name": "Sport Gloves | Omega", "rarity": "Перчатки", "price_dc": 100000, "chance": 4},
+        {"name": "Butterfly Knife | Doppler", "rarity": "Нож", "price_dc": 250000, "chance": 1}
+      ]
+    }
+  ]
+}

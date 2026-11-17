@@ -70,6 +70,7 @@
         margin-top:12px;
         font-size:13px;
         display:none;
+        line-height:1.5;
     }
     #upgrade-app .up-notice.show {
         display:block;
@@ -104,7 +105,10 @@
         if (!sourcePrice || !targetPrice ||
             targetPrice <= sourcePrice) return 0;
 
-        return Math.min(90, sourcePrice / targetPrice * 90);
+        return Math.min(
+            90,
+            sourcePrice / targetPrice * 90
+        );
     }
 
     function notice(message) {
@@ -196,6 +200,8 @@
 
         document.getElementById("upgrade-button")
             .addEventListener("click", performUpgrade);
+
+        updateChance();
     }
 
     function updateChance() {
@@ -209,6 +215,14 @@
 
         chanceElement.textContent = value.toFixed(2) + "%";
 
+        if (busy) {
+            button.disabled = true;
+            button.textContent = "АПГРЕЙД...";
+            return;
+        }
+
+        button.textContent = "⚡ АПГРЕЙД";
+
         if (!selectedSource || !selectedTarget) {
             info.textContent = "Сначала выбери два скина.";
             button.disabled = true;
@@ -216,30 +230,84 @@
         }
 
         if (Number(selectedTarget.price) <= Number(selectedSource.price)) {
-            info.textContent = "Целевой скин должен быть дороже исходного.";
+            info.textContent =
+                "Целевой скин должен быть дороже исходного.";
             button.disabled = true;
             return;
         }
 
         info.textContent =
-            "Исходный: " + Number(selectedSource.price).toLocaleString("ru-RU") +
+            "Исходный: " +
+            Number(selectedSource.price).toLocaleString("ru-RU") +
             " DC | Целевой: " +
-            Number(selectedTarget.price).toLocaleString("ru-RU") + " DC";
+            Number(selectedTarget.price).toLocaleString("ru-RU") +
+            " DC";
 
-        button.disabled = true;
-        button.textContent = "СЕРВЕРНАЯ ЧАСТЬ ЕЩЁ НЕ ПОДКЛЮЧЕНА";
+        button.disabled = false;
     }
 
     async function performUpgrade() {
         if (busy || !selectedSource || !selectedTarget) return;
-        notice("Серверная механика апгрейда пока не подключена.");
+
+        if (Number(selectedTarget.price) <= Number(selectedSource.price)) {
+            notice("Целевой скин должен быть дороже исходного.");
+            return;
+        }
+
+        const sourceId = selectedSource.id;
+        const targetId = selectedTarget.id;
+
+        busy = true;
+        updateChance();
+
+        try {
+            const result = await apiRequest("/api/upgrade", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    source_skin_id: sourceId,
+                    target_skin_id: targetId
+                })
+            });
+
+            if (!result.success) {
+                throw new Error(result.error || "Ошибка апгрейда");
+            }
+
+            const message = result.won
+                ? "🎉 УСПЕХ! Получен скин: " +
+                  result.target.name +
+                  ". Шанс: " + result.chance + "%"
+                : "❌ НЕУДАЧА! Скин " +
+                  result.source.name +
+                  " сгорел. Шанс был: " +
+                  result.chance + "%";
+
+            busy = false;
+
+            selectedSource = null;
+            selectedTarget = null;
+
+            await loadData();
+
+            notice(message);
+
+        } catch (error) {
+            busy = false;
+            updateChance();
+
+            notice("Ошибка: " + error.message);
+        }
     }
 
     async function loadData() {
         const root = document.getElementById("upgrade-app");
         if (!root) return;
 
-        root.innerHTML = '<div class="placeholder">Загрузка апгрейда...</div>';
+        root.innerHTML =
+            '<div class="placeholder">Загрузка апгрейда...</div>';
 
         try {
             const [inventoryData, casesData] = await Promise.all([
@@ -247,7 +315,6 @@
                 apiRequest("/api/cases")
             ]);
 
-            // ВАЖНО: в базе ID называется skin_id, а не id.
             inventory = (inventoryData.inventory || []).map(skin => ({
                 id: Number(skin.skin_id),
                 name: skin.name,
@@ -311,6 +378,7 @@
 
         selectedSource = null;
         selectedTarget = null;
+        busy = false;
 
         loadData();
     }

@@ -1,240 +1,400 @@
 
-(function () {
-    "use strict";
+(() => {
+ "use strict";
 
-    const API = "https://cs-go-case.onrender.com";
+ const app = window.NFT_CASE;
 
-    const style = `
-    .profile-stats {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin: 15px 0 22px;
-    }
-    .profile-stat {
-        background: #121b2d;
-        border: 1px solid #263550;
-        border-radius: 15px;
-        padding: 17px 12px;
-        text-align: center;
-    }
-    .profile-stat-icon {
-        font-size: 27px;
-        margin-bottom: 9px;
-    }
-    .profile-stat-value {
-        font-size: 22px;
-        font-weight: 900;
-        color: #80b2ff;
-        overflow-wrap: anywhere;
-    }
-    .profile-stat-label {
-        color: #8797b2;
-        font-size: 11px;
-        margin-top: 7px;
-    }
-    .profile-best {
-        background: linear-gradient(135deg,#172d4c,#29204c);
-        border: 1px solid #5577bd;
-        border-radius: 17px;
-        padding: 19px;
-        margin: 15px 0;
-    }
-    .profile-best-title {
-        color: #a8bddf;
-        font-size: 12px;
-        letter-spacing: 1px;
-        margin-bottom: 14px;
-    }
-    .profile-best-name {
-        font-size: 17px;
-        font-weight: bold;
-        overflow-wrap: anywhere;
-    }
-    .profile-best-price {
-        color: #80b2ff;
-        font-size: 20px;
-        font-weight: 900;
-        margin-top: 9px;
-    }
-    .profile-best-source {
-        color: #9aabc5;
-        font-size: 12px;
-        margin-top: 8px;
-    }
-    .profile-loading {
-        background: #121b2d;
-        border: 1px solid #263550;
-        border-radius: 15px;
-        padding: 20px;
-        text-align: center;
-        color: #aabbd4;
-    }
+ if (!app) {
+  console.error("NFT_CASE не найден");
+  return;
+ }
+
+ const Profile = {
+  loaded: false,
+
+  escape(value) {
+   return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+   }[char]));
+  },
+
+  backgroundName(background) {
+   const names = {
+    normal: "Normal",
+    gold: "Gold",
+    onyx_black: "Onyx Black",
+    black: "Black"
+   };
+   return names[background] || "Normal";
+  },
+
+  async load() {
+   try {
+    const [profileData, inventoryData] = await Promise.all([
+     app.request("/api/profile"),
+     app.request("/api/inventory")
+    ]);
+
+    const profile = profileData.profile || {};
+    const inventory = inventoryData.inventory || [];
+
+    app.profile = profile;
+    app.inventory = inventory;
+
+    this.renderProfile(profile);
+    this.renderInventory(inventory);
+    this.renderStats(profile, inventory);
+
+    this.loaded = true;
+   } catch (error) {
+    console.error("Ошибка загрузки профиля:", error);
+    app.notice(error.message || "Не удалось загрузить профиль");
+   }
+  },
+
+  renderProfile(profile) {
+   const name =
+    profile.first_name ||
+    profile.username ||
+    "Игрок";
+
+   const avatar = document.getElementById("profileAvatar");
+
+   document.getElementById("profileName").textContent = name;
+   document.getElementById("profileGameId").textContent =
+    profile.game_id || "#-----";
+
+   document.getElementById("profileBalance").textContent =
+    app.format(profile.balance);
+
+   document.getElementById("balance").textContent =
+    app.format(profile.balance);
+
+   avatar.textContent = name.trim().charAt(0).toUpperCase() || "N";
+
+   const sound = profile.sound_enabled !== false;
+   app.sound = sound;
+
+   document.getElementById("soundSwitch")
+    .classList.toggle("on", sound);
+  },
+
+  renderStats(profile, inventory) {
+   const stats = profile.stats || {};
+
+   document.getElementById("statCases").textContent =
+    stats.cases_opened || 0;
+
+   document.getElementById("statUpgrades").textContent =
+    stats.upgrades_played || 0;
+
+   document.getElementById("statWins").textContent =
+    stats.upgrades_won || 0;
+
+   document.getElementById("statCrafts").textContent =
+    stats.crafts_completed || 0;
+
+   document.getElementById("statSold").textContent =
+    stats.nft_sold || 0;
+
+   document.getElementById("statInventory").textContent =
+    inventory.length;
+  },
+
+  renderInventory(inventory) {
+   const container = document.getElementById("inventoryGrid");
+
+   if (!inventory.length) {
+    container.innerHTML =
+     '<div class="empty" style="grid-column:1/-1">' +
+     'У тебя пока нет NFT.<br>Открой первый кейс!' +
+     '</div>';
+    return;
+   }
+
+   const sorted = [...inventory].sort((a, b) => {
+    return Number(b.final_price || 0) - Number(a.final_price || 0);
+   });
+
+   container.innerHTML = sorted.map(item => {
+    const id = Number(item.inventory_id);
+    const name = this.escape(item.name || item.code || "NFT");
+    const background = this.backgroundName(item.background);
+    const price = app.format(item.final_price);
+
+    const image = item.image_url
+     ? `<img src="${this.escape(item.image_url)}" alt="${name}" loading="lazy">`
+     : "🎁";
+
+    return `
+     <div class="nft-card">
+      <div class="nft-art">${image}</div>
+      <div class="nft-name">${name}</div>
+      <div class="muted small">${background}</div>
+      <div class="nft-price">${price}</div>
+      <button class="card-button" data-inventory-id="${id}">
+       Подробнее
+      </button>
+     </div>
     `;
+   }).join("");
 
-    const styleElement = document.createElement("style");
-    styleElement.textContent = style;
-    document.head.appendChild(styleElement);
+   container.querySelectorAll("[data-inventory-id]").forEach(button => {
+    button.addEventListener("click", () => {
+     const id = Number(button.dataset.inventoryId);
+     const item = inventory.find(x => Number(x.inventory_id) === id);
+     if (item) this.showItem(item);
+    });
+   });
+  },
 
-    function escapeHtml(value) {
-        return String(value ?? "").replace(/[&<>"']/g, char => ({
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#039;"
-        })[char]);
+  showItem(item) {
+   const name = this.escape(item.name || item.code || "NFT");
+   const background = this.backgroundName(item.background);
+   const price = app.format(item.final_price);
+
+   const image = item.image_url
+    ? `<img src="${this.escape(item.image_url)}" style="width:100%;height:180px;object-fit:contain">`
+    : '<div style="font-size:75px;text-align:center;padding:30px">🎁</div>';
+
+   app.showModal(`
+    <div style="clear:both;padding-top:15px">
+     ${image}
+     <h2 style="text-align:center;margin:12px 0">${name}</h2>
+     <div class="result-item">
+      <div class="row">
+       <span class="muted">Фон</span>
+       <strong>${background}</strong>
+      </div>
+     </div>
+     <div class="result-item">
+      <div class="row">
+       <span class="muted">Стоимость</span>
+       <strong>${price}</strong>
+      </div>
+     </div>
+     <div class="result-item">
+      <div class="row">
+       <span class="muted">ID предмета</span>
+       <strong>#${Number(item.inventory_id)}</strong>
+      </div>
+     </div>
+     <button class="primary" id="sellOneNft" style="margin-top:12px">
+      ПРОДАТЬ ЗА ${price}
+     </button>
+    </div>
+   `);
+
+   document.getElementById("sellOneNft").onclick = async () => {
+    if (!confirm(`Продать ${name} за ${price}?`)) return;
+
+    try {
+     const result = await app.request("/api/skins/sell", {
+      method: "POST",
+      body: JSON.stringify({
+       inventory_id: Number(item.inventory_id)
+      })
+     });
+
+     app.closeModal();
+     app.notice(`NFT продан. Получено ${app.format(result.earned)}`);
+     await this.load();
+
+     window.Upgrade?.load();
+     window.Craft?.load();
+    } catch (error) {
+     app.notice(error.message);
     }
+   };
+  },
 
-    function formatNumber(value) {
-        return Number(value || 0).toLocaleString("ru-RU");
+  async sellAll() {
+   if (!app.inventory || !app.inventory.length) {
+    app.notice("Инвентарь пуст");
+    return;
+   }
+
+   if (!confirm(`Продать все NFT (${app.inventory.length} шт.)?`)) {
+    return;
+   }
+
+   try {
+    const result = await app.request("/api/inventory/sell-all", {
+     method: "POST",
+     body: JSON.stringify({})
+    });
+
+    app.notice(
+     `Продано NFT: ${result.sold}. Получено: ${app.format(result.earned)}`
+    );
+
+    await this.load();
+
+    window.Upgrade?.load();
+    window.Craft?.load();
+   } catch (error) {
+    app.notice(error.message);
+   }
+  },
+
+  async setSound() {
+   const next = !app.sound;
+
+   try {
+    await app.request("/api/profile/settings", {
+     method: "POST",
+     body: JSON.stringify({
+      sound_enabled: next
+     })
+    });
+
+    app.sound = next;
+
+    document.getElementById("soundSwitch")
+     .classList.toggle("on", next);
+
+    app.notice(next ? "Звуки включены" : "Звуки выключены");
+   } catch (error) {
+    app.notice(error.message);
+   }
+  },
+
+  toggleAdmin() {
+   if (!app.admin) {
+    app.notice("Нет доступа к админ-панели");
+    return;
+   }
+
+   const enabled =
+    localStorage.getItem("nft_show_admin") !== "1";
+
+   localStorage.setItem("nft_show_admin", enabled ? "1" : "0");
+
+   document.getElementById("adminSwitch")
+    .classList.toggle("on", enabled);
+
+   document.getElementById("adminNav").style.display =
+    enabled ? "flex" : "none";
+
+   document.getElementById("adminPanel").style.display =
+    enabled ? "block" : "none";
+
+   app.notice(enabled
+    ? "Админ-панель отображается"
+    : "Админ-панель скрыта"
+   );
+  },
+
+  async adminAction(action) {
+   if (!app.admin) {
+    app.notice("Нет доступа");
+    return;
+   }
+
+   const gameId = document.getElementById("adminGameId").value.trim();
+   const amount = Number(document.getElementById("adminAmount").value);
+
+   if (!gameId) {
+    app.notice("Введи игровой ID");
+    return;
+   }
+
+   if (!Number.isFinite(amount) || amount <= 0) {
+    app.notice("Введи корректное количество G");
+    return;
+   }
+
+   const endpoint = action === "give"
+    ? "/api/admin/give-g"
+    : "/api/admin/take-g";
+
+   try {
+    const result = await app.request(endpoint, {
+     method: "POST",
+     body: JSON.stringify({
+      game_id: gameId,
+      amount
+     })
+    });
+
+    app.notice(
+     action === "give" ? "G успешно выданы" : "G успешно забраны"
+    );
+
+    document.getElementById("adminAmount").value = "";
+
+    if (result.balance !== undefined) {
+     await this.load();
     }
+   } catch (error) {
+    app.notice(error.message);
+   }
+  },
 
-    function getProfileContainer() {
-        const section = document.getElementById("profile");
-        if (!section) return null;
+  async giveNft() {
+   if (!app.admin) {
+    app.notice("Нет доступа");
+    return;
+   }
 
-        let container = document.getElementById("profile-stats-container");
+   const gameId = document.getElementById("adminGameId").value.trim();
+   const code = document.getElementById("adminNftCode").value.trim();
+   const background = document.getElementById("adminBackground").value;
 
-        if (!container) {
-            container = document.createElement("div");
-            container.id = "profile-stats-container";
+   if (!gameId || !code) {
+    app.notice("Заполни игровой ID и код NFT");
+    return;
+   }
 
-            const historyTitle = section.querySelector(".sub-title");
+   try {
+    await app.request("/api/admin/give-nft", {
+     method: "POST",
+     body: JSON.stringify({
+      game_id: gameId,
+      nft_code: code,
+      background
+     })
+    });
 
-            if (historyTitle) {
-                section.insertBefore(container, historyTitle);
-            } else {
-                section.appendChild(container);
-            }
-        }
+    app.notice("NFT успешно выдан");
+    document.getElementById("adminNftCode").value = "";
+   } catch (error) {
+    app.notice(error.message);
+   }
+  },
 
-        return container;
-    }
+  init() {
+   document.getElementById("sellAllButton").onclick =
+    () => this.sellAll();
 
-    async function loadProfile() {
-        const container = getProfileContainer();
-        if (!container) return;
+   document.getElementById("soundSwitch").onclick =
+    () => this.setSound();
 
-        const tg = window.Telegram && window.Telegram.WebApp;
+   document.getElementById("adminSwitch").onclick =
+    () => this.toggleAdmin();
 
-        if (!tg || !tg.initData) {
-            container.innerHTML =
-                '<div class="profile-loading">Открой приложение через Telegram.</div>';
-            return;
-        }
+   document.getElementById("adminGiveG").onclick =
+    () => this.adminAction("give");
 
-        container.innerHTML =
-            '<div class="profile-loading">Загружаем профиль...</div>';
+   document.getElementById("adminTakeG").onclick =
+    () => this.adminAction("take");
 
-        try {
-            const response = await fetch(API + "/api/profile", {
-                method: "GET",
-                headers: {
-                    "X-Telegram-Init-Data": tg.initData
-                }
-            });
+   document.getElementById("adminGiveNft").onclick =
+    () => this.giveNft();
 
-            const data = await response.json();
+   const showAdmin =
+    localStorage.getItem("nft_show_admin") === "1";
 
-            if (!response.ok) {
-                throw new Error(data.error || "Ошибка загрузки профиля");
-            }
+   document.getElementById("adminSwitch")
+    .classList.toggle("on", showAdmin);
+  }
+ };
 
-            const profile = data.profile || {};
-            const best = profile.best_item;
+ window.Profile = Profile;
 
-            let bestHtml = "";
-
-            if (best) {
-                bestHtml = `
-                    <div class="profile-best">
-                        <div class="profile-best-title">
-                            🏆 ЛУЧШИЙ ПРЕДМЕТ ЗА ВСЁ ВРЕМЯ
-                        </div>
-                        <div class="profile-best-name">
-                            ${escapeHtml(best.name)}
-                        </div>
-                        <div class="profile-best-price">
-                            ${formatNumber(best.price)} DC
-                        </div>
-                        <div class="profile-best-source">
-                            Получен: ${escapeHtml(best.source === "upgrade" ? "Апгрейд" : "Кейс")}
-                        </div>
-                    </div>
-                `;
-            } else {
-                bestHtml = `
-                    <div class="profile-best">
-                        <div class="profile-best-title">
-                            🏆 ЛУЧШИЙ ПРЕДМЕТ
-                        </div>
-                        <div class="profile-best-name">
-                            Пока нет полученных предметов
-                        </div>
-                    </div>
-                `;
-            }
-
-            container.innerHTML = `
-                <h2 class="section-title">📊 Моя статистика</h2>
-
-                <div class="profile-stat" style="margin-bottom:12px">
-                    <div class="profile-stat-icon">💰</div>
-                    <div class="profile-stat-value">
-                        ${formatNumber(profile.balance)} DC
-                    </div>
-                    <div class="profile-stat-label">ТЕКУЩИЙ БАЛАНС</div>
-                </div>
-
-                ${bestHtml}
-
-                <div class="profile-stats">
-                    <div class="profile-stat">
-                        <div class="profile-stat-icon">📦</div>
-                        <div class="profile-stat-value">
-                            ${formatNumber(profile.opened_cases)}
-                        </div>
-                        <div class="profile-stat-label">ОТКРЫТО КЕЙСОВ</div>
-                    </div>
-
-                    <div class="profile-stat">
-                        <div class="profile-stat-icon">⚡</div>
-                        <div class="profile-stat-value">
-                            ${formatNumber(profile.successful_upgrades)}
-                        </div>
-                        <div class="profile-stat-label">УСПЕШНЫХ АПГРЕЙДОВ</div>
-                    </div>
-                </div>
-            `;
-
-        } catch (error) {
-            console.error("PROFILE ERROR:", error);
-
-            container.innerHTML = `
-                <div class="profile-loading">
-                    ❌ Не удалось загрузить профиль.<br><br>
-                    ${escapeHtml(error.message)}
-                    <br><br>
-                    <button class="open-button" onclick="window.loadProfile()">
-                        Повторить
-                    </button>
-                </div>
-            `;
-        }
-    }
-
-    window.loadProfile = loadProfile;
-
-    const originalShowPage = window.showPage;
-
-    if (typeof originalShowPage === "function") {
-        window.showPage = function (page, button) {
-            originalShowPage(page, button);
-
-            if (page === "profile") {
-                loadProfile();
-            }
-        };
-    }
+ Profile.init();
 })();

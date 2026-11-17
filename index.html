@@ -4,22 +4,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#080b18">
+<meta name="theme-color" content="#142342">
 <title>CS GO CASE</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
- --bg:#080b18;
- --glass:rgba(20,29,55,.62);
- --border:rgba(126,164,255,.19);
+ --bg:#142342;
+ --glass:rgba(35,58,100,.72);
+ --border:rgba(126,177,255,.28);
  --blue:#398cff;
- --purple:#823cff;
- --muted:#91a3c4;
+ --purple:#557dff;
+ --muted:#b0c5e8;
 }
 body{
- background:radial-gradient(ellipse at 50% -15%,#1a2850 0%,#0b1022 42%,var(--bg) 75%);
+ background:radial-gradient(ellipse at 50% -15%,#4169a8 0%,#203c6b 42%,#142342 85%);
  color:#fff;font-family:Arial,sans-serif;
  padding-bottom:105px;min-height:100vh;
 }
@@ -28,25 +28,25 @@ button{font-family:inherit;cursor:pointer}
  position:sticky;top:0;z-index:20;
  padding:14px 17px;display:flex;align-items:center;
  justify-content:space-between;gap:10px;
- background:rgba(8,12,27,.78);
+ background:rgba(19,35,65,.85);
  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
- border-bottom:1px solid rgba(139,169,255,.13);
+ border-bottom:1px solid rgba(139,169,255,.22);
 }
 .logo{font-size:21px;font-weight:900;letter-spacing:-.7px}
 .logo span{
- background:linear-gradient(100deg,#55aaff,#a77aff);
+ background:linear-gradient(100deg,#75c4ff,#b9a0ff);
  -webkit-background-clip:text;background-clip:text;color:transparent;
 }
 .header-right{display:flex;align-items:center;gap:9px}
 .balance-chip{
- padding:9px 12px;border:1px solid rgba(104,153,255,.35);
- border-radius:14px;background:linear-gradient(130deg,rgba(41,91,175,.35),rgba(100,51,180,.25));
- box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
- font-size:13px;font-weight:900;color:#dceaff;
+ padding:9px 12px;border:1px solid rgba(130,180,255,.45);
+ border-radius:14px;background:linear-gradient(130deg,rgba(41,110,205,.45),rgba(100,75,200,.35));
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
+ font-size:13px;font-weight:900;color:#eaf3ff;
 }
 .avatar-button{
  width:39px;height:39px;border-radius:50%;overflow:hidden;
- border:2px solid rgba(122,166,255,.65);
+ border:2px solid rgba(150,195,255,.75);
  background:linear-gradient(135deg,#347cff,#8b42ff);
  display:flex;align-items:center;justify-content:center;
  color:white;font-size:17px;padding:0;
@@ -59,9 +59,9 @@ button{font-family:inherit;cursor:pointer}
 
 /* GLASS */
 .glass{
- background:linear-gradient(145deg,rgba(35,52,91,.57),rgba(15,23,46,.68));
+ background:linear-gradient(145deg,rgba(55,83,135,.72),rgba(27,47,83,.78));
  border:1px solid var(--border);border-radius:19px;
- box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 35px rgba(0,0,0,.16);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 12px 35px rgba(0,0,0,.16);
  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
 }
 
@@ -71,24 +71,24 @@ button{font-family:inherit;cursor:pointer}
  margin:8px 2px 15px;
 }
 .games-heading h2{font-size:20px}
-.games-heading span{font-size:11px;color:#8da6d5}
+.games-heading span{font-size:11px;color:#b3c9ee}
 .game-card{
  position:relative;overflow:hidden;isolation:isolate;
- border:1px solid rgba(125,164,255,.25);
+ border:1px solid rgba(145,190,255,.35);
  border-radius:22px;cursor:pointer;
- background:linear-gradient(145deg,#14264a,#10152b 65%,#171333);
- box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 12px 28px rgba(0,0,0,.25);
+ background:linear-gradient(145deg,#294c80,#1b3158 65%,#263d70);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 12px 28px rgba(0,0,0,.25);
  transition:transform .15s,border-color .15s;
 }
 .game-card:active{transform:scale(.975)}
 .game-card:before{
  content:"";position:absolute;inset:0;z-index:-1;
- background:radial-gradient(circle at 80% 75%,rgba(39,113,255,.35),transparent 48%),
- radial-gradient(circle at 15% 20%,rgba(130,55,255,.24),transparent 45%);
+ background:radial-gradient(circle at 80% 75%,rgba(39,145,255,.4),transparent 48%),
+ radial-gradient(circle at 15% 20%,rgba(100,100,255,.28),transparent 45%);
 }
 .game-card:after{
  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
- background:linear-gradient(120deg,rgba(255,255,255,.08),transparent 32%,transparent 70%,rgba(111,142,255,.06));
+ background:linear-gradient(120deg,rgba(255,255,255,.12),transparent 32%,transparent 70%,rgba(111,170,255,.1));
 }
 .mines-card{
  min-height:205px;padding:20px;margin-bottom:13px;
@@ -102,7 +102,7 @@ button{font-family:inherit;cursor:pointer}
  margin-bottom:10px;
 }
 .game-title{font-size:24px;font-weight:900;letter-spacing:.3px}
-.game-description{font-size:11px;color:#a7b8d8;line-height:1.5;margin-top:7px}
+.game-description{font-size:11px;color:#c2d5f5;line-height:1.5;margin-top:7px}
 .game-open{
  display:inline-block;margin-top:15px;padding:9px 14px;border-radius:10px;
  color:white;font-size:11px;font-weight:800;
@@ -112,29 +112,22 @@ button{font-family:inherit;cursor:pointer}
 
 /* КАРТИНКИ НА ВСЮ ПЛОЩАДЬ КАРТОЧЕК */
 .games-heading{display:none}
-
 .game-card{
  padding:0 !important;
  position:relative;
  overflow:hidden;
  min-height:0;
 }
-
 .mines-card{
  height:205px;
  min-height:205px;
  margin-bottom:13px;
 }
-
 .small-game{
  height:178px;
  min-height:178px;
 }
-
-.game-copy{
- display:none !important;
-}
-
+.game-copy{display:none !important}
 .game-art{
  position:absolute;
  inset:0;
@@ -143,7 +136,6 @@ button{font-family:inherit;cursor:pointer}
  z-index:2;
  overflow:hidden;
 }
-
 .game-art img{
  position:absolute;
  inset:0;
@@ -156,9 +148,7 @@ button{font-family:inherit;cursor:pointer}
  filter:drop-shadow(0 8px 20px rgba(65,100,255,.5));
  pointer-events:none;
 }
-
 .game-particles{display:none}
-
 .game-art .art-icon{
  font-size:100px;filter:drop-shadow(0 8px 20px rgba(46,125,255,.65));
  transform:rotate(-12deg);
@@ -186,9 +176,9 @@ button{font-family:inherit;cursor:pointer}
  backdrop-filter:blur(14px);
 }
 .case-name,.skin-name{font-weight:bold;margin-bottom:7px;font-size:14px}
-.case-price,.skin-price{color:#8dbaff;font-size:13px}
+.case-price,.skin-price{color:#a9ceff;font-size:13px}
 .skin-info{min-width:0;overflow-wrap:anywhere}
-.rarity{font-size:11px;color:#aabbd4;margin-top:5px}
+.rarity{font-size:11px;color:#c0d0e8;margin-top:5px}
 .open-button,.action-button,.sell-button{
  background:linear-gradient(120deg,#347cff,#754bff);
  color:white;border:none;border-radius:10px;
@@ -199,9 +189,9 @@ button{font-family:inherit;cursor:pointer}
 .placeholder,.empty{
  background:var(--glass);border:1px solid var(--border);
  border-radius:16px;padding:22px;text-align:center;
- color:#aabbd4;line-height:1.7;
+ color:#d0def5;line-height:1.7;
 }
-.small-note{color:#72839e;font-size:11px;text-align:center;margin-top:15px;line-height:1.6}
+.small-note{color:#a6badb;font-size:11px;text-align:center;margin-top:15px;line-height:1.6}
 .page-title{font-size:21px;font-weight:900;margin:8px 0 17px}
 
 /* CASE OPENING */
@@ -210,46 +200,46 @@ button{font-family:inherit;cursor:pointer}
  border-radius:18px;padding:15px;margin-top:12px;
 }
 .back-button{
- background:rgba(45,65,105,.6);color:#b9cbea;
- border:1px solid #354b6d;border-radius:9px;padding:10px 13px;margin-bottom:15px;
+ background:rgba(55,85,135,.75);color:#e0ecff;
+ border:1px solid #6684b5;border-radius:9px;padding:10px 13px;margin-bottom:15px;
 }
 .case-menu-title{font-size:21px;font-weight:bold;margin-bottom:7px}
-.case-menu-price{color:#80b2ff;font-size:14px;margin-bottom:17px}
+.case-menu-price{color:#a9ceff;font-size:14px;margin-bottom:17px}
 .items-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .item-card{
- background:rgba(24,38,60,.8);border:1px solid #2d405e;
+ background:rgba(38,60,95,.9);border:1px solid #506c98;
  border-radius:12px;padding:10px;min-width:0;
 }
 .item-icon{font-size:25px;margin-bottom:7px}
 .item-name{font-size:12px;font-weight:bold;line-height:1.4;overflow-wrap:anywhere}
-.item-rarity{font-size:10px;color:#b9a5ff;margin-top:5px}
-.item-price{font-size:11px;color:#80b2ff;margin-top:5px}
-.item-chance{font-size:11px;color:#91d5a9;margin-top:5px}
+.item-rarity{font-size:10px;color:#c5b7ff;margin-top:5px}
+.item-price{font-size:11px;color:#a9ceff;margin-top:5px}
+.item-chance{font-size:11px;color:#91e0ad;margin-top:5px}
 .quantity-title{font-size:14px;font-weight:bold;margin:20px 0 10px}
 .quantity-controls{display:flex;align-items:center;justify-content:center;gap:18px}
 .quantity-button{
- width:43px;height:43px;border:1px solid #4266a0;border-radius:11px;
- background:#1b3153;color:white;font-size:23px;
+ width:43px;height:43px;border:1px solid #668ac0;border-radius:11px;
+ background:#294a78;color:white;font-size:23px;
 }
 .quantity-value{font-size:25px;font-weight:bold;min-width:25px;text-align:center}
-.total-price{text-align:center;color:#9bbce9;font-size:13px;margin:13px 0}
+.total-price{text-align:center;color:#b7d2f7;font-size:13px;margin:13px 0}
 .main-open-button{
  width:100%;padding:15px;background:linear-gradient(120deg,#347cff,#754bff);
  border:0;border-radius:12px;color:white;font-size:15px;font-weight:bold;
 }
 .result-box{
- display:none;background:linear-gradient(135deg,#182e50,#30205a);
- border:1px solid #668cff;border-radius:17px;padding:17px;margin:15px 0;
+ display:none;background:linear-gradient(135deg,#254875,#3b3275);
+ border:1px solid #83aaff;border-radius:17px;padding:17px;margin:15px 0;
 }
 .result-box.show{display:block;animation:appear .3s ease}
 .result-heading{text-align:center;font-weight:bold;font-size:19px;margin-bottom:15px}
 .result-item{
- background:#101a2c;border:1px solid #35496c;border-radius:12px;
+ background:#1c3150;border:1px solid #59749d;border-radius:12px;
  padding:12px;margin-bottom:9px;
 }
 .result-item-top{display:flex;justify-content:space-between;gap:8px}
 .result-item-name{font-size:13px;font-weight:bold;overflow-wrap:anywhere}
-.result-item-price{font-size:12px;color:#8ebaff;margin-top:6px}
+.result-item-price{font-size:12px;color:#b6d2fa;margin-top:6px}
 .result-item button{margin-top:10px;width:100%}
 .result-sold{color:#80e6a0;font-size:12px;margin-top:10px}
 .result-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
@@ -266,7 +256,7 @@ button{font-family:inherit;cursor:pointer}
  background:var(--glass);border:1px solid var(--border);
  border-radius:12px;padding:13px;margin-bottom:9px;font-size:13px;line-height:1.6;
 }
-.history-item strong{color:#8bb6ff}
+.history-item strong{color:#b7d2ff}
 
 /* PROFILE / ADMIN */
 .profile-box{
@@ -276,23 +266,23 @@ button{font-family:inherit;cursor:pointer}
 #profile-name{font-size:18px;font-weight:bold}
 #profile-id{font-size:12px;color:var(--muted)}
 .admin-box{
- background:var(--glass);border:1px solid #4169ad;
+ background:var(--glass);border:1px solid #668ac5;
  border-radius:15px;padding:18px;margin-bottom:15px;
 }
-.admin-label{display:block;color:#a8bddf;font-size:13px;margin:14px 0 7px}
+.admin-label{display:block;color:#c3d5f1;font-size:13px;margin:14px 0 7px}
 .admin-input{
- width:100%;background:#080c16;border:1px solid #344767;
+ width:100%;background:#172b4b;border:1px solid #6680a8;
  border-radius:9px;padding:13px;color:white;font-size:16px;
 }
 .action-button{width:100%;margin-top:14px;font-size:15px}
 .take-button{background:linear-gradient(135deg,#bd3c56,#e46b45)}
 .admin-message,.notice{
  margin-top:14px;padding:12px;border-radius:9px;
- background:#1c2940;color:#a8bddf;font-size:13px;line-height:1.5;
+ background:#263d60;color:#d0e0f7;font-size:13px;line-height:1.5;
  display:none;overflow-wrap:anywhere;white-space:pre-line;
 }
 .admin-message.success,.notice.success{display:block;color:#80e6a0}
-.admin-message.error,.notice.error{display:block;color:#ff8585}
+.admin-message.error,.notice.error{display:block;color:#ff9999}
 .admin-status{color:#80e6a0;font-size:13px;margin-bottom:12px}
 
 /* BOTTOM NAV */
@@ -300,17 +290,17 @@ button{font-family:inherit;cursor:pointer}
  position:fixed;bottom:10px;left:10px;right:10px;z-index:30;
  display:flex;justify-content:space-around;align-items:center;
  padding:9px 3px calc(9px + env(safe-area-inset-bottom));
- border:1px solid rgba(139,169,255,.2);border-radius:21px;
- background:rgba(13,20,40,.82);
+ border:1px solid rgba(150,190,255,.3);border-radius:21px;
+ background:rgba(25,44,78,.88);
  backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);
- box-shadow:0 8px 30px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.08);
+ box-shadow:0 8px 30px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.12);
 }
 .nav-button{
- flex:1;min-width:0;background:none;border:0;color:#8191b2;
+ flex:1;min-width:0;background:none;border:0;color:#b0c3e2;
  font-size:9px;padding:5px 0;border-radius:13px;
 }
 .nav-button.active{
- color:#fff;background:linear-gradient(140deg,rgba(54,125,255,.28),rgba(126,65,255,.22));
+ color:#fff;background:linear-gradient(140deg,rgba(54,125,255,.4),rgba(126,65,255,.3));
 }
 .nav-icon{display:block;font-size:20px;margin-bottom:4px}
 #admin-nav{display:none}
@@ -342,7 +332,7 @@ button{font-family:inherit;cursor:pointer}
 
  <div class="game-card mines-card" onclick="showPage('mines')">
   <div class="game-art">
-   <img src="mines.png" alt="Мины">
+   <img src="mines-blue.png" alt="Мины">
   </div>
  </div>
 
@@ -350,13 +340,13 @@ button{font-family:inherit;cursor:pointer}
 
   <div class="game-card small-game" onclick="showPage('upgrade')">
    <div class="game-art">
-    <img src="upgrade.png" alt="Апгрейд">
+    <img src="upgrade-blue.png" alt="Апгрейд">
    </div>
   </div>
 
   <div class="game-card small-game" onclick="showPage('craft')">
    <div class="game-art">
-    <img src="craft.png" alt="Крафт">
+    <img src="craft-blue.png" alt="Крафт">
    </div>
   </div>
 
@@ -439,7 +429,7 @@ button{font-family:inherit;cursor:pointer}
  <div class="profile-box">
   <div id="profile-name">Игрок</div>
   <div id="profile-id" style="margin-top:7px">Telegram ID: —</div>
-  <div style="font-size:11px;color:#8094b8;margin-top:12px">Проект CS GO CASE</div>
+  <div style="font-size:11px;color:#b0c5e8;margin-top:12px">Проект CS GO CASE</div>
  </div>
 
  <div id="profile-stats-container"></div>

@@ -35,13 +35,44 @@
    })[value] || "Normal";
   },
 
+  getBackgroundMultiplier(background) {
+   return ({
+    normal: 1,
+    gold: 3,
+    onyx_black: 5,
+    black: 10
+   })[background] || 1;
+  },
+
+  getChanceValue() {
+   const value = Number(
+    document.getElementById("upgradeChance").value
+   );
+
+   return Math.min(90, Math.max(5, value || 5));
+  },
+
+  getMultiplierChance() {
+   const item = Array.isArray(this.multipliers)
+    ? this.multipliers.find(x =>
+       Number(x.value) === this.multiplier
+      )
+    : null;
+
+   const chance = Number(
+    item?.chance ?? 100 / this.multiplier
+   );
+
+   return chance > 1 ? chance / 100 : chance;
+  },
+
   async load() {
    try {
     const data = await app.request("/api/upgrade/options");
 
     this.inventory = data.inventory || [];
     this.catalog = data.catalog || [];
-    this.multipliers = data.multipliers || {};
+    this.multipliers = data.multipliers || [];
 
     this.renderSource();
     this.renderTargets();
@@ -65,7 +96,8 @@
     '<option value="">Выбери NFT</option>' +
     this.inventory.map(item => `
      <option value="${Number(item.inventory_id)}">
-      ${this.escape(item.name || item.code)} — ${app.format(item.final_price)}
+      ${this.escape(item.name || item.code)} —
+      ${app.format(item.final_price)}
       (${this.backgroundName(item.background)})
      </option>
     `).join("");
@@ -78,46 +110,60 @@
   },
 
   getSource() {
-   const id = Number(document.getElementById("upgradeSource").value);
+   const id = Number(
+    document.getElementById("upgradeSource").value
+   );
 
    return this.inventory.find(item =>
     Number(item.inventory_id) === id
    ) || null;
   },
 
-  getBackgroundMultiplier(background) {
-   return ({
-    normal: 1,
-    gold: 3,
-    onyx_black: 5,
-    black: 10
-   })[background] || 1;
-  },
-
   getTargetBackground() {
    return document.getElementById("upgradeBackground").value;
   },
 
-  getTargetPrice() {
+  getPriceRange() {
    const source = this.getSource();
 
-   if (!source) return 0;
+   if (!source) {
+    return { min: 0, max: 0, desired: 0 };
+   }
 
    const sourcePrice = Number(source.final_price || 0);
-   const targetBackground = this.getBackgroundMultiplier(
+   const backgroundMultiplier = this.getBackgroundMultiplier(
     this.getTargetBackground()
    );
 
+   let min;
+   let max;
+   let desired;
+
    if (this.mode === "multiplier") {
-    return sourcePrice * this.multiplier / targetBackground;
+    const expected = sourcePrice * this.multiplier;
+
+    min = expected * 0.75;
+    max = expected * 1.25;
+    desired = expected;
+   } else {
+    min = sourcePrice * 2;
+    max = sourcePrice * 10;
+
+    const chance = this.getChanceValue();
+
+    const ratio = Math.min(
+     10,
+     Math.max(2, 100 / chance)
+    );
+
+    desired = sourcePrice * ratio;
    }
 
-   const chance = Math.min(
-    50,
-    Math.max(1, Number(document.getElementById("upgradeChance").value) || 1)
-   );
-
-   return sourcePrice / (chance / 100) / targetBackground;
+   return {
+    min: min / backgroundMultiplier,
+    max: max / backgroundMultiplier,
+    desired: desired / backgroundMultiplier
+   };
   },
 
   renderTargets() {
@@ -130,35 +176,43 @@
     return;
    }
 
-   const desiredPrice = this.getTargetPrice();
+   const range = this.getPriceRange();
+   const previous = select.value;
 
    const candidates = this.catalog
-    .filter(item => Number(item.base_price) > 0)
+    .filter(item => {
+     const price = Number(item.base_price || 0);
+
+     return price > 0 &&
+      price >= range.min &&
+      price <= range.max;
+    })
     .map(item => ({
      ...item,
      distance: Math.abs(
-      Number(item.base_price) - desiredPrice
+      Number(item.base_price) - range.desired
      )
     }))
     .sort((a, b) => a.distance - b.distance);
 
    if (!candidates.length) {
     select.innerHTML =
-     '<option value="">Каталог NFT пуст</option>';
+     '<option value="">Нет NFT подходящей стоимости</option>';
     return;
    }
-
-   const previous = select.value;
 
    select.innerHTML =
     '<option value="">Выбери желаемый NFT</option>' +
     candidates.map(item => `
      <option value="${Number(item.id)}">
-      ${this.escape(item.name || item.code)} — ${app.format(item.base_price)}
+      ${this.escape(item.name || item.code)} —
+      ${app.format(item.base_price)}
      </option>
     `).join("");
 
-   if (previous && candidates.some(x => String(x.id) === previous)) {
+   if (previous && candidates.some(x =>
+    String(x.id) === previous
+   )) {
     select.value = previous;
    }
   },
@@ -173,30 +227,24 @@
    }
 
    const sourcePrice = Number(source.final_price || 0);
-   const desiredPrice = this.getTargetPrice();
+   const range = this.getPriceRange();
 
-   let chance;
-
-   if (this.mode === "multiplier") {
-    chance = Number(this.multipliers[this.multiplier]);
-
-    if (!Number.isFinite(chance)) {
-     chance = 100 / this.multiplier;
-    }
-
-    if (chance > 1) chance /= 100;
-   } else {
-    chance = Math.min(
-     50,
-     Math.max(1, Number(document.getElementById("upgradeChance").value) || 1)
-    ) / 100;
-   }
+   const chance = this.mode === "multiplier"
+    ? this.getMultiplierChance() * 100
+    : this.getChanceValue();
 
    const selectedId = Number(
     document.getElementById("upgradeTarget").value
    );
 
-   const target = this.catalog.find(x => Number(x.id) === selectedId);
+   const target = this.catalog.find(x =>
+    Number(x.id) === selectedId
+   );
+
+   const targetPrice = target
+    ? Number(target.base_price) *
+      this.getBackgroundMultiplier(this.getTargetBackground())
+    : 0;
 
    info.innerHTML = `
     <div style="display:grid;gap:7px">
@@ -204,23 +252,38 @@
       <span>Стоимость твоего NFT</span>
       <strong>${app.format(sourcePrice)}</strong>
      </div>
+
      <div class="row">
-      <span>Примерная стоимость цели</span>
-      <strong>${app.format(desiredPrice)}</strong>
+      <span>Подходящая стоимость цели</span>
+      <strong>
+       ${app.format(range.min * this.getBackgroundMultiplier(this.getTargetBackground()))}
+       —
+       ${app.format(range.max * this.getBackgroundMultiplier(this.getTargetBackground()))}
+      </strong>
      </div>
+
      <div class="row">
-      <span>Шанс по выбранному режиму</span>
-      <strong style="color:#bbaaff">${(chance * 100).toFixed(2)}%</strong>
+      <span>Шанс победы</span>
+      <strong style="color:#bbaaff">
+       ${chance.toFixed(2)}%
+      </strong>
      </div>
+
      ${target ? `
       <div class="row">
        <span>Выбранная цель</span>
        <strong>${this.escape(target.name || target.code)}</strong>
       </div>
+
+      <div class="row">
+       <span>Итоговая стоимость</span>
+       <strong>${app.format(targetPrice)}</strong>
+      </div>
      ` : ""}
     </div>
+
     <div style="margin-top:10px;font-size:11px;color:#858b9c">
-     Итоговая вероятность и допустимость цены проверяются сервером.
+     При проигрыше исходный NFT сгорает.
     </div>
    `;
   },
@@ -242,7 +305,31 @@
     return;
    }
 
+   const target = this.catalog.find(x =>
+    Number(x.id) === targetId
+   );
+
+   if (!target) {
+    app.notice("Целевой NFT не найден");
+    return;
+   }
+
    const background = this.getTargetBackground();
+   const range = this.getPriceRange();
+
+   const finalTargetPrice =
+    Number(target.base_price) *
+    this.getBackgroundMultiplier(background);
+
+   if (
+    finalTargetPrice < range.min *
+     this.getBackgroundMultiplier(background) ||
+    finalTargetPrice > range.max *
+     this.getBackgroundMultiplier(background)
+   ) {
+    app.notice("Стоимость выбранного NFT не подходит");
+    return;
+   }
 
    const body = {
     inventory_id: Number(source.inventory_id),
@@ -254,10 +341,7 @@
    if (this.mode === "multiplier") {
     body.multiplier = this.multiplier;
    } else {
-    body.chance = Math.min(
-     50,
-     Math.max(1, Number(document.getElementById("upgradeChance").value) || 1)
-    );
+    body.chance = this.getChanceValue();
    }
 
    const button = document.getElementById("upgradeButton");
@@ -274,26 +358,44 @@
      app.showModal(`
       <div style="clear:both;text-align:center;padding-top:15px">
        <div style="font-size:65px">🎉</div>
-       <h2 style="color:#48d69a;margin:10px 0">АПГРЕЙД УДАЛСЯ!</h2>
-       <p style="margin:10px 0">${this.escape(result.message || "Ты получил новый NFT!")}</p>
+       <h2 style="color:#48d69a;margin:10px 0">
+        АПГРЕЙД УДАЛСЯ!
+       </h2>
+
+       <p style="margin:10px 0">
+        ${this.escape(result.message || "Ты получил новый NFT!")}
+       </p>
+
        ${result.reward ? `
         <div class="result-item">
          <strong>${this.escape(result.reward.name || "NFT")}</strong>
-         <div class="muted small">${app.format(result.reward.final_price)}</div>
+         <div class="muted small">
+          ${app.format(result.reward.price)}
+         </div>
         </div>
        ` : ""}
-       <button class="primary" id="upgradeResultClose">Продолжить</button>
+
+       <button class="primary" id="upgradeResultClose">
+        Продолжить
+       </button>
       </div>
      `);
     } else {
      app.showModal(`
       <div style="clear:both;text-align:center;padding-top:15px">
        <div style="font-size:65px">💔</div>
-       <h2 style="color:#ff8294;margin:10px 0">НЕ ПОВЕЗЛО</h2>
+
+       <h2 style="color:#ff8294;margin:10px 0">
+        НЕ ПОВЕЗЛО
+       </h2>
+
        <p class="muted" style="margin:10px 0">
         ${this.escape(result.message || "Исходный NFT сгорел")}
        </p>
-       <button class="primary" id="upgradeResultClose">Понятно</button>
+
+       <button class="primary" id="upgradeResultClose">
+        Понятно
+       </button>
       </div>
      `);
     }
@@ -318,16 +420,22 @@
    document.getElementById("upgradeModes")
     .querySelectorAll("button").forEach(button => {
      button.onclick = () => {
-      this.mode = button.dataset.mode;
+      const selectedMode = button.dataset.mode;
+
+      this.mode = selectedMode === "chance"
+       ? "percent"
+       : selectedMode;
 
       document.querySelectorAll("#upgradeModes button")
-       .forEach(x => x.classList.toggle("selected", x === button));
+       .forEach(x =>
+        x.classList.toggle("selected", x === button)
+       );
 
       document.getElementById("multiplierTabs").style.display =
        this.mode === "multiplier" ? "flex" : "none";
 
       document.getElementById("chanceControls").style.display =
-       this.mode === "chance" ? "block" : "none";
+       this.mode === "percent" ? "block" : "none";
 
       this.renderTargets();
       this.updateInfo();
@@ -340,7 +448,9 @@
       this.multiplier = Number(button.dataset.multiplier);
 
       document.querySelectorAll("#multiplierTabs button")
-       .forEach(x => x.classList.toggle("selected", x === button));
+       .forEach(x =>
+        x.classList.toggle("selected", x === button)
+       );
 
       this.renderTargets();
       this.updateInfo();

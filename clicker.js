@@ -34,28 +34,14 @@
     }
 
     function addClickerInterface() {
-        const homeGrid = document.querySelector("#home .grid");
-        const main = document.querySelector("main.container");
+        const page = document.getElementById("clicker");
 
-        if (!homeGrid || !main || document.getElementById("clicker")) return;
+        if (!page || page.dataset.clickerReady === "true") return;
 
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-            <div class="card-icon">🪙</div>
-            <div class="card-name">Кликер</div>
-            <div class="card-description">Зарабатывай GUADON COIN</div>
-        `;
-
-        card.addEventListener("click", () => window.showPage("clicker"));
-        homeGrid.appendChild(card);
-
-        const page = document.createElement("section");
-        page.className = "page";
-        page.id = "clicker";
+        page.dataset.clickerReady = "true";
 
         page.innerHTML = `
-            <h2 class="section-title">🪙 GUADON COIN</h2>
+            <h2 class="page-title">🪙 GUADON COIN</h2>
 
             <div class="balance">
                 <div class="balance-label">ТВОЙ БАЛАНС</div>
@@ -84,28 +70,16 @@
 
                 <button id="clicker-button"
                     class="clicker-main-button"
-                    type="button"
-                    aria-label="Получить GUADON COIN">
+                    type="button">
 
                     <span class="clicker-coin-wrap">
                         <span class="clicker-coin">
-
                             <span class="clicker-coin-face">
-                                <span class="clicker-coin-top">
-                                    GUADON
-                                </span>
-
+                                <span class="clicker-coin-top">GUADON</span>
                                 <span class="clicker-coin-logo">G</span>
-
-                                <span class="clicker-coin-bottom">
-                                    COIN
-                                </span>
-
-                                <span class="clicker-coin-stars">
-                                    ★　　 ★
-                                </span>
+                                <span class="clicker-coin-bottom">COIN</span>
+                                <span class="clicker-coin-stars">★　 ★</span>
                             </span>
-
                         </span>
                     </span>
 
@@ -126,8 +100,6 @@
                 Между нажатиями действует серверная задержка.
             </div>
         `;
-
-        main.appendChild(page);
 
         const style = document.createElement("style");
 
@@ -163,13 +135,12 @@
                 margin:25px 0;
                 padding:22px 12px;
                 border-radius:22px;
-                background:
-                    radial-gradient(
-                        ellipse at center,
-                        #203b65 0%,
-                        #152640 48%,
-                        #101a2c 100%
-                    );
+                background:radial-gradient(
+                    ellipse at center,
+                    #203b65,
+                    #152640 55%,
+                    #101a2c
+                );
                 border:1px solid #304b70;
                 text-align:center;
                 overflow:hidden;
@@ -214,7 +185,6 @@
             }
 
             .clicker-coin {
-                position:relative;
                 width:174px;
                 height:174px;
                 border-radius:50%;
@@ -223,35 +193,21 @@
                 display:flex;
                 align-items:center;
                 justify-content:center;
-
-                background:
-                    linear-gradient(
-                        135deg,
-                        #fff2a8 0%,
-                        #e7b83f 17%,
-                        #a86b12 35%,
-                        #ffe58a 52%,
-                        #bd821e 72%,
-                        #fff0a4 100%
-                    );
-
+                background:linear-gradient(
+                    135deg,
+                    #fff2a8,
+                    #e7b83f 17%,
+                    #a86b12 35%,
+                    #ffe58a 52%,
+                    #bd821e 72%,
+                    #fff0a4
+                );
                 border:3px solid #ffe99b;
-
                 box-shadow:
                     0 0 0 3px #956014,
                     0 0 0 6px #eac45f,
                     inset 0 3px 5px #fff9c5,
                     inset 0 -6px 8px #7b4b0b;
-            }
-
-            .clicker-coin::before {
-                content:"";
-                position:absolute;
-                inset:5px;
-                border-radius:50%;
-                border:2px solid #fff0a0;
-                opacity:.8;
-                pointer-events:none;
             }
 
             .clicker-coin-face {
@@ -260,13 +216,12 @@
                 border-radius:50%;
                 border:3px solid #e9bd55;
                 box-sizing:border-box;
-                background:
-                    radial-gradient(
-                        circle at 30% 23%,
-                        #416fae 0%,
-                        #203e70 42%,
-                        #101d39 100%
-                    );
+                background:radial-gradient(
+                    circle at 30% 23%,
+                    #416fae,
+                    #203e70 55%,
+                    #101d39
+                );
                 display:flex;
                 flex-direction:column;
                 align-items:center;
@@ -278,13 +233,12 @@
                     inset 0 -5px 12px #0008;
             }
 
-            .clicker-coin-face::before {
+            .clicker-coin-face:before {
                 content:"";
                 position:absolute;
                 inset:8px;
                 border:1px solid #e7bd61;
                 border-radius:50%;
-                opacity:.65;
             }
 
             .clicker-coin-top {
@@ -292,9 +246,7 @@
                 font-size:13px;
                 font-weight:1000;
                 letter-spacing:3px;
-                margin-bottom:-3px;
                 z-index:1;
-                text-shadow:0 2px 3px #000;
             }
 
             .clicker-coin-logo {
@@ -303,14 +255,13 @@
                 line-height:1;
                 font-weight:1000;
                 font-style:italic;
-                background:
-                    linear-gradient(
-                        135deg,
-                        #fff6b8,
-                        #f4c64e 45%,
-                        #a86c16 75%,
-                        #ffeaa0
-                    );
+                background:linear-gradient(
+                    135deg,
+                    #fff6b8,
+                    #f4c64e 45%,
+                    #a86c16 75%,
+                    #ffeaa0
+                );
                 -webkit-background-clip:text;
                 background-clip:text;
                 color:transparent;
@@ -324,9 +275,7 @@
                 font-size:12px;
                 font-weight:1000;
                 letter-spacing:5px;
-                margin-top:-2px;
                 z-index:1;
-                text-shadow:0 2px 3px #000;
             }
 
             .clicker-coin-stars {
@@ -334,13 +283,11 @@
                 bottom:20px;
                 color:#f5d77e;
                 font-size:9px;
-                opacity:.8;
             }
 
             .clicker-button-text {
                 font-size:16px;
                 font-weight:1000;
-                letter-spacing:.5px;
                 color:#fff;
             }
 
@@ -350,30 +297,18 @@
                 font-weight:800;
             }
 
-            .clicker-main-button:active .clicker-coin {
-                transform:scale(.94);
-            }
-
             .clicker-pop .clicker-coin {
                 animation:clickerCoinSpin .55s ease;
             }
 
             @keyframes clickerCoinSpin {
-                0% {
-                    transform:scale(1) rotateY(0deg);
-                }
-                40% {
-                    transform:scale(1.12) rotateY(180deg);
-                }
-                75% {
-                    transform:scale(.96) rotateY(300deg);
-                }
-                100% {
-                    transform:scale(1) rotateY(360deg);
-                }
+                0% {transform:scale(1) rotateY(0deg)}
+                40% {transform:scale(1.12) rotateY(180deg)}
+                75% {transform:scale(.96) rotateY(300deg)}
+                100% {transform:scale(1) rotateY(360deg)}
             }
 
-            @media (max-width:360px) {
+            @media(max-width:360px) {
                 .clicker-coin-wrap {
                     width:170px;
                     height:170px;
@@ -386,7 +321,10 @@
             }
         `;
 
-        document.head.appendChild(style);
+        if (!document.getElementById("clicker-styles")) {
+            style.id = "clicker-styles";
+            document.head.appendChild(style);
+        }
 
         document.getElementById("clicker-button")
             .addEventListener("click", makeClick);
@@ -394,7 +332,6 @@
 
     function showClickerMessage(message, type) {
         const box = document.getElementById("clicker-message");
-
         if (!box) return;
 
         box.textContent = message;
@@ -416,7 +353,15 @@
             rewardPerClick.toLocaleString("ru-RU") + " DC";
 
         document.getElementById("clicker-button-reward").textContent =
-            "+" + rewardPerClick.toLocaleString("ru-RU") + " GUADON COIN";
+            "+" + rewardPerClick.toLocaleString("ru-RU") +
+            " GUADON COIN";
+
+        const headerBalance = document.getElementById("balance");
+
+        if (headerBalance) {
+            headerBalance.textContent =
+                balance.toLocaleString("ru-RU") + " DC";
+        }
     }
 
     async function loadClicker() {
@@ -424,7 +369,6 @@
 
         try {
             const data = await request("/api/clicker");
-
             renderClicker(data);
             clickerLoaded = true;
 
@@ -446,9 +390,7 @@
         button.disabled = true;
         button.classList.remove("clicker-pop");
 
-        // Перезапускаем анимацию монеты
         void button.offsetWidth;
-
         button.classList.add("clicker-pop");
 
         try {
@@ -467,13 +409,6 @@
                 " DC начислено!",
                 "success"
             );
-
-            const mainBalance = document.getElementById("balance");
-
-            if (mainBalance) {
-                mainBalance.textContent =
-                    balance.toLocaleString("ru-RU") + " DC";
-            }
 
             if (tg && tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred("light");
@@ -495,23 +430,8 @@
     function init() {
         addClickerInterface();
 
-        const originalShowPage = window.showPage;
-
-        if (
-            typeof originalShowPage === "function" &&
-            !originalShowPage.__clickerWrapped
-        ) {
-            const wrappedShowPage = function (page, button) {
-                originalShowPage(page, button);
-
-                if (page === "clicker") {
-                    loadClicker();
-                }
-            };
-
-            wrappedShowPage.__clickerWrapped = true;
-            window.showPage = wrappedShowPage;
-        }
+        // Эту функцию вызывает showPage() из index.html
+        window.loadClicker = loadClicker;
     }
 
     init();

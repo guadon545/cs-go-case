@@ -1,487 +1,435 @@
 
 (() => {
- "use strict";
+    "use strict";
 
- const app = window.NFT_CASE;
+    const app = window.NFT_CASE;
 
- if (!app) {
-  console.error("NFT_CASE не найден");
-  return;
- }
-
- const Upgrade = {
-  inventory: [],
-  catalog: [],
-  multipliers: {},
-  mode: "multiplier",
-  multiplier: 2,
-
-  escape(value) {
-   return String(value ?? "").replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-   }[char]));
-  },
-
-  backgroundName(value) {
-   return ({
-    normal: "Normal",
-    gold: "Gold",
-    onyx_black: "Onyx Black",
-    black: "Black"
-   })[value] || "Normal";
-  },
-
-  getBackgroundMultiplier(background) {
-   return ({
-    normal: 1,
-    gold: 3,
-    onyx_black: 5,
-    black: 10
-   })[background] || 1;
-  },
-
-  getChanceValue() {
-   const value = Number(
-    document.getElementById("upgradeChance").value
-   );
-
-   return Math.min(90, Math.max(5, value || 5));
-  },
-
-  getMultiplierChance() {
-   const item = Array.isArray(this.multipliers)
-    ? this.multipliers.find(x =>
-       Number(x.value) === this.multiplier
-      )
-    : null;
-
-   const chance = Number(
-    item?.chance ?? 100 / this.multiplier
-   );
-
-   return chance > 1 ? chance / 100 : chance;
-  },
-
-  async load() {
-   try {
-    const data = await app.request("/api/upgrade/options");
-
-    this.inventory = data.inventory || [];
-    this.catalog = data.catalog || [];
-    this.multipliers = data.multipliers || [];
-
-    this.renderSource();
-    this.renderTargets();
-    this.updateInfo();
-   } catch (error) {
-    console.error("Ошибка загрузки апгрейда:", error);
-    app.notice(error.message || "Не удалось загрузить апгрейд");
-   }
-  },
-
-  renderSource() {
-   const select = document.getElementById("upgradeSource");
-   const previous = select.value;
-
-   if (!this.inventory.length) {
-    select.innerHTML = '<option value="">Инвентарь пуст</option>';
-    return;
-   }
-
-   select.innerHTML =
-    '<option value="">Выбери NFT</option>' +
-    this.inventory.map(item => `
-     <option value="${Number(item.inventory_id)}">
-      ${this.escape(item.name || item.code)} —
-      ${app.format(item.final_price)}
-      (${this.backgroundName(item.background)})
-     </option>
-    `).join("");
-
-   if (previous && this.inventory.some(x =>
-    String(x.inventory_id) === previous
-   )) {
-    select.value = previous;
-   }
-  },
-
-  getSource() {
-   const id = Number(
-    document.getElementById("upgradeSource").value
-   );
-
-   return this.inventory.find(item =>
-    Number(item.inventory_id) === id
-   ) || null;
-  },
-
-  getTargetBackground() {
-   return document.getElementById("upgradeBackground").value;
-  },
-
-  getPriceRange() {
-   const source = this.getSource();
-
-   if (!source) {
-    return { min: 0, max: 0, desired: 0 };
-   }
-
-   const sourcePrice = Number(source.final_price || 0);
-   const backgroundMultiplier = this.getBackgroundMultiplier(
-    this.getTargetBackground()
-   );
-
-   let min;
-   let max;
-   let desired;
-
-   if (this.mode === "multiplier") {
-    const expected = sourcePrice * this.multiplier;
-
-    min = expected * 0.75;
-    max = expected * 1.25;
-    desired = expected;
-   } else {
-    min = sourcePrice * 2;
-    max = sourcePrice * 10;
-
-    const chance = this.getChanceValue();
-
-    const ratio = Math.min(
-     10,
-     Math.max(2, 100 / chance)
-    );
-
-    desired = sourcePrice * ratio;
-   }
-
-   return {
-    min: min / backgroundMultiplier,
-    max: max / backgroundMultiplier,
-    desired: desired / backgroundMultiplier
-   };
-  },
-
-  renderTargets() {
-   const select = document.getElementById("upgradeTarget");
-   const source = this.getSource();
-
-   if (!source) {
-    select.innerHTML =
-     '<option value="">Сначала выбери исходный NFT</option>';
-    return;
-   }
-
-   const range = this.getPriceRange();
-   const previous = select.value;
-
-   const candidates = this.catalog
-    .filter(item => {
-     const price = Number(item.base_price || 0);
-
-     return price > 0 &&
-      price >= range.min &&
-      price <= range.max;
-    })
-    .map(item => ({
-     ...item,
-     distance: Math.abs(
-      Number(item.base_price) - range.desired
-     )
-    }))
-    .sort((a, b) => a.distance - b.distance);
-
-   if (!candidates.length) {
-    select.innerHTML =
-     '<option value="">Нет NFT подходящей стоимости</option>';
-    return;
-   }
-
-   select.innerHTML =
-    '<option value="">Выбери желаемый NFT</option>' +
-    candidates.map(item => `
-     <option value="${Number(item.id)}">
-      ${this.escape(item.name || item.code)} —
-      ${app.format(item.base_price)}
-     </option>
-    `).join("");
-
-   if (previous && candidates.some(x =>
-    String(x.id) === previous
-   )) {
-    select.value = previous;
-   }
-  },
-
-  updateInfo() {
-   const source = this.getSource();
-   const info = document.getElementById("upgradeInfo");
-
-   if (!source) {
-    info.textContent = "Выбери NFT для начала";
-    return;
-   }
-
-   const sourcePrice = Number(source.final_price || 0);
-   const range = this.getPriceRange();
-
-   const chance = this.mode === "multiplier"
-    ? this.getMultiplierChance() * 100
-    : this.getChanceValue();
-
-   const selectedId = Number(
-    document.getElementById("upgradeTarget").value
-   );
-
-   const target = this.catalog.find(x =>
-    Number(x.id) === selectedId
-   );
-
-   const targetPrice = target
-    ? Number(target.base_price) *
-      this.getBackgroundMultiplier(this.getTargetBackground())
-    : 0;
-
-   info.innerHTML = `
-    <div style="display:grid;gap:7px">
-     <div class="row">
-      <span>Стоимость твоего NFT</span>
-      <strong>${app.format(sourcePrice)}</strong>
-     </div>
-
-     <div class="row">
-      <span>Подходящая стоимость цели</span>
-      <strong>
-       ${app.format(range.min * this.getBackgroundMultiplier(this.getTargetBackground()))}
-       —
-       ${app.format(range.max * this.getBackgroundMultiplier(this.getTargetBackground()))}
-      </strong>
-     </div>
-
-     <div class="row">
-      <span>Шанс победы</span>
-      <strong style="color:#bbaaff">
-       ${chance.toFixed(2)}%
-      </strong>
-     </div>
-
-     ${target ? `
-      <div class="row">
-       <span>Выбранная цель</span>
-       <strong>${this.escape(target.name || target.code)}</strong>
-      </div>
-
-      <div class="row">
-       <span>Итоговая стоимость</span>
-       <strong>${app.format(targetPrice)}</strong>
-      </div>
-     ` : ""}
-    </div>
-
-    <div style="margin-top:10px;font-size:11px;color:#858b9c">
-     При проигрыше исходный NFT сгорает.
-    </div>
-   `;
-  },
-
-  async play() {
-   const source = this.getSource();
-
-   if (!source) {
-    app.notice("Сначала выбери свой NFT");
-    return;
-   }
-
-   const targetId = Number(
-    document.getElementById("upgradeTarget").value
-   );
-
-   if (!targetId) {
-    app.notice("Выбери NFT, который хочешь получить");
-    return;
-   }
-
-   const target = this.catalog.find(x =>
-    Number(x.id) === targetId
-   );
-
-   if (!target) {
-    app.notice("Целевой NFT не найден");
-    return;
-   }
-
-   const background = this.getTargetBackground();
-   const range = this.getPriceRange();
-
-   const finalTargetPrice =
-    Number(target.base_price) *
-    this.getBackgroundMultiplier(background);
-
-   if (
-    finalTargetPrice < range.min *
-     this.getBackgroundMultiplier(background) ||
-    finalTargetPrice > range.max *
-     this.getBackgroundMultiplier(background)
-   ) {
-    app.notice("Стоимость выбранного NFT не подходит");
-    return;
-   }
-
-   const body = {
-    inventory_id: Number(source.inventory_id),
-    target_nft_id: targetId,
-    target_background: background,
-    mode: this.mode
-   };
-
-   if (this.mode === "multiplier") {
-    body.multiplier = this.multiplier;
-   } else {
-    body.chance = this.getChanceValue();
-   }
-
-   const button = document.getElementById("upgradeButton");
-   button.disabled = true;
-   button.textContent = "АПГРЕЙД...";
-
-   try {
-    const result = await app.request("/api/upgrade", {
-     method: "POST",
-     body: JSON.stringify(body)
-    });
-
-    if (result.won) {
-     app.showModal(`
-      <div style="clear:both;text-align:center;padding-top:15px">
-       <div style="font-size:65px">🎉</div>
-       <h2 style="color:#48d69a;margin:10px 0">
-        АПГРЕЙД УДАЛСЯ!
-       </h2>
-
-       <p style="margin:10px 0">
-        ${this.escape(result.message || "Ты получил новый NFT!")}
-       </p>
-
-       ${result.reward ? `
-        <div class="result-item">
-         <strong>${this.escape(result.reward.name || "NFT")}</strong>
-         <div class="muted small">
-          ${app.format(result.reward.price)}
-         </div>
-        </div>
-       ` : ""}
-
-       <button class="primary" id="upgradeResultClose">
-        Продолжить
-       </button>
-      </div>
-     `);
-    } else {
-     app.showModal(`
-      <div style="clear:both;text-align:center;padding-top:15px">
-       <div style="font-size:65px">💔</div>
-
-       <h2 style="color:#ff8294;margin:10px 0">
-        НЕ ПОВЕЗЛО
-       </h2>
-
-       <p class="muted" style="margin:10px 0">
-        ${this.escape(result.message || "Исходный NFT сгорел")}
-       </p>
-
-       <button class="primary" id="upgradeResultClose">
-        Понятно
-       </button>
-      </div>
-     `);
+    if (!app) {
+        console.error("NFT_CASE не найден");
+        return;
     }
 
-    document.getElementById("upgradeResultClose").onclick = () => {
-     app.closeModal();
+    const Cases = {
+        list: [],
+        currentCase: null,
+        quantity: 1,
+        opening: false,
+
+        sound(name) {
+            window.GameSound?.play(name);
+        },
+
+        wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        },
+
+        escape(value) {
+            return String(value ?? "").replace(/[&<>"']/g, char => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;"
+            })[char]);
+        },
+
+        async load() {
+            const grid = document.getElementById("casesGrid");
+            if (!grid) return;
+
+            try {
+                const data = await app.request("/api/cases");
+                this.list = data.cases || [];
+                this.render();
+            } catch (error) {
+                console.error("Ошибка загрузки кейсов:", error);
+                grid.innerHTML =
+                    '<div class="empty">Не удалось загрузить кейсы</div>';
+            }
+        },
+
+        render() {
+            const grid = document.getElementById("casesGrid");
+            if (!grid) return;
+
+            if (!this.list.length) {
+                grid.innerHTML =
+                    '<div class="empty">Кейсов пока нет</div>';
+                return;
+            }
+
+            grid.innerHTML = this.list.map(item => `
+                <div class="case-card">
+                    <div class="case-art">
+                        ${item.image_url
+                            ? `<img src="${this.escape(item.image_url)}" alt="">`
+                            : "🎁"}
+                    </div>
+
+                    <div class="case-name">
+                        ${this.escape(item.name)}
+                    </div>
+
+                    <div class="case-price">
+                        ${app.format(item.price)}
+                    </div>
+
+                    <button class="card-button"
+                        data-open="${this.escape(item.code)}">
+                        Открыть кейс
+                    </button>
+                </div>
+            `).join("");
+
+            grid.querySelectorAll("[data-open]").forEach(button => {
+                button.addEventListener("click", () => {
+                    this.sound("click");
+                    this.openDetails(button.dataset.open);
+                });
+            });
+        },
+
+        async openDetails(code) {
+            try {
+                const data = await app.request(
+                    "/api/cases/" + encodeURIComponent(code)
+                );
+
+                this.currentCase = data.case;
+                this.quantity = 1;
+
+                const items = data.items || [];
+
+                const html = `
+                    <h2>${this.escape(data.case.name)}</h2>
+
+                    <div class="case-art"
+                        style="height:130px;font-size:55px">
+                        🎁
+                    </div>
+
+                    <p class="muted">
+                        Цена: ${app.format(data.case.price)}
+                    </p>
+
+                    <hr>
+                    <h3>Содержимое кейса</h3>
+
+                    ${items.map(item => `
+                        <div class="result-item">
+                            <b>${this.escape(item.name)}</b>
+                            <div class="muted small">
+                                Цена: ${app.format(item.base_price)}
+                                · Шанс: ${item.chance}%
+                            </div>
+                        </div>
+                    `).join("")}
+
+                    <hr>
+
+                    <div class="row">
+                        <button class="secondary" id="caseMinus">−</button>
+                        <b id="caseQuantity">1</b>
+                        <button class="secondary" id="casePlus">+</button>
+                    </div>
+
+                    <p id="caseTotal" style="margin:15px 0">
+                        Итого: ${app.format(data.case.price)}
+                    </p>
+
+                    <button class="primary" id="caseOpenConfirm">
+                        ОТКРЫТЬ
+                    </button>
+                `;
+
+                app.showModal(html);
+
+                document.getElementById("caseMinus").onclick = () => {
+                    this.sound("click");
+                    this.setQuantity(this.quantity - 1);
+                };
+
+                document.getElementById("casePlus").onclick = () => {
+                    this.sound("click");
+                    this.setQuantity(this.quantity + 1);
+                };
+
+                document.getElementById("caseOpenConfirm").onclick = () => {
+                    this.open(code);
+                };
+
+            } catch (error) {
+                app.notice(error.message || "Ошибка загрузки кейса");
+            }
+        },
+
+        setQuantity(value) {
+            this.quantity = Math.max(1, Math.min(5, value));
+
+            const quantity = document.getElementById("caseQuantity");
+            const total = document.getElementById("caseTotal");
+
+            if (quantity) {
+                quantity.textContent = this.quantity;
+            }
+
+            if (total) {
+                total.textContent =
+                    "Итого: " + app.format(
+                        this.currentCase.price * this.quantity
+                    );
+            }
+        },
+
+        showOpening() {
+            app.showModal(`
+                <style>
+                    @keyframes caseFlip {
+                        0% { transform: rotateY(0) scale(.85); }
+                        50% { transform: rotateY(180deg) scale(1.12); }
+                        100% { transform: rotateY(360deg) scale(.85); }
+                    }
+
+                    @keyframes caseGlow {
+                        0%,100% {
+                            box-shadow: 0 0 10px #9270ff44;
+                        }
+                        50% {
+                            box-shadow: 0 0 35px #9270ffcc;
+                        }
+                    }
+
+                    @keyframes caseText {
+                        0%,100% { opacity:.5; }
+                        50% { opacity:1; }
+                    }
+
+                    .case-opening-card {
+                        width:75px;
+                        height:95px;
+                        border-radius:15px;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        font-size:38px;
+                        background:linear-gradient(145deg,#7554d9,#244e9b);
+                        border:1px solid #bbaaff;
+                        animation:caseFlip 1s ease-in-out infinite,
+                                  caseGlow 1s ease-in-out infinite;
+                    }
+
+                    .case-opening-card:nth-child(2) {
+                        animation-delay:.15s;
+                    }
+
+                    .case-opening-card:nth-child(3) {
+                        animation-delay:.3s;
+                    }
+
+                    .case-opening-text {
+                        animation:caseText 1s ease-in-out infinite;
+                    }
+                </style>
+
+                <div style="clear:both;text-align:center;padding:30px 5px">
+                    <h2 style="margin-bottom:25px">Открываем кейс</h2>
+
+                    <div style="display:flex;justify-content:center;gap:9px">
+                        <div class="case-opening-card">🎁</div>
+                        <div class="case-opening-card">🎁</div>
+                        <div class="case-opening-card">🎁</div>
+                    </div>
+
+                    <h3 class="case-opening-text"
+                        style="margin-top:28px;color:#bbaaff">
+                        Ищем твой NFT...
+                    </h3>
+                </div>
+            `);
+        },
+
+        async open(code) {
+            if (this.opening) return;
+
+            const button = document.getElementById("caseOpenConfirm");
+            if (!button) return;
+
+            this.opening = true;
+            button.disabled = true;
+            button.textContent = "ОТКРЫВАЕМ...";
+
+            this.sound("open");
+            this.showOpening();
+
+            try {
+                const result = await app.request("/api/cases/open", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        case_code: code,
+                        quantity: this.quantity
+                    })
+                });
+
+                app.pendingBatch = result.batch_id;
+
+                const balance = document.getElementById("balance");
+
+                if (balance && result.balance !== undefined) {
+                    balance.textContent = app.format(result.balance);
+                }
+
+                await this.wait(1300);
+
+                this.showResults(result);
+
+            } catch (error) {
+                app.closeModal();
+                app.notice(error.message || "Ошибка открытия кейса");
+            } finally {
+                this.opening = false;
+            }
+        },
+
+        showResults(result) {
+            const rewards = result.rewards || [];
+
+            const total = rewards.reduce(
+                (sum, item) => sum + Number(item.price || 0),
+                0
+            );
+
+            this.sound("win");
+
+            const html = `
+                <style>
+                    @keyframes rewardAppear {
+                        from {
+                            opacity:0;
+                            transform:translateY(25px) scale(.8);
+                        }
+                        to {
+                            opacity:1;
+                            transform:translateY(0) scale(1);
+                        }
+                    }
+
+                    .case-reward {
+                        animation:rewardAppear .45s ease both;
+                    }
+
+                    .case-reward:nth-child(2) {animation-delay:.1s}
+                    .case-reward:nth-child(3) {animation-delay:.2s}
+                    .case-reward:nth-child(4) {animation-delay:.3s}
+                    .case-reward:nth-child(5) {animation-delay:.4s}
+                </style>
+
+                <h2 style="margin-bottom:10px">Твои NFT!</h2>
+
+                <p class="muted small">
+                    Открыто кейсов: ${result.quantity}
+                </p>
+
+                <div class="grid" style="margin:15px 0">
+                    ${rewards.map(item => `
+                        <div class="nft-card case-reward">
+                            <div class="nft-art">
+                                ${item.image_url
+                                    ? `<img src="${this.escape(item.image_url)}" alt="">`
+                                    : "🎁"}
+                            </div>
+
+                            <div class="nft-name">
+                                ${this.escape(item.name)}
+                            </div>
+
+                            <div class="small muted">
+                                ${this.escape(
+                                    item.background_name || "Обычный"
+                                )}
+                            </div>
+
+                            <div class="nft-price">
+                                ${app.format(item.price)}
+                            </div>
+                        </div>
+                    `).join("")}
+                </div>
+
+                <button class="primary" id="caseClaim">
+                    ЗАБРАТЬ ВСЁ
+                </button>
+
+                <button class="primary" id="caseSell"
+                    style="margin-top:9px">
+                    ПРОДАТЬ ВСЁ · ${app.format(total)}
+                </button>
+
+                <button class="secondary" id="caseAgain"
+                    style="width:100%;margin-top:9px">
+                    ОТКРЫТЬ ЕЩЁ
+                </button>
+            `;
+
+            app.showModal(html);
+
+            document.getElementById("caseClaim").onclick = () => {
+                this.sound("click");
+                this.finishBatch("claim");
+            };
+
+            document.getElementById("caseSell").onclick = () => {
+                this.sound("click");
+                this.finishBatch("sell");
+            };
+
+            document.getElementById("caseAgain").onclick = () => {
+                this.sound("click");
+                app.closeModal();
+                this.openDetails(this.currentCase.code);
+            };
+        },
+
+        async finishBatch(action) {
+            if (!app.pendingBatch) {
+                app.notice("Награды не найдены");
+                return;
+            }
+
+            try {
+                const endpoint = action === "sell"
+                    ? "/api/rewards/sell"
+                    : "/api/rewards/claim";
+
+                const result = await app.request(endpoint, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        batch_id: app.pendingBatch
+                    })
+                });
+
+                app.pendingBatch = null;
+                app.closeModal();
+
+                if (action === "sell") {
+                    app.notice(
+                        "Продано! Получено " + app.format(result.earned)
+                    );
+                } else {
+                    app.notice("NFT добавлены в инвентарь");
+                }
+
+                await app.refresh();
+
+            } catch (error) {
+                app.notice(error.message || "Ошибка обработки наград");
+            }
+        },
+
+        init() {
+            this.load();
+        }
     };
 
-    await this.load();
-    await window.Profile?.load();
-    await window.Craft?.load();
-
-   } catch (error) {
-    app.notice(error.message || "Ошибка апгрейда");
-   } finally {
-    button.disabled = false;
-    button.textContent = "ПРОКАЧАТЬ NFT";
-   }
-  },
-
-  init() {
-   document.getElementById("upgradeModes")
-    .querySelectorAll("button").forEach(button => {
-     button.onclick = () => {
-      const selectedMode = button.dataset.mode;
-
-      this.mode = selectedMode === "chance"
-       ? "percent"
-       : selectedMode;
-
-      document.querySelectorAll("#upgradeModes button")
-       .forEach(x =>
-        x.classList.toggle("selected", x === button)
-       );
-
-      document.getElementById("multiplierTabs").style.display =
-       this.mode === "multiplier" ? "flex" : "none";
-
-      document.getElementById("chanceControls").style.display =
-       this.mode === "percent" ? "block" : "none";
-
-      this.renderTargets();
-      this.updateInfo();
-     };
-    });
-
-   document.getElementById("multiplierTabs")
-    .querySelectorAll("button").forEach(button => {
-     button.onclick = () => {
-      this.multiplier = Number(button.dataset.multiplier);
-
-      document.querySelectorAll("#multiplierTabs button")
-       .forEach(x =>
-        x.classList.toggle("selected", x === button)
-       );
-
-      this.renderTargets();
-      this.updateInfo();
-     };
-    });
-
-   document.getElementById("upgradeSource").onchange = () => {
-    this.renderTargets();
-    this.updateInfo();
-   };
-
-   document.getElementById("upgradeBackground").onchange = () => {
-    this.renderTargets();
-    this.updateInfo();
-   };
-
-   document.getElementById("upgradeChance").oninput = () => {
-    this.renderTargets();
-    this.updateInfo();
-   };
-
-   document.getElementById("upgradeTarget").onchange = () => {
-    this.updateInfo();
-   };
-
-   document.getElementById("upgradeButton").onclick = () => {
-    this.play();
-   };
-  }
- };
-
- window.Upgrade = Upgrade;
- Upgrade.init();
+    window.Cases = Cases;
+    Cases.init();
 })();

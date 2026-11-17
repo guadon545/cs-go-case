@@ -1,3 +1,4 @@
+
 import os
 import hmac
 import hashlib
@@ -8,7 +9,6 @@ import base64
 from urllib.parse import parse_qsl
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 import database
@@ -32,7 +32,6 @@ for admin_id in admin_ids.split(","):
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 
-# Публичный ключ Telegram для обычного (не тестового) окружения
 TELEGRAM_PUBLIC_KEY = bytes.fromhex(
     "e7bf03a2fa4602af4580703d88dda5bb"
     "59f32ed8b02a56c187fe7d34caed242d"
@@ -40,30 +39,20 @@ TELEGRAM_PUBLIC_KEY = bytes.fromhex(
 
 
 def verify_telegram_data(init_data):
-    if not BOT_TOKEN:
-        print("AUTH DEBUG: BOT_TOKEN missing")
-        return None
-
-    if not init_data:
-        print("AUTH DEBUG: initData missing")
+    if not BOT_TOKEN or not init_data:
         return None
 
     try:
         data = dict(parse_qsl(init_data, keep_blank_values=True))
 
-        print("AUTH DEBUG: fields:", sorted(data.keys()))
-
         auth_date = int(data.get("auth_date", "0"))
 
         if auth_date > time.time() + 60:
-            print("AUTH DEBUG: auth_date in future")
             return None
 
         if time.time() - auth_date > 86400:
-            print("AUTH DEBUG: initData expired")
             return None
 
-        # Вариант 1: проверка HMAC через токен бота
         received_hash = data.get("hash")
 
         if received_hash:
@@ -94,15 +83,12 @@ def verify_telegram_data(init_data):
                 calculated_hash,
                 received_hash
             ):
-                print("AUTH DEBUG: HMAC hash mismatch")
                 return None
 
-        # Вариант 2: проверка Ed25519-подписи Telegram
         else:
             signature = data.get("signature")
 
             if not signature:
-                print("AUTH DEBUG: hash and signature missing")
                 return None
 
             bot_id = BOT_TOKEN.split(":")[0]
@@ -134,13 +120,10 @@ def verify_telegram_data(init_data):
                 check_string.encode()
             )
 
-        user = json.loads(data["user"])
-
-        print("AUTH DEBUG: authorization success")
-        return user
+        return json.loads(data["user"])
 
     except Exception as error:
-        print("AUTH DEBUG: verification error:", type(error).__name__)
+        print("AUTH DEBUG:", type(error).__name__)
         return None
 
 
@@ -166,17 +149,13 @@ def balance():
     user = get_telegram_user()
 
     if not user:
-        return jsonify({
-            "error": "Telegram authorization failed"
-        }), 401
+        return jsonify({"error": "Telegram authorization failed"}), 401
 
     user_id = user.get("id")
     username = user.get("username")
 
     if not user_id:
-        return jsonify({
-            "error": "User ID missing"
-        }), 400
+        return jsonify({"error": "User ID missing"}), 400
 
     database.register_user(user_id, username)
 
@@ -195,10 +174,8 @@ def admin_status():
     if not user:
         return jsonify({"error": "Authorization failed"}), 401
 
-    user_id = user.get("id")
-
     return jsonify({
-        "is_admin": database.is_admin(user_id)
+        "is_admin": database.is_admin(user.get("id"))
     })
 
 
@@ -223,9 +200,7 @@ def admin_give_dc():
         return jsonify({"error": "Неверные данные"}), 400
 
     if target_id <= 0 or amount <= 0:
-        return jsonify({
-            "error": "Сумма и ID должны быть положительными"
-        }), 400
+        return jsonify({"error": "Неверная сумма или ID"}), 400
 
     database.register_user(target_id)
 
@@ -243,7 +218,52 @@ def admin_give_dc():
     })
 
 
+@app.route("/api/admin/take-dc", methods=["POST"])
+def admin_take_dc():
+    user = get_telegram_user()
+
+    if not user:
+        return jsonify({"error": "Authorization failed"}), 401
+
+    admin_id = user.get("id")
+
+    if not database.is_admin(admin_id):
+        return jsonify({"error": "Нет доступа"}), 403
+
+    data = request.get_json(silent=True) or {}
+
+    try:
+        target_id = int(data.get("user_id"))
+        amount = int(data.get("amount"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Неверные данные"}), 400
+
+    if target_id <= 0 or amount <= 0:
+        return jsonify({"error": "Неверная сумма или ID"}), 400
+
+    database.register_user(target_id)
+
+    current_balance = database.get_balance(target_id)
+
+    if amount > current_balance:
+        return jsonify({
+            "error": f"Недостаточно DC. Баланс игрока: {current_balance}"
+        }), 400
+
+    database.change_balance(
+        target_id,
+        -amount,
+        "admin_take",
+        admin_id
+    )
+
+    return jsonify({
+        "success": True,
+        "message": f"Снято {amount} DC",
+        "balance": database.get_balance(target_id)
+    })
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
-

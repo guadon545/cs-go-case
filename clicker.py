@@ -6,7 +6,7 @@ import database
 
 
 CLICK_REWARD = 1
-CLICK_COOLDOWN = 0.5
+CLICK_COOLDOWN = 0.1
 
 
 def create_clicker_blueprint(authorized_user):
@@ -17,7 +17,9 @@ def create_clicker_blueprint(authorized_user):
         user = authorized_user()
 
         if not user:
-            return jsonify({"error": "Telegram authorization failed"}), 401
+            return jsonify({
+                "error": "Telegram authorization failed"
+            }), 401
 
         user_id = int(user["id"])
 
@@ -25,14 +27,18 @@ def create_clicker_blueprint(authorized_user):
             player = db.execute("""
                 SELECT balance, total_clicks, click_level, is_banned
                 FROM users
-                WHERE telegram_id = ?
+                WHERE telegram_id = %s
             """, (user_id,)).fetchone()
 
             if not player:
-                return jsonify({"error": "Игрок не найден"}), 404
+                return jsonify({
+                    "error": "Игрок не найден"
+                }), 404
 
             if player["is_banned"]:
-                return jsonify({"error": "Аккаунт заблокирован"}), 403
+                return jsonify({
+                    "error": "Аккаунт заблокирован"
+                }), 403
 
             return jsonify({
                 "success": True,
@@ -47,26 +53,31 @@ def create_clicker_blueprint(authorized_user):
         user = authorized_user()
 
         if not user:
-            return jsonify({"error": "Telegram authorization failed"}), 401
+            return jsonify({
+                "error": "Telegram authorization failed"
+            }), 401
 
         user_id = int(user["id"])
         now = time.time()
 
         try:
             with database.get_db() as db:
-                db.execute("BEGIN IMMEDIATE")
-
                 player = db.execute("""
                     SELECT balance, total_clicks, last_click_at, is_banned
                     FROM users
-                    WHERE telegram_id = ?
+                    WHERE telegram_id = %s
+                    FOR UPDATE
                 """, (user_id,)).fetchone()
 
                 if not player:
-                    return jsonify({"error": "Игрок не найден"}), 404
+                    return jsonify({
+                        "error": "Игрок не найден"
+                    }), 404
 
                 if player["is_banned"]:
-                    return jsonify({"error": "Аккаунт заблокирован"}), 403
+                    return jsonify({
+                        "error": "Аккаунт заблокирован"
+                    }), 403
 
                 last_click = float(player["last_click_at"] or 0)
                 elapsed = now - last_click
@@ -75,7 +86,9 @@ def create_clicker_blueprint(authorized_user):
                     return jsonify({
                         "success": False,
                         "error": "Слишком быстро! Подожди немного.",
-                        "cooldown": round(CLICK_COOLDOWN - elapsed, 2)
+                        "cooldown": round(
+                            CLICK_COOLDOWN - elapsed, 2
+                        )
                     }), 429
 
                 new_balance = int(player["balance"]) + CLICK_REWARD
@@ -83,10 +96,10 @@ def create_clicker_blueprint(authorized_user):
 
                 db.execute("""
                     UPDATE users
-                    SET balance = ?,
-                        total_clicks = ?,
-                        last_click_at = ?
-                    WHERE telegram_id = ?
+                    SET balance = %s,
+                        total_clicks = %s,
+                        last_click_at = %s
+                    WHERE telegram_id = %s
                 """, (
                     new_balance,
                     new_clicks,
@@ -97,7 +110,7 @@ def create_clicker_blueprint(authorized_user):
                 db.execute("""
                     INSERT INTO transactions
                     (user_id, amount, action)
-                    VALUES (?, ?, ?)
+                    VALUES (%s, %s, %s)
                 """, (user_id, CLICK_REWARD, "clicker"))
 
                 return jsonify({

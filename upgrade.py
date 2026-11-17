@@ -98,7 +98,6 @@ def create_upgrade_blueprint(authorized_user):
                 roll = secrets.randbelow(10000) / 100
                 won = roll < chance
 
-                # Списываем один исходный скин.
                 if item["quantity"] == 1:
                     db.execute("""
                         DELETE FROM inventory
@@ -111,7 +110,6 @@ def create_upgrade_blueprint(authorized_user):
                         WHERE user_id = ? AND skin_id = ?
                     """, (user_id, source_id))
 
-                # При успехе выдаём целевой скин.
                 if won:
                     db.execute("""
                         INSERT INTO inventory
@@ -120,6 +118,31 @@ def create_upgrade_blueprint(authorized_user):
                         ON CONFLICT(user_id, skin_id)
                         DO UPDATE SET quantity = quantity + 1
                     """, (user_id, target_id))
+
+                    # Записываем успешный апгрейд.
+                    db.execute("""
+                        INSERT OR IGNORE INTO profile_stats (user_id)
+                        VALUES (?)
+                    """, (user_id,))
+
+                    db.execute("""
+                        UPDATE profile_stats
+                        SET successful_upgrades = successful_upgrades + 1
+                        WHERE user_id = ?
+                    """, (user_id,))
+
+                    # Сохраняем полученный предмет в истории.
+                    db.execute("""
+                        INSERT INTO item_history
+                        (user_id, skin_id, skin_name, skin_price, source)
+                        VALUES (?, ?, ?, ?, ?)
+                    """, (
+                        user_id,
+                        target["id"],
+                        target["name"],
+                        target_price,
+                        "upgrade"
+                    ))
 
                 return jsonify({
                     "success": True,

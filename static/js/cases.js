@@ -1,6 +1,13 @@
 
 (() => {
+    "use strict";
+
     const app = window.NFT_CASE;
+
+    if (!app) {
+        console.error("NFT_CASE не найден");
+        return;
+    }
 
     const Cases = {
         list: [],
@@ -16,8 +23,9 @@
                 this.list = data.cases || [];
                 this.render();
             } catch (error) {
-                console.error(error);
-                grid.innerHTML = '<div class="empty">Не удалось загрузить кейсы</div>';
+                console.error("Ошибка загрузки кейсов:", error);
+                grid.innerHTML =
+                    '<div class="empty">Не удалось загрузить кейсы</div>';
             }
         },
 
@@ -26,7 +34,8 @@
             if (!grid) return;
 
             if (!this.list.length) {
-                grid.innerHTML = '<div class="empty">Кейсов пока нет</div>';
+                grid.innerHTML =
+                    '<div class="empty">Кейсов пока нет</div>';
                 return;
             }
 
@@ -37,9 +46,17 @@
                             ? `<img src="${this.escape(item.image_url)}" alt="">`
                             : "🎁"}
                     </div>
-                    <div class="case-name">${this.escape(item.name)}</div>
-                    <div class="case-price">${app.format(item.price)}</div>
-                    <button class="card-button" data-open="${this.escape(item.code)}">
+
+                    <div class="case-name">
+                        ${this.escape(item.name)}
+                    </div>
+
+                    <div class="case-price">
+                        ${app.format(item.price)}
+                    </div>
+
+                    <button class="card-button"
+                        data-open="${this.escape(item.code)}">
                         Открыть кейс
                     </button>
                 </div>
@@ -65,9 +82,15 @@
 
                 const html = `
                     <h2>${this.escape(data.case.name)}</h2>
-                    <div class="case-art" style="height:130px;font-size:55px">🎁</div>
 
-                    <p class="muted">Цена: ${app.format(data.case.price)}</p>
+                    <div class="case-art"
+                        style="height:130px;font-size:55px">
+                        🎁
+                    </div>
+
+                    <p class="muted">
+                        Цена: ${app.format(data.case.price)}
+                    </p>
 
                     <hr>
                     <h3>Содержимое кейса</h3>
@@ -83,6 +106,7 @@
                     `).join("")}
 
                     <hr>
+
                     <div class="row">
                         <button class="secondary" id="caseMinus">−</button>
                         <b id="caseQuantity">1</b>
@@ -113,24 +137,32 @@
                 };
 
             } catch (error) {
-                app.notice(error.message);
+                app.notice(error.message || "Ошибка загрузки кейса");
             }
         },
 
         setQuantity(value) {
             this.quantity = Math.max(1, Math.min(5, value));
 
-            document.getElementById("caseQuantity").textContent =
-                this.quantity;
+            const quantity = document.getElementById("caseQuantity");
+            const total = document.getElementById("caseTotal");
 
-            document.getElementById("caseTotal").textContent =
-                "Итого: " + app.format(
-                    this.currentCase.price * this.quantity
-                );
+            if (quantity) {
+                quantity.textContent = this.quantity;
+            }
+
+            if (total) {
+                total.textContent =
+                    "Итого: " + app.format(
+                        this.currentCase.price * this.quantity
+                    );
+            }
         },
 
         async open(code) {
             const button = document.getElementById("caseOpenConfirm");
+            if (!button) return;
+
             button.disabled = true;
             button.textContent = "Открываем...";
 
@@ -146,12 +178,16 @@
                 app.pendingBatch = result.batch_id;
 
                 const balance = document.getElementById("balance");
-                if (balance) balance.textContent = app.format(result.balance);
+
+                if (balance && result.balance !== undefined) {
+                    balance.textContent = app.format(result.balance);
+                }
 
                 this.showResults(result);
 
             } catch (error) {
-                app.notice(error.message);
+                app.notice(error.message || "Ошибка открытия кейса");
+
                 button.disabled = false;
                 button.textContent = "ОТКРЫТЬ";
             }
@@ -161,12 +197,16 @@
             const rewards = result.rewards || [];
 
             const total = rewards.reduce(
-                (sum, item) => sum + Number(item.price || 0), 0
+                (sum, item) => sum + Number(item.price || 0),
+                0
             );
 
             const html = `
                 <h2 style="margin-bottom:10px">Твои NFT!</h2>
-                <p class="muted small">Открыто кейсов: ${result.quantity}</p>
+
+                <p class="muted small">
+                    Открыто кейсов: ${result.quantity}
+                </p>
 
                 <div class="grid" style="margin:15px 0">
                     ${rewards.map(item => `
@@ -176,11 +216,20 @@
                                     ? `<img src="${this.escape(item.image_url)}" alt="">`
                                     : "🎁"}
                             </div>
-                            <div class="nft-name">${this.escape(item.name)}</div>
-                            <div class="small muted">
-                                ${this.escape(item.background_name || "Normal")}
+
+                            <div class="nft-name">
+                                ${this.escape(item.name)}
                             </div>
-                            <div class="nft-price">${app.format(item.price)}</div>
+
+                            <div class="small muted">
+                                ${this.escape(
+                                    item.background_name || "Обычный"
+                                )}
+                            </div>
+
+                            <div class="nft-price">
+                                ${app.format(item.price)}
+                            </div>
                         </div>
                     `).join("")}
                 </div>
@@ -189,7 +238,8 @@
                     ЗАБРАТЬ ВСЁ
                 </button>
 
-                <button class="primary" id="caseSell" style="margin-top:9px">
+                <button class="primary" id="caseSell"
+                    style="margin-top:9px">
                     ПРОДАТЬ ВСЁ · ${app.format(total)}
                 </button>
 
@@ -237,7 +287,9 @@
                 app.closeModal();
 
                 if (action === "sell") {
-                    app.notice("Продано! Получено " + app.format(result.earned));
+                    app.notice(
+                        "Продано! Получено " + app.format(result.earned)
+                    );
                 } else {
                     app.notice("NFT добавлены в инвентарь");
                 }
@@ -245,7 +297,7 @@
                 await app.refresh();
 
             } catch (error) {
-                app.notice(error.message);
+                app.notice(error.message || "Ошибка обработки наград");
             }
         },
 
@@ -257,8 +309,13 @@
                 '"': "&quot;",
                 "'": "&#039;"
             })[char]);
+        },
+
+        init() {
+            this.load();
         }
     };
 
     window.Cases = Cases;
+    Cases.init();
 })();

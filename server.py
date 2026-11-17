@@ -1,934 +1,544 @@
 
 import os
+import json
 import hmac
 import hashlib
-import json
-import time
-import base64
-import random
-import re
+import secrets
+import uuid
 
 from pathlib import Path
 from urllib.parse import parse_qsl
-from urllib.request import Request, urlopen
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 import database
-from upgrade import create_upgrade_blueprint
-from clicker import create_clicker_blueprint
-from craft import create_craft_blueprint
+
+
+BASE_DIR = Path(__file__).resolve().parent
+CATALOG_PATH = BASE_DIR / "catalog.json"
+
+BOT_TOKEN = os.getenv("BOT_TOKEN", "")
+ADMIN_IDS = {
+    int(value.strip())
+    for value in os.getenv("ADMIN_IDS", "").split(",")
+    if value.strip().isdigit()
+}
+
+BACKGROUND_NAMES = {
+    "normal": "Обычный",
+    "gold": "Gold",
+    "onyx_black": "Onyx Black",
+    "black": "Black"
+}
 
 
 app = Flask(__name__)
-
-CORS(
-    app,
-    origins=["https://guadon545.github.io"],
-    allow_headers=["Content-Type", "X-Telegram-Init-Data"],
-    methods=["GET", "POST", "OPTIONS"]
-)
-
-database.init_db()
-
-BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
-ADMIN_IDS = os.getenv("ADMIN_IDS", "")
-
-CATALOG_PATH = Path(__file__).resolve().parent / "catalog.json"
-
-TELEGRAM_PUBLIC_KEY = bytes.fromhex(
-    "e7bf03a2fa4602af4580703d88dda5bb"
-    "59f32ed8b02a56c187fe7d34caed242d"
-)
-
-INVENTORY_LIMIT = 100
-
-# ==========================================
-# CS2 SKIN IMAGES
-# ==========================================
-
-SKIN_IMAGES_URL = (
-    "https://raw.githubusercontent.com/"
-    "ByMykel/CSGO-API/main/public/api/en/skins.json"
-)
-
-SKIN_IMAGE_MAP = {}
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 
-def normalize_skin_name(name):
-    name = str(name or "").casefold()
-
-    name = re.sub(r"stattrak™?", "", name)
-    name = name.replace("★", "")
-    name = " ".join(name.split())
-
-    return name.strip()
-
-
-def load_skin_images():
-    global SKIN_IMAGE_MAP
-
-    try:
-        print("LOADING CS2 SKIN IMAGES...")
-
-        req = Request(
-            SKIN_IMAGES_URL,
-            headers={"User-Agent": "GUADON-COIN/1.0"}
-        )
-
-        with urlopen(req, timeout=20) as response:
-            skins = json.loads(
-                response.read().decode("utf-8")
-            )
-
-        image_map = {}
-
-        for skin in skins:
-            name = skin.get("name")
-            image = skin.get("image")
-
-            if not name or not image:
-                continue
-
-            if not image.startswith("https://"):
-                continue
-
-            normalized = normalize_skin_name(name)
-
-            if normalized:
-                image_map.setdefault(normalized, image)
-
-        SKIN_IMAGE_MAP = image_map
-
-        print(
-            "CS2 IMAGES LOADED:",
-            len(SKIN_IMAGE_MAP)
-        )
-
-        return True
-
-    except Exception as error:
-        print(
-            "CS2 IMAGE LOAD ERROR:",
-            type(error).__name__,
-            str(error)
-        )
-
-        return False
-
-
-def find_skin_image(name):
-    return SKIN_IMAGE_MAP.get(
-        normalize_skin_name(name)
-    )
-
-
-# ==========================================
+# -------------------------
 # TELEGRAM AUTHORIZATION
-# ==========================================
+# -------------------------
 
 def verify_telegram_data(init_data):
-    if not BOT_TOKEN or not init_data:
+    if not init_data or not BOT_TOKEN:
         return None
 
     try:
-        data = dict(parse_qsl(init_data, keep_blank_values=True))
-        auth_date = int(data.get("auth_date", "0"))
+        parsed = dict(parse_qsl(init_data, keep_blank_values=True))
+        received_hash = parsed.pop("hash", None)
 
-        if auth_date > time.time() + 60:
+        if not received_hash:
             return None
 
-        if time.time() - auth_date > 86400:
+        data_check_string = "\n".join(
+            f"{key}={value}"
+            for key, value in sorted(parsed.items())
+        )
+
+        secret_key = hmac.new(
+            b"WebAppData",
+            BOT_TOKEN.encode(),
+            hashlib.sha256
+        ).digest()
+
+        calculated_hash = hmac.new(
+            secret_key,
+            data_check_string.encode(),
+            hashlib.sha256
+        ).hexdigest()
+
+        if not hmac.compare_digest(calculated_hash, received_hash):
             return None
 
-        received_hash = data.get("hash")
+        user_data = json.loads(parsed.get("user", "{}"))
 
-        if received_hash:
-            check_data = {
-                key: value
-                for key, value in data.items()
-                if key != "hash"
-            }
+        if not user_data.get("id"):
+            return None
 
-            check_string = "\n".join(
-                f"{key}={value}"
-                for key, value in sorted(check_data.items())
-            )
+        return user_data
 
-            secret_key = hmac.new(
-                b"WebAppData",
-                BOT_TOKEN.encode(),
-                hashlib.sha256
-            ).digest()
-
-            calculated_hash = hmac.new(
-                secret_key,
-                check_string.encode(),
-                hashlib.sha256
-            ).hexdigest()
-
-            if not hmac.compare_digest(
-                calculated_hash,
-                received_hash
-            ):
-                return None
-
-        else:
-            signature = data.get("signature")
-
-            if not signature:
-                return None
-
-            bot_id = BOT_TOKEN.split(":")[0]
-
-            check_data = {
-                key: value
-                for key, value in data.items()
-                if key not in ("hash", "signature")
-            }
-
-            check_string = (
-                f"{bot_id}:WebAppData\n"
-                + "\n".join(
-                    f"{key}={value}"
-                    for key, value in sorted(check_data.items())
-                )
-            )
-
-            signature_bytes = base64.urlsafe_b64decode(
-                signature + "=" * (-len(signature) % 4)
-            )
-
-            public_key = Ed25519PublicKey.from_public_bytes(
-                TELEGRAM_PUBLIC_KEY
-            )
-
-            public_key.verify(
-                signature_bytes,
-                check_string.encode()
-            )
-
-        return json.loads(data["user"])
-
-    except Exception as error:
-        print("AUTH ERROR:", type(error).__name__)
+    except Exception:
         return None
-
-
-def get_telegram_user():
-    init_data = request.headers.get(
-        "X-Telegram-Init-Data", ""
-    )
-    return verify_telegram_data(init_data)
 
 
 def authorized_user():
-    user = get_telegram_user()
+    init_data = request.headers.get("X-Telegram-Init-Data", "")
+    return verify_telegram_data(init_data)
 
-    if not user or not user.get("id"):
-        return None
 
-    database.register_user(
+def require_user():
+    user = authorized_user()
+
+    if not user:
+        return None, (jsonify({
+            "success": False,
+            "error": "Ошибка авторизации Telegram"
+        }), 401)
+
+    player = database.register_user(
         user["id"],
         user.get("username")
     )
 
-    return user
+    if player.get("is_banned"):
+        return None, (jsonify({
+            "success": False,
+            "error": "Аккаунт заблокирован"
+        }), 403)
+
+    return user, None
 
 
-def admin_user():
-    user = authorized_user()
+def require_admin():
+    user, error = require_user()
 
-    if not user:
-        return None
+    if error:
+        return None, error
 
-    if not database.is_admin(user["id"]):
-        return None
+    if int(user["id"]) not in ADMIN_IDS and not database.is_admin(user["id"]):
+        return None, (jsonify({
+            "success": False,
+            "error": "Нет доступа"
+        }), 403)
 
-    return user
-
-
-# ==========================================
-# MODULES
-# ==========================================
-
-app.register_blueprint(
-    create_upgrade_blueprint(authorized_user)
-)
-
-app.register_blueprint(
-    create_clicker_blueprint(authorized_user)
-)
-
-app.register_blueprint(
-    create_craft_blueprint(authorized_user)
-)
+    return user, None
 
 
-# ==========================================
-# ADMIN REGISTRATION
-# ==========================================
+# -------------------------
+# CATALOG
+# -------------------------
 
-for admin_id in ADMIN_IDS.split(","):
-    if admin_id.strip().isdigit():
-        database.add_admin(int(admin_id.strip()))
+def weighted_choice(items, weight_key):
+    weights = [
+        max(0, int(round(float(item[weight_key]) * 10000)))
+        for item in items
+    ]
+
+    total = sum(weights)
+
+    if total <= 0:
+        raise ValueError("Некорректные вероятности")
+
+    roll = secrets.randbelow(total)
+    current = 0
+
+    for item, weight in zip(items, weights):
+        current += weight
+
+        if roll < current:
+            return item
+
+    return items[-1]
 
 
-# ==========================================
-# CATALOG DATABASE
-# ==========================================
-
-def init_catalog():
+def load_catalog():
     if not CATALOG_PATH.exists():
-        raise FileNotFoundError("catalog.json not found")
+        raise RuntimeError("Не найден catalog.json")
 
     with open(CATALOG_PATH, "r", encoding="utf-8") as file:
         catalog = json.load(file)
 
-    cases_data = catalog.get("cases", [])
+    if catalog.get("version") != 2:
+        raise RuntimeError("Неподдерживаемая версия catalog.json")
 
-    if len(cases_data) != 9:
-        raise ValueError("Catalog must contain exactly 9 cases")
+    if len(catalog.get("cases", [])) != 10:
+        raise RuntimeError("В каталоге должно быть ровно 10 кейсов")
 
-    # Загружаем изображения CS2.
-    load_skin_images()
-
-    matched_images = 0
-    total_skins = 0
-
-    for case in cases_data:
-        items = case.get("items", [])
-
-        if not case.get("id") or not case.get("name"):
-            raise ValueError("Invalid case data")
-
-        if len(items) != 6:
-            raise ValueError(
-                f"Case {case['name']} must contain 6 items"
+    for case in catalog["cases"]:
+        if not 7 <= len(case.get("items", [])) <= 13:
+            raise RuntimeError(
+                f"В кейсе {case['id']} должно быть от 7 до 13 NFT"
             )
 
-        total_chance = sum(
+        item_total = sum(
             float(item["chance"])
-            for item in items
+            for item in case["items"]
         )
 
-        if abs(total_chance - 100) > 0.000001:
-            raise ValueError(
-                f"Chances in {case['name']} must equal 100%"
+        background_total = sum(
+            float(item["chance"])
+            for item in case["background_chances"]
+        )
+
+        if abs(item_total - 100) > 0.001:
+            raise RuntimeError(
+                f"Вероятности NFT в кейсе {case['id']} не равны 100%"
             )
 
-        for item in items:
-            if (
-                not item.get("name")
-                or not item.get("rarity")
-                or int(item["price_dc"]) <= 0
-                or float(item["chance"]) <= 0
-            ):
-                raise ValueError(
-                    f"Invalid item in {case['name']}"
-                )
+        if abs(background_total - 100) > 0.001:
+            raise RuntimeError(
+                f"Вероятности фонов в кейсе {case['id']} не равны 100%"
+            )
+
+    return catalog
+
+
+def init_catalog():
+    catalog = load_catalog()
 
     with database.get_db() as db:
+        for case in catalog["cases"]:
+            db.execute("""
+                INSERT INTO nft_cases (
+                    code, name, price, image_url, sort_order, is_active
+                )
+                VALUES (%s, %s, %s, %s, %s, TRUE)
+                ON CONFLICT (code)
+                DO UPDATE SET
+                    name = EXCLUDED.name,
+                    price = EXCLUDED.price,
+                    image_url = EXCLUDED.image_url,
+                    sort_order = EXCLUDED.sort_order,
+                    is_active = TRUE
+            """, (
+                case["id"],
+                case["name"],
+                case["price_g"],
+                case.get("image_url"),
+                catalog["cases"].index(case)
+            ))
 
-        db.execute("""
-            CREATE TABLE IF NOT EXISTS case_skins (
-                case_id BIGINT NOT NULL,
-                skin_id BIGINT NOT NULL,
-                weight INTEGER NOT NULL DEFAULT 1,
-                PRIMARY KEY (case_id, skin_id)
-            )
-        """)
+            case_row = db.execute("""
+                SELECT id
+                FROM nft_cases
+                WHERE code = %s
+            """, (case["id"],)).fetchone()
 
-        db.execute("""
-            CREATE TABLE IF NOT EXISTS case_openings (
-                id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-                user_id BIGINT NOT NULL,
-                case_id BIGINT NOT NULL,
-                skin_id BIGINT NOT NULL,
-                price_paid BIGINT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-
-        db.execute("""
-            CREATE TABLE IF NOT EXISTS skin_sales (
-                id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-                user_id BIGINT NOT NULL,
-                skin_id BIGINT NOT NULL,
-                quantity INTEGER NOT NULL,
-                amount_received BIGINT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-
-        db.execute("""
-            CREATE TABLE IF NOT EXISTS catalog_cases (
-                catalog_id TEXT PRIMARY KEY,
-                case_id BIGINT NOT NULL UNIQUE
-            )
-        """)
-
-        for case_data in cases_data:
-            catalog_id = case_data["id"]
-
-            mapping = db.execute("""
-                SELECT case_id
-                FROM catalog_cases
-                WHERE catalog_id = %s
-            """, (catalog_id,)).fetchone()
-
-            if mapping:
-                case_id = mapping["case_id"]
-
-                db.execute("""
-                    UPDATE cases
-                    SET name = %s, price_dc = %s
-                    WHERE id = %s
-                """, (
-                    case_data["name"],
-                    int(case_data["price_dc"]),
-                    case_id
-                ))
-
-            else:
-                case_row = db.execute("""
-                    INSERT INTO cases (name, price_dc)
-                    VALUES (%s, %s)
-                    RETURNING id
-                """, (
-                    case_data["name"],
-                    int(case_data["price_dc"])
-                )).fetchone()
-
-                case_id = case_row["id"]
-
-                db.execute("""
-                    INSERT INTO catalog_cases
-                    (catalog_id, case_id)
-                    VALUES (%s, %s)
-                """, (catalog_id, case_id))
+            case_db_id = case_row["id"]
 
             db.execute("""
-                DELETE FROM case_skins
+                DELETE FROM nft_case_items
                 WHERE case_id = %s
-            """, (case_id,))
+            """, (case_db_id,))
 
-            for item in case_data["items"]:
-                total_skins += 1
+            db.execute("""
+                DELETE FROM nft_case_backgrounds
+                WHERE case_id = %s
+            """, (case_db_id,))
 
-                image_url = (
-                    item.get("image_url")
-                    or find_skin_image(item["name"])
-                )
-
-                if image_url:
-                    matched_images += 1
-
-                skin = db.execute("""
-                    SELECT id
-                    FROM skins
-                    WHERE name = %s
-                """, (item["name"],)).fetchone()
-
-                if skin:
-                    skin_id = skin["id"]
-
-                    db.execute("""
-                        UPDATE skins
-                        SET rarity = %s,
-                            price = %s,
-                            image_url = COALESCE(%s, image_url)
-                        WHERE id = %s
-                    """, (
-                        item["rarity"],
-                        int(item["price_dc"]),
-                        image_url,
-                        skin_id
-                    ))
-
-                else:
-                    skin_row = db.execute("""
-                        INSERT INTO skins
-                        (name, rarity, price, image_url)
-                        VALUES (%s, %s, %s, %s)
-                        RETURNING id
-                    """, (
-                        item["name"],
-                        item["rarity"],
-                        int(item["price_dc"]),
-                        image_url
-                    )).fetchone()
-
-                    skin_id = skin_row["id"]
-
+            for item in case["items"]:
                 db.execute("""
-                    INSERT INTO case_skins
-                    (case_id, skin_id, weight)
-                    VALUES (%s, %s, %s)
+                    INSERT INTO nft_catalog (
+                        code, name, rarity, base_price, image_url, is_active
+                    )
+                    VALUES (%s, %s, %s, %s, %s, TRUE)
+                    ON CONFLICT (code)
+                    DO UPDATE SET
+                        name = EXCLUDED.name,
+                        rarity = EXCLUDED.rarity,
+                        base_price = EXCLUDED.base_price,
+                        image_url = EXCLUDED.image_url,
+                        is_active = TRUE
                 """, (
-                    case_id,
-                    skin_id,
-                    int(round(float(item["chance"]) * 100))
+                    item["code"],
+                    item["name"],
+                    item["rarity"],
+                    item["base_price"],
+                    item.get("image_url")
                 ))
 
-    print("CATALOG LOADED:", len(cases_data), "cases")
-    print(
-        "SKIN IMAGES MATCHED:",
-        matched_images,
-        "/",
-        total_skins
-    )
+                nft = db.execute("""
+                    SELECT id
+                    FROM nft_catalog
+                    WHERE code = %s
+                """, (item["code"],)).fetchone()
+
+                db.execute("""
+                    INSERT INTO nft_case_items (
+                        case_id, nft_id, chance
+                    )
+                    VALUES (%s, %s, %s)
+                """, (
+                    case_db_id,
+                    nft["id"],
+                    item["chance"]
+                ))
+
+            for background in case["background_chances"]:
+                background_id = background["background"]
+
+                db.execute("""
+                    INSERT INTO nft_case_backgrounds (
+                        case_id, background, multiplier, chance
+                    )
+                    VALUES (%s, %s, %s, %s)
+                """, (
+                    case_db_id,
+                    background_id,
+                    {
+                        "normal": 1,
+                        "gold": 3,
+                        "onyx_black": 5,
+                        "black": 10
+                    }[background_id],
+                    background["chance"]
+                ))
 
 
-init_catalog()
-
-
-# ==========================================
-# BASIC
-# ==========================================
+# -------------------------
+# BASIC ROUTES
+# -------------------------
 
 @app.route("/")
-def home():
-    return "GUADON COIN SERVER IS ONLINE!"
+def index():
+    return jsonify({
+        "name": "NFT CASE",
+        "status": "online"
+    })
 
 
 @app.route("/health")
 def health():
     return jsonify({
-        "status": "ok",
-        "catalog": "loaded",
-        "inventory_limit": INVENTORY_LIMIT,
-        "skin_images": len(SKIN_IMAGE_MAP)
+        "success": True,
+        "status": "online"
     })
 
 
 @app.route("/api/balance")
-def balance():
-    user = authorized_user()
+def get_balance():
+    user, error = require_user()
 
-    if not user:
-        return jsonify({
-            "error": "Telegram authorization failed"
-        }), 401
-
-    user_id = user["id"]
+    if error:
+        return error
 
     return jsonify({
-        "user_id": user_id,
-        "username": user.get("username"),
-        "balance": database.get_balance(user_id),
-        "currency": "DC"
+        "success": True,
+        "balance": database.get_balance(user["id"]),
+        "currency": "G"
     })
 
 
-# ==========================================
+# -------------------------
 # PROFILE
-# ==========================================
+# -------------------------
 
 @app.route("/api/profile")
-def profile():
-    user = authorized_user()
+def get_profile():
+    user, error = require_user()
 
-    if not user:
-        return jsonify({
-            "error": "Telegram authorization failed"
-        }), 401
+    if error:
+        return error
 
-    user_id = user["id"]
+    with database.get_db() as db:
+        player = db.execute("""
+            SELECT
+                u.telegram_id,
+                u.game_id,
+                u.username,
+                u.balance,
+                u.created_at,
+                u.sound_enabled,
+                s.cases_opened,
+                s.upgrades_played,
+                s.upgrades_won,
+                s.crafts_completed,
+                s.nft_sold,
+                s.total_spent,
+                s.total_earned
+            FROM users u
+            LEFT JOIN nft_player_stats s
+                ON s.user_id = u.telegram_id
+            WHERE u.telegram_id = %s
+        """, (int(user["id"]),)).fetchone()
 
-    try:
-        stats = database.get_profile_stats(user_id)
+        inventory_count = db.execute("""
+            SELECT COUNT(*) AS total
+            FROM nft_inventory
+            WHERE user_id = %s
+        """, (int(user["id"]),)).fetchone()
 
-        with database.get_db() as db:
-            opened_cases = db.execute("""
-                SELECT COUNT(*) AS total
-                FROM case_openings
-                WHERE user_id = %s
-            """, (user_id,)).fetchone()["total"]
-
-            best_item = db.execute("""
-                SELECT name, price, source, created_at
-                FROM (
-                    SELECT
-                        id,
-                        skin_name AS name,
-                        skin_price AS price,
-                        source,
-                        created_at
-                    FROM item_history
-                    WHERE user_id = %s
-
-                    UNION ALL
-
-                    SELECT
-                        co.id,
-                        s.name,
-                        s.price,
-                        'case' AS source,
-                        co.created_at
-                    FROM case_openings co
-                    JOIN skins s ON s.id = co.skin_id
-                    WHERE co.user_id = %s
-                ) AS history
-                ORDER BY price DESC, id ASC
-                LIMIT 1
-            """, (user_id, user_id)).fetchone()
-
-        stats["balance"] = database.get_balance(user_id)
-        stats["opened_cases"] = opened_cases
-        stats["best_item"] = (
-            dict(best_item) if best_item else None
-        )
-
-        return jsonify({
-            "success": True,
-            "profile": stats
-        })
-
-    except Exception as error:
-        print("PROFILE ERROR:", type(error).__name__)
-        return jsonify({
-            "error": "Ошибка загрузки профиля"
-        }), 500
-
-
-# ==========================================
-# ADMIN
-# ==========================================
-
-@app.route("/api/admin/status")
-def admin_status():
-    user = authorized_user()
-
-    if not user:
-        return jsonify({"error": "Authorization failed"}), 401
-
-    return jsonify({
-        "is_admin": database.is_admin(user["id"])
-    })
-
-
-@app.route("/api/admin/give-dc", methods=["POST"])
-def admin_give_dc():
-    user = admin_user()
-
-    if not user:
-        return jsonify({"error": "Нет доступа"}), 403
-
-    data = request.get_json(silent=True) or {}
-
-    try:
-        target_id = int(data.get("user_id"))
-        amount = int(data.get("amount"))
-    except (TypeError, ValueError):
-        return jsonify({"error": "Неверные данные"}), 400
-
-    if target_id <= 0 or amount <= 0:
-        return jsonify({"error": "Неверная сумма или ID"}), 400
-
-    database.register_user(target_id)
-
-    database.change_balance(
-        target_id, amount, "admin_give", user["id"]
-    )
-
-    database.log_admin(
-        user["id"], "give_dc", target_id, str(amount)
-    )
+        best_item = db.execute("""
+            SELECT
+                n.name,
+                i.final_price,
+                i.background,
+                n.image_url
+            FROM nft_inventory i
+            JOIN nft_catalog n ON n.id = i.nft_id
+            WHERE i.user_id = %s
+            ORDER BY i.final_price DESC
+            LIMIT 1
+        """, (int(user["id"]),)).fetchone()
 
     return jsonify({
         "success": True,
-        "message": f"Выдано {amount} DC",
-        "balance": database.get_balance(target_id)
+        "profile": {
+            "game_id": f"#{player['game_id']}",
+            "username": player["username"],
+            "first_name": user.get("first_name"),
+            "balance": player["balance"],
+            "created_at": player["created_at"],
+            "sound_enabled": player["sound_enabled"],
+            "inventory_count": inventory_count["total"],
+            "stats": {
+                "cases_opened": player["cases_opened"] or 0,
+                "upgrades_played": player["upgrades_played"] or 0,
+                "upgrades_won": player["upgrades_won"] or 0,
+                "crafts_completed": player["crafts_completed"] or 0,
+                "nft_sold": player["nft_sold"] or 0,
+                "total_spent": player["total_spent"] or 0,
+                "total_earned": player["total_earned"] or 0
+            },
+            "best_item": dict(best_item) if best_item else None
+        }
     })
 
 
-@app.route("/api/admin/take-dc", methods=["POST"])
-def admin_take_dc():
-    user = admin_user()
+@app.route("/api/profile/settings", methods=["POST"])
+def update_profile_settings():
+    user, error = require_user()
 
-    if not user:
-        return jsonify({"error": "Нет доступа"}), 403
+    if error:
+        return error
 
     data = request.get_json(silent=True) or {}
+    sound_enabled = data.get("sound_enabled")
 
-    try:
-        target_id = int(data.get("user_id"))
-        amount = int(data.get("amount"))
-    except (TypeError, ValueError):
-        return jsonify({"error": "Неверные данные"}), 400
+    if not isinstance(sound_enabled, bool):
+        return jsonify({"error": "Неверное значение настройки"}), 400
 
-    if target_id <= 0 or amount <= 0:
-        return jsonify({"error": "Неверная сумма или ID"}), 400
-
-    database.register_user(target_id)
-    current_balance = database.get_balance(target_id)
-
-    if amount > current_balance:
-        return jsonify({
-            "error": f"Недостаточно DC. Баланс: {current_balance}"
-        }), 400
-
-    database.change_balance(
-        target_id, -amount, "admin_take", user["id"]
-    )
-
-    database.log_admin(
-        user["id"], "take_dc", target_id, str(amount)
-    )
+    with database.get_db() as db:
+        db.execute("""
+            UPDATE users
+            SET sound_enabled = %s
+            WHERE telegram_id = %s
+        """, (sound_enabled, int(user["id"])))
 
     return jsonify({
         "success": True,
-        "message": f"Снято {amount} DC",
-        "balance": database.get_balance(target_id)
+        "sound_enabled": sound_enabled
     })
 
 
-@app.route("/api/admin/give-skin", methods=["POST"])
-def admin_give_skin():
-    user = admin_user()
-
-    if not user:
-        return jsonify({"error": "Нет доступа"}), 403
-
-    data = request.get_json(silent=True) or {}
-
-    try:
-        target_id = int(data.get("user_id"))
-        skin_id = int(data.get("skin_id"))
-        quantity = int(data.get("quantity", 1))
-    except (TypeError, ValueError):
-        return jsonify({"error": "Неверные данные"}), 400
-
-    if target_id <= 0 or skin_id <= 0 or quantity <= 0:
-        return jsonify({"error": "Неверные данные"}), 400
-
-    database.register_user(target_id)
-    skin = database.get_skin(skin_id)
-
-    if not skin:
-        return jsonify({"error": "Скин не найден"}), 404
-
-    try:
-        database.add_inventory_skin(
-            target_id, skin_id, quantity
-        )
-    except ValueError as error:
-        return jsonify({"error": str(error)}), 400
-
-    database.log_admin(
-        user["id"],
-        "give_skin",
-        target_id,
-        f"skin={skin_id}, quantity={quantity}"
-    )
-
-    return jsonify({
-        "success": True,
-        "message": "Скин выдан",
-        "skin": skin,
-        "quantity": quantity,
-        "inventory": database.get_inventory_space(target_id)
-    })
-
-
-# ==========================================
-# CASES AND SKINS
-# ==========================================
+# -------------------------
+# CASES
+# -------------------------
 
 @app.route("/api/cases")
 def get_cases():
-    user = authorized_user()
+    user, error = require_user()
 
-    if not user:
-        return jsonify({"error": "Authorization failed"}), 401
+    if error:
+        return error
 
     with database.get_db() as db:
-        cases = db.execute("""
+        rows = db.execute("""
             SELECT
-                cases.id,
-                catalog_cases.catalog_id,
-                cases.name,
-                cases.price_dc
-            FROM cases
-            JOIN catalog_cases
-                ON catalog_cases.case_id = cases.id
-            ORDER BY cases.price_dc ASC
+                c.code,
+                c.name,
+                c.price,
+                c.image_url,
+                COUNT(ci.id) AS item_count
+            FROM nft_cases c
+            LEFT JOIN nft_case_items ci ON ci.case_id = c.id
+            WHERE c.is_active = TRUE
+            GROUP BY c.id
+            ORDER BY c.sort_order
         """).fetchall()
 
-        result = []
-
-        for case in cases:
-            items = db.execute("""
-                SELECT
-                    skins.id,
-                    skins.name,
-                    skins.rarity,
-                    skins.price,
-                    skins.image_url,
-                    case_skins.weight
-                FROM case_skins
-                JOIN skins
-                    ON skins.id = case_skins.skin_id
-                WHERE case_skins.case_id = %s
-                ORDER BY case_skins.weight DESC
-            """, (case["id"],)).fetchall()
-
-            total_weight = sum(
-                int(item["weight"]) for item in items
-            )
-
-            result.append({
-                "id": case["id"],
-                "catalog_id": case["catalog_id"],
-                "name": case["name"],
-                "price_dc": case["price_dc"],
-                "items": [
-                    {
-                        "id": item["id"],
-                        "name": item["name"],
-                        "rarity": item["rarity"],
-                        "price": item["price"],
-                        "image_url": item["image_url"],
-                        "chance": round(
-                            int(item["weight"]) / total_weight * 100, 2
-                        ) if total_weight else 0
-                    }
-                    for item in items
-                ]
-            })
-
-    return jsonify({"cases": result})
+    return jsonify({
+        "success": True,
+        "currency": "G",
+        "cases": [dict(row) for row in rows]
+    })
 
 
-@app.route("/api/cases/<int:case_id>")
-def get_case_details(case_id):
-    user = authorized_user()
+@app.route("/api/cases/<case_code>")
+def get_case(case_code):
+    user, error = require_user()
 
-    if not user:
-        return jsonify({"error": "Authorization failed"}), 401
+    if error:
+        return error
 
     with database.get_db() as db:
         case = db.execute("""
-            SELECT
-                cases.id,
-                catalog_cases.catalog_id,
-                cases.name,
-                cases.price_dc
-            FROM cases
-            JOIN catalog_cases
-                ON catalog_cases.case_id = cases.id
-            WHERE cases.id = %s
-        """, (case_id,)).fetchone()
+            SELECT *
+            FROM nft_cases
+            WHERE code = %s AND is_active = TRUE
+        """, (case_code,)).fetchone()
 
         if not case:
             return jsonify({"error": "Кейс не найден"}), 404
 
         items = db.execute("""
             SELECT
-                skins.id,
-                skins.name,
-                skins.rarity,
-                skins.price,
-                skins.image_url,
-                case_skins.weight
-            FROM case_skins
-            JOIN skins
-                ON skins.id = case_skins.skin_id
-            WHERE case_skins.case_id = %s
-        """, (case_id,)).fetchall()
+                n.code,
+                n.name,
+                n.rarity,
+                n.base_price,
+                n.image_url,
+                ci.chance
+            FROM nft_case_items ci
+            JOIN nft_catalog n ON n.id = ci.nft_id
+            WHERE ci.case_id = %s
+            ORDER BY n.base_price
+        """, (case["id"],)).fetchall()
 
-        total_weight = sum(
-            int(item["weight"]) for item in items
-        )
-
-        return jsonify({
-            "case": {
-                "id": case["id"],
-                "catalog_id": case["catalog_id"],
-                "name": case["name"],
-                "price_dc": case["price_dc"],
-                "items": [
-                    {
-                        "id": item["id"],
-                        "name": item["name"],
-                        "rarity": item["rarity"],
-                        "price": item["price"],
-                        "image_url": item["image_url"],
-                        "chance": round(
-                            int(item["weight"]) / total_weight * 100, 2
-                        ) if total_weight else 0
-                    }
-                    for item in items
-                ]
-            }
-        })
-
-
-@app.route("/api/skins")
-def get_skins():
-    user = authorized_user()
-
-    if not user:
-        return jsonify({"error": "Authorization failed"}), 401
+        backgrounds = db.execute("""
+            SELECT background, multiplier, chance
+            FROM nft_case_backgrounds
+            WHERE case_id = %s
+            ORDER BY multiplier
+        """, (case["id"],)).fetchall()
 
     return jsonify({
-        "skins": database.get_all_skins()
+        "success": True,
+        "case": dict(case),
+        "items": [dict(item) for item in items],
+        "backgrounds": [dict(item) for item in backgrounds]
     })
 
-
-# ==========================================
-# INVENTORY
-# ==========================================
-
-@app.route("/api/inventory")
-def inventory():
-    user = authorized_user()
-
-    if not user:
-        return jsonify({"error": "Authorization failed"}), 401
-
-    user_id = user["id"]
-
-    return jsonify({
-        "inventory": database.get_inventory(user_id),
-        "capacity": database.get_inventory_space(user_id)
-    })
-
-
-# ==========================================
-# OPEN CASES: 1 TO 5
-# ==========================================
 
 @app.route("/api/cases/open", methods=["POST"])
 def open_case():
-    user = authorized_user()
+    user, error = require_user()
 
-    if not user:
-        return jsonify({"error": "Authorization failed"}), 401
+    if error:
+        return error
 
-    user_id = int(user["id"])
     data = request.get_json(silent=True) or {}
+    case_code = data.get("case_code") or data.get("case_id")
+    quantity = data.get("quantity", 1)
 
     try:
-        case_id = int(data.get("case_id"))
-        count = int(data.get("count", 1))
+        quantity = int(quantity)
     except (TypeError, ValueError):
-        return jsonify({"error": "Неверные данные"}), 400
+        return jsonify({"error": "Неверное количество"}), 400
 
-    if case_id <= 0:
-        return jsonify({"error": "Неверный ID кейса"}), 400
+    if quantity < 1 or quantity > 5:
+        return jsonify({"error": "Можно открыть от 1 до 5 кейсов"}), 400
 
-    if count < 1 or count > 5:
-        return jsonify({
-            "error": "Можно открыть от 1 до 5 кейсов"
-        }), 400
+    if not isinstance(case_code, str):
+        return jsonify({"error": "Не указан кейс"}), 400
+
+    user_id = int(user["id"])
+    batch_id = str(uuid.uuid4())
 
     try:
         with database.get_db() as db:
-
             player = db.execute("""
                 SELECT balance, is_banned
                 FROM users
@@ -942,396 +552,782 @@ def open_case():
             if player["is_banned"]:
                 return jsonify({"error": "Аккаунт заблокирован"}), 403
 
-            inventory_row = db.execute("""
-                SELECT COUNT(*) AS total
-                FROM inventory
-                WHERE user_id = %s
-            """, (user_id,)).fetchone()
-
-            inventory_used = int(inventory_row["total"])
-            inventory_remaining = INVENTORY_LIMIT - inventory_used
-
-            if inventory_remaining < count:
-                return jsonify({
-                    "error": (
-                        "Недостаточно места в инвентаре. "
-                        f"Свободно: {max(0, inventory_remaining)} "
-                        f"из {INVENTORY_LIMIT}"
-                    ),
-                    "inventory_used": inventory_used,
-                    "inventory_limit": INVENTORY_LIMIT,
-                    "inventory_remaining": max(0, inventory_remaining)
-                }), 400
-
             case = db.execute("""
-                SELECT
-                    cases.id,
-                    cases.name,
-                    cases.price_dc
-                FROM cases
-                JOIN catalog_cases
-                    ON catalog_cases.case_id = cases.id
-                WHERE cases.id = %s
-            """, (case_id,)).fetchone()
+                SELECT *
+                FROM nft_cases
+                WHERE code = %s AND is_active = TRUE
+            """, (case_code,)).fetchone()
 
             if not case:
                 return jsonify({"error": "Кейс не найден"}), 404
 
-            price = int(case["price_dc"])
-            total_price = price * count
+            total_price = int(case["price"]) * quantity
 
-            if price <= 0:
-                return jsonify({
-                    "error": "Некорректная цена кейса"
-                }), 400
+            if int(player["balance"]) < total_price:
+                return jsonify({"error": "Недостаточно G"}), 400
 
-            if player["balance"] < total_price:
-                return jsonify({
-                    "error": "Недостаточно DC",
-                    "required": total_price,
-                    "balance": player["balance"]
-                }), 400
-
-            pool = db.execute("""
+            current_count = db.execute("""
                 SELECT
-                    skins.id,
-                    skins.name,
-                    skins.rarity,
-                    skins.price,
-                    skins.image_url,
-                    case_skins.weight
-                FROM case_skins
-                JOIN skins
-                    ON skins.id = case_skins.skin_id
-                WHERE case_skins.case_id = %s
-                  AND case_skins.weight > 0
-            """, (case_id,)).fetchall()
+                    (SELECT COUNT(*) FROM nft_inventory
+                     WHERE user_id = %s)
+                    +
+                    (SELECT COUNT(*) FROM nft_pending_rewards
+                     WHERE user_id = %s AND status = 'pending')
+                    AS total
+            """, (user_id, user_id)).fetchone()["total"]
 
-            if not pool:
+            if int(current_count) + quantity > database.INVENTORY_LIMIT:
                 return jsonify({
-                    "error": "В кейсе пока нет скинов"
+                    "error": "Недостаточно места в инвентаре"
                 }), 400
 
-            selected_items = random.choices(
-                pool,
-                weights=[
-                    int(item["weight"]) for item in pool
-                ],
-                k=count
-            )
+            items = db.execute("""
+                SELECT
+                    n.id AS nft_id,
+                    n.code,
+                    n.name,
+                    n.rarity,
+                    n.base_price,
+                    n.image_url,
+                    ci.chance
+                FROM nft_case_items ci
+                JOIN nft_catalog n ON n.id = ci.nft_id
+                WHERE ci.case_id = %s AND n.is_active = TRUE
+            """, (case["id"],)).fetchall()
 
-            updated = db.execute("""
+            backgrounds = db.execute("""
+                SELECT background, multiplier, chance
+                FROM nft_case_backgrounds
+                WHERE case_id = %s
+            """, (case["id"],)).fetchall()
+
+            if not items or not backgrounds:
+                return jsonify({"error": "У кейса нет содержимого"}), 500
+
+            new_balance = int(player["balance"]) - total_price
+
+            db.execute("""
                 UPDATE users
-                SET balance = balance - %s
+                SET balance = %s
                 WHERE telegram_id = %s
-                  AND balance >= %s
-            """, (total_price, user_id, total_price))
+            """, (new_balance, user_id))
 
-            if updated.rowcount != 1:
-                return jsonify({
-                    "error": "Недостаточно DC"
-                }), 400
+            db.execute("""
+                INSERT INTO nft_g_transactions (
+                    user_id, amount, balance_after, action, description
+                )
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                user_id,
+                -total_price,
+                new_balance,
+                "case_open",
+                f"Открытие кейса {case_code} x{quantity}"
+            ))
 
-            results = []
+            rewards = []
 
-            for selected in selected_items:
-                skin_id = selected["id"]
+            for _ in range(quantity):
+                selected = weighted_choice(items, "chance")
+                background = weighted_choice(backgrounds, "chance")
 
-                inventory_item = db.execute("""
-                    INSERT INTO inventory
-                    (user_id, skin_id, quantity)
-                    VALUES (%s, %s, 1)
+                multiplier = float(background["multiplier"])
+                final_price = int(
+                    round(int(selected["base_price"]) * multiplier)
+                )
+
+                reward = db.execute("""
+                    INSERT INTO nft_pending_rewards (
+                        user_id,
+                        nft_id,
+                        background,
+                        background_multiplier,
+                        final_price,
+                        case_code,
+                        batch_id
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
                     RETURNING id
-                """, (user_id, skin_id)).fetchone()
-
-                db.execute("""
-                    INSERT INTO case_openings
-                    (user_id, case_id, skin_id, price_paid)
-                    VALUES (%s, %s, %s, %s)
                 """, (
                     user_id,
-                    case_id,
-                    skin_id,
-                    price
-                ))
+                    selected["nft_id"],
+                    background["background"],
+                    multiplier,
+                    final_price,
+                    case_code,
+                    batch_id
+                )).fetchone()
 
-                db.execute("""
-                    INSERT INTO item_history
-                    (user_id, skin_id, skin_name, skin_price, source)
-                    VALUES (%s, %s, %s, %s, %s)
-                """, (
-                    user_id,
-                    skin_id,
-                    selected["name"],
-                    selected["price"],
-                    "case"
-                ))
-
-                results.append({
-                    "inventory_id": inventory_item["id"],
-                    "id": skin_id,
+                rewards.append({
+                    "reward_id": reward["id"],
+                    "code": selected["code"],
                     "name": selected["name"],
                     "rarity": selected["rarity"],
-                    "price": selected["price"],
                     "image_url": selected["image_url"],
-                    "sell_price": int(selected["price"]) * 90 // 100
+                    "base_price": selected["base_price"],
+                    "background": background["background"],
+                    "background_name": BACKGROUND_NAMES.get(
+                        background["background"],
+                        background["background"]
+                    ),
+                    "multiplier": multiplier,
+                    "price": final_price
                 })
 
             db.execute("""
-                INSERT INTO profile_stats (user_id)
-                VALUES (%s)
-                ON CONFLICT (user_id) DO NOTHING
-            """, (user_id,))
+                INSERT INTO nft_case_history (
+                    user_id, case_code, quantity, total_price, batch_id
+                )
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                user_id,
+                case_code,
+                quantity,
+                total_price,
+                batch_id
+            ))
 
             db.execute("""
-                UPDATE profile_stats
-                SET opened_cases = opened_cases + %s
+                UPDATE nft_player_stats
+                SET cases_opened = cases_opened + %s,
+                    total_spent = total_spent + %s
                 WHERE user_id = %s
-            """, (count, user_id))
-
-            db.execute("""
-                INSERT INTO transactions
-                (user_id, amount, action, admin_id)
-                VALUES (%s, %s, 'case_open', NULL)
-            """, (user_id, -total_price))
-
-            new_balance = db.execute("""
-                SELECT balance
-                FROM users
-                WHERE telegram_id = %s
-            """, (user_id,)).fetchone()["balance"]
+            """, (quantity, total_price, user_id))
 
         return jsonify({
             "success": True,
-            "case": case["name"],
-            "count": count,
-            "total_price": total_price,
-            "skins": results,
-            "skin": results[0],
+            "batch_id": batch_id,
             "balance": new_balance,
-            "inventory": {
-                "used": inventory_used + count,
-                "limit": INVENTORY_LIMIT,
-                "remaining": inventory_remaining - count
-            }
+            "quantity": quantity,
+            "total_price": total_price,
+            "rewards": rewards
         })
 
-    except Exception as error:
-        print("OPEN CASE ERROR:", type(error).__name__, str(error))
+    except Exception as exc:
+        print("OPEN CASE ERROR:", type(exc).__name__, str(exc))
+        return jsonify({"error": "Ошибка открытия кейса"}), 500
+
+
+# -------------------------
+# PENDING REWARDS
+# -------------------------
+
+@app.route("/api/rewards/claim", methods=["POST"])
+def claim_rewards():
+    user, error = require_user()
+
+    if error:
+        return error
+
+    data = request.get_json(silent=True) or {}
+    batch_id = data.get("batch_id")
+
+    if not batch_id:
+        return jsonify({"error": "Не указан batch_id"}), 400
+
+    user_id = int(user["id"])
+
+    try:
+        uuid.UUID(str(batch_id))
+
+        with database.get_db() as db:
+            db.execute("""
+                SELECT telegram_id
+                FROM users
+                WHERE telegram_id = %s
+                FOR UPDATE
+            """, (user_id,))
+
+            rewards = db.execute("""
+                SELECT *
+                FROM nft_pending_rewards
+                WHERE user_id = %s
+                  AND batch_id = %s
+                  AND status = 'pending'
+                FOR UPDATE
+            """, (user_id, batch_id)).fetchall()
+
+            if not rewards:
+                return jsonify({
+                    "error": "Награды уже получены или не найдены"
+                }), 404
+
+            count = db.execute("""
+                SELECT COUNT(*) AS total
+                FROM nft_inventory
+                WHERE user_id = %s
+            """, (user_id,)).fetchone()["total"]
+
+            if int(count) + len(rewards) > database.INVENTORY_LIMIT:
+                return jsonify({"error": "Недостаточно места"}), 400
+
+            for reward in rewards:
+                db.execute("""
+                    INSERT INTO nft_inventory (
+                        user_id,
+                        nft_id,
+                        background,
+                        background_multiplier,
+                        final_price,
+                        source
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (
+                    user_id,
+                    reward["nft_id"],
+                    reward["background"],
+                    reward["background_multiplier"],
+                    reward["final_price"],
+                    "case"
+                ))
+
+            db.execute("""
+                UPDATE nft_pending_rewards
+                SET status = 'claimed',
+                    completed_at = NOW()
+                WHERE user_id = %s
+                  AND batch_id = %s
+                  AND status = 'pending'
+            """, (user_id, batch_id))
+
         return jsonify({
-            "error": "Ошибка открытия кейса"
-        }), 500
+            "success": True,
+            "claimed": len(rewards)
+        })
+
+    except Exception as exc:
+        print("CLAIM ERROR:", type(exc).__name__, str(exc))
+        return jsonify({"error": "Ошибка получения наград"}), 500
 
 
-# ==========================================
-# SELL ONE INVENTORY ITEM
-# ==========================================
+@app.route("/api/rewards/sell", methods=["POST"])
+def sell_rewards():
+    user, error = require_user()
+
+    if error:
+        return error
+
+    data = request.get_json(silent=True) or {}
+    batch_id = data.get("batch_id")
+
+    if not batch_id:
+        return jsonify({"error": "Не указан batch_id"}), 400
+
+    user_id = int(user["id"])
+
+    try:
+        uuid.UUID(str(batch_id))
+
+        with database.get_db() as db:
+            db.execute("""
+                SELECT telegram_id
+                FROM users
+                WHERE telegram_id = %s
+                FOR UPDATE
+            """, (user_id,))
+
+            rewards = db.execute("""
+                SELECT *
+                FROM nft_pending_rewards
+                WHERE user_id = %s
+                  AND batch_id = %s
+                  AND status = 'pending'
+                FOR UPDATE
+            """, (user_id, batch_id)).fetchall()
+
+            if not rewards:
+                return jsonify({"error": "Награды уже обработаны"}), 404
+
+            earned = sum(int(item["final_price"]) for item in rewards)
+
+            player = db.execute("""
+                SELECT balance
+                FROM users
+                WHERE telegram_id = %s
+            """, (user_id,)).fetchone()
+
+            new_balance = int(player["balance"]) + earned
+
+            db.execute("""
+                UPDATE users
+                SET balance = %s
+                WHERE telegram_id = %s
+            """, (new_balance, user_id))
+
+            db.execute("""
+                INSERT INTO nft_g_transactions (
+                    user_id, amount, balance_after, action, description
+                )
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                user_id,
+                earned,
+                new_balance,
+                "sell_case_rewards",
+                f"Продажа наград из кейса {batch_id}"
+            ))
+
+            db.execute("""
+                UPDATE nft_pending_rewards
+                SET status = 'sold',
+                    completed_at = NOW()
+                WHERE user_id = %s
+                  AND batch_id = %s
+                  AND status = 'pending'
+            """, (user_id, batch_id))
+
+            db.execute("""
+                UPDATE nft_player_stats
+                SET nft_sold = nft_sold + %s,
+                    total_earned = total_earned + %s
+                WHERE user_id = %s
+            """, (len(rewards), earned, user_id))
+
+        return jsonify({
+            "success": True,
+            "sold": len(rewards),
+            "earned": earned,
+            "balance": new_balance
+        })
+
+    except Exception as exc:
+        print("SELL REWARDS ERROR:", type(exc).__name__, str(exc))
+        return jsonify({"error": "Ошибка продажи наград"}), 500
+
+
+# -------------------------
+# INVENTORY
+# -------------------------
+
+@app.route("/api/inventory")
+def get_inventory():
+    user, error = require_user()
+
+    if error:
+        return error
+
+    inventory = database.get_inventory(user["id"])
+
+    return jsonify({
+        "success": True,
+        "inventory": inventory,
+        "count": len(inventory),
+        "limit": database.INVENTORY_LIMIT
+    })
+
+
+@app.route("/api/skins")
+def get_skins():
+    user, error = require_user()
+
+    if error:
+        return error
+
+    with database.get_db() as db:
+        rows = db.execute("""
+            SELECT id, code, name, rarity, base_price, image_url
+            FROM nft_catalog
+            WHERE is_active = TRUE
+            ORDER BY base_price ASC
+        """).fetchall()
+
+    return jsonify({
+        "success": True,
+        "skins": [dict(row) for row in rows]
+    })
+
 
 @app.route("/api/skins/sell", methods=["POST"])
 def sell_skin():
-    user = authorized_user()
+    user, error = require_user()
 
-    if not user:
-        return jsonify({"error": "Authorization failed"}), 401
+    if error:
+        return error
 
-    user_id = int(user["id"])
     data = request.get_json(silent=True) or {}
 
     try:
-        inventory_id = data.get("inventory_id")
-        skin_id = data.get("skin_id")
-
-        if inventory_id is not None:
-            inventory_id = int(inventory_id)
-
-            if inventory_id <= 0:
-                raise ValueError()
-
-        elif skin_id is not None:
-            skin_id = int(skin_id)
-
-            if skin_id <= 0:
-                raise ValueError()
-
-        else:
-            raise ValueError()
-
+        inventory_id = int(data.get("inventory_id"))
     except (TypeError, ValueError):
-        return jsonify({"error": "Неверные данные"}), 400
+        return jsonify({"error": "Неверный ID NFT"}), 400
+
+    user_id = int(user["id"])
 
     try:
         with database.get_db() as db:
+            db.execute("""
+                SELECT telegram_id
+                FROM users
+                WHERE telegram_id = %s
+                FOR UPDATE
+            """, (user_id,))
+
+            item = db.execute("""
+                SELECT id, final_price
+                FROM nft_inventory
+                WHERE id = %s AND user_id = %s
+                FOR UPDATE
+            """, (inventory_id, user_id)).fetchone()
+
+            if not item:
+                return jsonify({"error": "NFT не найден"}), 404
+
+            earned = int(item["final_price"])
 
             player = db.execute("""
-                SELECT is_banned
+                SELECT balance
+                FROM users
+                WHERE telegram_id = %s
+            """, (user_id,)).fetchone()
+
+            new_balance = int(player["balance"]) + earned
+
+            db.execute("""
+                DELETE FROM nft_inventory
+                WHERE id = %s AND user_id = %s
+            """, (inventory_id, user_id))
+
+            db.execute("""
+                UPDATE users
+                SET balance = %s
+                WHERE telegram_id = %s
+            """, (new_balance, user_id))
+
+            db.execute("""
+                INSERT INTO nft_g_transactions (
+                    user_id, amount, balance_after, action, description
+                )
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                user_id,
+                earned,
+                new_balance,
+                "sell_nft",
+                f"Продажа NFT #{inventory_id}"
+            ))
+
+            db.execute("""
+                UPDATE nft_player_stats
+                SET nft_sold = nft_sold + 1,
+                    total_earned = total_earned + %s
+                WHERE user_id = %s
+            """, (earned, user_id))
+
+        return jsonify({
+            "success": True,
+            "earned": earned,
+            "balance": new_balance
+        })
+
+    except Exception as exc:
+        print("SELL NFT ERROR:", type(exc).__name__, str(exc))
+        return jsonify({"error": "Ошибка продажи NFT"}), 500
+
+
+@app.route("/api/inventory/sell-all", methods=["POST"])
+def sell_all_inventory():
+    user, error = require_user()
+
+    if error:
+        return error
+
+    user_id = int(user["id"])
+
+    try:
+        with database.get_db() as db:
+            player = db.execute("""
+                SELECT balance
                 FROM users
                 WHERE telegram_id = %s
                 FOR UPDATE
             """, (user_id,)).fetchone()
 
-            if not player:
-                return jsonify({"error": "Игрок не найден"}), 404
+            items = db.execute("""
+                SELECT id, final_price
+                FROM nft_inventory
+                WHERE user_id = %s
+                FOR UPDATE
+            """, (user_id,)).fetchall()
 
-            if player["is_banned"]:
-                return jsonify({"error": "Аккаунт заблокирован"}), 403
+            if not items:
+                return jsonify({"error": "Инвентарь пуст"}), 400
 
-            if inventory_id is not None:
-                item = db.execute("""
-                    SELECT
-                        inventory.id AS inventory_id,
-                        skins.id AS skin_id,
-                        skins.name,
-                        skins.rarity,
-                        skins.price
-                    FROM inventory
-                    JOIN skins ON skins.id = inventory.skin_id
-                    WHERE inventory.id = %s
-                      AND inventory.user_id = %s
-                    FOR UPDATE OF inventory
-                """, (inventory_id, user_id)).fetchone()
-
-            else:
-                item = db.execute("""
-                    SELECT
-                        inventory.id AS inventory_id,
-                        skins.id AS skin_id,
-                        skins.name,
-                        skins.rarity,
-                        skins.price
-                    FROM inventory
-                    JOIN skins ON skins.id = inventory.skin_id
-                    WHERE inventory.user_id = %s
-                      AND inventory.skin_id = %s
-                    ORDER BY inventory.acquired_at ASC, inventory.id ASC
-                    LIMIT 1
-                    FOR UPDATE OF inventory
-                """, (user_id, skin_id)).fetchone()
-
-            if not item:
-                return jsonify({
-                    "error": "Предмет не найден в инвентаре"
-                }), 404
-
-            unit_price = int(item["price"])
-            reward = unit_price * 90 // 100
-
-            if reward <= 0:
-                return jsonify({
-                    "error": "Цена скина слишком мала"
-                }), 400
+            earned = sum(int(item["final_price"]) for item in items)
+            new_balance = int(player["balance"]) + earned
 
             db.execute("""
-                DELETE FROM inventory
-                WHERE id = %s AND user_id = %s
-            """, (item["inventory_id"], user_id))
+                DELETE FROM nft_inventory
+                WHERE user_id = %s
+            """, (user_id,))
 
             db.execute("""
                 UPDATE users
-                SET balance = balance + %s
+                SET balance = %s
                 WHERE telegram_id = %s
-            """, (reward, user_id))
+            """, (new_balance, user_id))
 
             db.execute("""
-                INSERT INTO transactions
-                (user_id, amount, action, admin_id)
-                VALUES (%s, %s, 'skin_sale', NULL)
-            """, (user_id, reward))
-
-            db.execute("""
-                INSERT INTO skin_sales
-                (user_id, skin_id, quantity, amount_received)
-                VALUES (%s, %s, 1, %s)
+                INSERT INTO nft_g_transactions (
+                    user_id, amount, balance_after, action, description
+                )
+                VALUES (%s, %s, %s, %s, %s)
             """, (
                 user_id,
-                item["skin_id"],
-                reward
+                earned,
+                new_balance,
+                "sell_all",
+                f"Продано NFT: {len(items)}"
             ))
 
-            new_balance = db.execute("""
-                SELECT balance
-                FROM users
-                WHERE telegram_id = %s
-            """, (user_id,)).fetchone()["balance"]
-
-            remaining = db.execute("""
-                SELECT COUNT(*) AS total
-                FROM inventory
+            db.execute("""
+                UPDATE nft_player_stats
+                SET nft_sold = nft_sold + %s,
+                    total_earned = total_earned + %s
                 WHERE user_id = %s
-            """, (user_id,)).fetchone()["total"]
+            """, (len(items), earned, user_id))
 
         return jsonify({
             "success": True,
-            "message": f"Продано: {item['name']}",
-            "inventory_id": item["inventory_id"],
-            "quantity": 1,
-            "received": reward,
-            "balance": new_balance,
-            "inventory": {
-                "used": int(remaining),
-                "limit": INVENTORY_LIMIT,
-                "remaining": INVENTORY_LIMIT - int(remaining)
-            }
+            "sold": len(items),
+            "earned": earned,
+            "balance": new_balance
         })
 
-    except Exception as error:
-        print("SELL SKIN ERROR:", type(error).__name__, str(error))
-        return jsonify({
-            "error": "Ошибка продажи скина"
-        }), 500
+    except Exception as exc:
+        print("SELL ALL ERROR:", type(exc).__name__, str(exc))
+        return jsonify({"error": "Ошибка продажи NFT"}), 500
 
 
-# ==========================================
-# HISTORY
-# ==========================================
+# -------------------------
+# ADMIN
+# -------------------------
 
-@app.route("/api/history")
-def history():
-    user = authorized_user()
+@app.route("/api/admin/status")
+def admin_status():
+    user, error = require_user()
 
-    if not user:
-        return jsonify({"error": "Authorization failed"}), 401
-
-    with database.get_db() as db:
-        openings = db.execute("""
-            SELECT
-                case_openings.id,
-                cases.name AS case_name,
-                skins.name AS skin_name,
-                skins.rarity,
-                case_openings.price_paid,
-                case_openings.created_at
-            FROM case_openings
-            JOIN cases ON cases.id = case_openings.case_id
-            JOIN skins ON skins.id = case_openings.skin_id
-            WHERE case_openings.user_id = %s
-            ORDER BY case_openings.id DESC
-            LIMIT 50
-        """, (user["id"],)).fetchall()
-
-        sales = db.execute("""
-            SELECT
-                skin_sales.id,
-                skins.name AS skin_name,
-                skin_sales.quantity,
-                skin_sales.amount_received,
-                skin_sales.created_at
-            FROM skin_sales
-            JOIN skins ON skins.id = skin_sales.skin_id
-            WHERE skin_sales.user_id = %s
-            ORDER BY skin_sales.id DESC
-            LIMIT 50
-        """, (user["id"],)).fetchall()
+    if error:
+        return error
 
     return jsonify({
-        "openings": [dict(row) for row in openings],
-        "sales": [dict(row) for row in sales]
+        "success": True,
+        "is_admin": (
+            int(user["id"]) in ADMIN_IDS
+            or database.is_admin(user["id"])
+        )
     })
 
 
-# ==========================================
-# START
-# ==========================================
+@app.route("/api/admin/give-g", methods=["POST"])
+def admin_give_g():
+    admin, error = require_admin()
+
+    if error:
+        return error
+
+    data = request.get_json(silent=True) or {}
+
+    try:
+        game_id = int(str(data.get("game_id", "")).replace("#", ""))
+        amount = int(data.get("amount"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Неверный игровой ID или сумма"}), 400
+
+    if amount <= 0:
+        return jsonify({"error": "Сумма должна быть больше нуля"}), 400
+
+    target = database.get_player_by_game_id(game_id)
+
+    if not target:
+        return jsonify({"error": "Игрок не найден"}), 404
+
+    try:
+        balance = database.change_balance(
+            target["telegram_id"],
+            amount,
+            "admin_give",
+            f"Выдача администратором #{game_id}"
+        )
+
+        database.log_admin_action(
+            admin["id"],
+            "give_g",
+            target["telegram_id"],
+            {"amount": amount}
+        )
+
+        return jsonify({
+            "success": True,
+            "balance": balance
+        })
+
+    except Exception as exc:
+        print("ADMIN GIVE G ERROR:", type(exc).__name__, str(exc))
+        return jsonify({"error": "Не удалось выдать G"}), 500
+
+
+@app.route("/api/admin/take-g", methods=["POST"])
+def admin_take_g():
+    admin, error = require_admin()
+
+    if error:
+        return error
+
+    data = request.get_json(silent=True) or {}
+
+    try:
+        game_id = int(str(data.get("game_id", "")).replace("#", ""))
+        amount = int(data.get("amount"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Неверный игровой ID или сумма"}), 400
+
+    if amount <= 0:
+        return jsonify({"error": "Сумма должна быть больше нуля"}), 400
+
+    target = database.get_player_by_game_id(game_id)
+
+    if not target:
+        return jsonify({"error": "Игрок не найден"}), 404
+
+    try:
+        balance = database.change_balance(
+            target["telegram_id"],
+            -amount,
+            "admin_take",
+            f"Списание администратором #{game_id}"
+        )
+
+        database.log_admin_action(
+            admin["id"],
+            "take_g",
+            target["telegram_id"],
+            {"amount": amount}
+        )
+
+        return jsonify({
+            "success": True,
+            "balance": balance
+        })
+
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    except Exception as exc:
+        print("ADMIN TAKE G ERROR:", type(exc).__name__, str(exc))
+        return jsonify({"error": "Не удалось списать G"}), 500
+
+
+@app.route("/api/admin/give-nft", methods=["POST"])
+def admin_give_nft():
+    admin, error = require_admin()
+
+    if error:
+        return error
+
+    data = request.get_json(silent=True) or {}
+
+    try:
+        game_id = int(str(data.get("game_id", "")).replace("#", ""))
+        nft_code = str(data.get("nft_code", ""))
+        background = str(data.get("background", "normal"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Неверные данные"}), 400
+
+    if background not in ("normal", "gold", "onyx_black", "black"):
+        return jsonify({"error": "Неверный фон"}), 400
+
+    target = database.get_player_by_game_id(game_id)
+
+    if not target:
+        return jsonify({"error": "Игрок не найден"}), 404
+
+    multipliers = {
+        "normal": 1,
+        "gold": 3,
+        "onyx_black": 5,
+        "black": 10
+    }
+
+    try:
+        with database.get_db() as db:
+            db.execute("""
+                SELECT telegram_id
+                FROM users
+                WHERE telegram_id = %s
+                FOR UPDATE
+            """, (target["telegram_id"],))
+
+            count = db.execute("""
+                SELECT COUNT(*) AS total
+                FROM nft_inventory
+                WHERE user_id = %s
+            """, (target["telegram_id"],)).fetchone()["total"]
+
+            if int(count) >= database.INVENTORY_LIMIT:
+                return jsonify({"error": "Инвентарь заполнен"}), 400
+
+            nft = db.execute("""
+                SELECT id, base_price
+                FROM nft_catalog
+                WHERE code = %s AND is_active = TRUE
+            """, (nft_code,)).fetchone()
+
+            if not nft:
+                return jsonify({"error": "NFT не найден"}), 404
+
+            multiplier = multipliers[background]
+            price = int(nft["base_price"]) * multiplier
+
+            db.execute("""
+                INSERT INTO nft_inventory (
+                    user_id, nft_id, background,
+                    background_multiplier, final_price, source
+                )
+                VALUES (%s, %s, %s, %s, %s, 'admin')
+            """, (
+                target["telegram_id"],
+                nft["id"],
+                background,
+                multiplier,
+                price
+            ))
+
+        database.log_admin_action(
+            admin["id"],
+            "give_nft",
+            target["telegram_id"],
+            {
+                "nft_code": nft_code,
+                "background": background
+            }
+        )
+
+        return jsonify({"success": True})
+
+    except Exception as exc:
+        print("ADMIN GIVE NFT ERROR:", type(exc).__name__, str(exc))
+        return jsonify({"error": "Не удалось выдать NFT"}), 500
+
+
+# -------------------------
+# STARTUP
+# -------------------------
+
+def initialize():
+    database.init_db()
+
+    for admin_id in ADMIN_IDS:
+        database.add_admin(admin_id)
+
+    init_catalog()
+
+
+initialize()
+
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", 5000)),
+        debug=False
+    )

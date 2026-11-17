@@ -110,61 +110,61 @@ button{font-family:inherit;cursor:pointer}
  box-shadow:0 5px 18px rgba(64,105,255,.25);
 }
 
-/* GAME IMAGES — ОБНОВЛЕНО */
+/* КАРТИНКИ НА ВСЮ ПЛОЩАДЬ КАРТОЧЕК */
+.games-heading{display:none}
+
+.game-card{
+ padding:0 !important;
+ position:relative;
+ overflow:hidden;
+ min-height:0;
+}
+
+.mines-card{
+ height:205px;
+ min-height:205px;
+ margin-bottom:13px;
+}
+
+.small-game{
+ height:178px;
+ min-height:178px;
+}
+
+.game-copy{
+ display:none !important;
+}
+
 .game-art{
  position:absolute;
- right:0;
- top:0;
- bottom:0;
- width:52%;
- display:flex;
- align-items:center;
- justify-content:center;
+ inset:0;
+ width:100% !important;
+ height:100%;
+ z-index:2;
  overflow:hidden;
 }
 
 .game-art img{
  position:absolute;
  inset:0;
- z-index:1;
  width:100%;
  height:100%;
- max-height:none;
+ max-height:none !important;
  object-fit:cover;
  object-position:center;
+ transform:scale(1.08);
  filter:drop-shadow(0 8px 20px rgba(65,100,255,.5));
  pointer-events:none;
 }
 
-.mines-card .game-art{
- width:58%;
-}
-
-.small-game .game-art{
- top:0;
- right:0;
- bottom:0;
- width:100%;
- align-items:center;
- justify-content:center;
-}
-
-.small-game .game-art img{
- max-height:none;
-}
+.game-particles{display:none}
 
 .game-art .art-icon{
  font-size:100px;filter:drop-shadow(0 8px 20px rgba(46,125,255,.65));
  transform:rotate(-12deg);
 }
 .mines-card .art-icon{font-size:112px;transform:rotate(-17deg)}
-.game-particles{
- position:absolute;width:145px;height:145px;border-radius:50%;
- background:radial-gradient(circle,rgba(50,128,255,.38),rgba(105,49,255,.13) 48%,transparent 70%);
- filter:blur(8px);
-}
 .small-games{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.small-game{min-height:178px;padding:15px 13px}
 .small-game .game-title{font-size:17px}
 .small-game .game-description{font-size:10px}
 .small-game .art-icon{font-size:72px;transform:rotate(-12deg)}
@@ -316,9 +316,8 @@ button{font-family:inherit;cursor:pointer}
 #admin-nav{display:none}
 @keyframes appear{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
 @media(min-width:520px){
- .mines-card{min-height:230px}
- .game-title{font-size:27px}
- .small-game{min-height:195px}
+ .mines-card{height:230px;min-height:230px}
+ .small-game{height:195px;min-height:195px}
 }
 </style>
 </head>
@@ -340,50 +339,27 @@ button{font-family:inherit;cursor:pointer}
 
 <!-- ИГРЫ -->
 <section class="page active" id="home">
- <div class="games-heading">
-  <h2>Игровой центр</h2>
-  <span>CS GO CASE</span>
- </div>
 
  <div class="game-card mines-card" onclick="showPage('mines')">
-  <div class="game-copy">
-   <div class="game-tag">НОВАЯ ИГРА</div>
-   <div class="game-title">МИНЫ</div>
-   <div class="game-description">Проверь удачу и забери выигрыш до взрыва</div>
-   <div class="game-open">ИГРАТЬ →</div>
-  </div>
   <div class="game-art">
-   <div class="game-particles"></div>
    <img src="mines.png" alt="Мины">
   </div>
  </div>
 
  <div class="small-games">
+
   <div class="game-card small-game" onclick="showPage('upgrade')">
-   <div class="game-copy">
-    <div class="game-tag">SKINS</div>
-    <div class="game-title">АПГРЕЙД</div>
-    <div class="game-description">Улучшай свои скины</div>
-    <div class="game-open">УЛУЧШИТЬ →</div>
-   </div>
-   <div class="game-art art-upgrade">
-    <div class="game-particles"></div>
+   <div class="game-art">
     <img src="upgrade.png" alt="Апгрейд">
    </div>
   </div>
 
   <div class="game-card small-game" onclick="showPage('craft')">
-   <div class="game-copy">
-    <div class="game-tag">WORKSHOP</div>
-    <div class="game-title">КРАФТ</div>
-    <div class="game-description">Создавай новые скины</div>
-    <div class="game-open">СОЗДАТЬ →</div>
-   </div>
-   <div class="game-art art-craft">
-    <div class="game-particles"></div>
+   <div class="game-art">
     <img src="craft.png" alt="Крафт">
    </div>
   </div>
+
  </div>
 </section>
 

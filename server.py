@@ -13,6 +13,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 import database
+import upgrade
+import craft
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -31,7 +33,6 @@ BACKGROUND_NAMES = {
     "onyx_black": "Onyx Black",
     "black": "Black"
 }
-
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -117,13 +118,31 @@ def require_admin():
     if error:
         return None, error
 
-    if int(user["id"]) not in ADMIN_IDS and not database.is_admin(user["id"]):
+    if (
+        int(user["id"]) not in ADMIN_IDS
+        and not database.is_admin(user["id"])
+    ):
         return None, (jsonify({
             "success": False,
             "error": "Нет доступа"
         }), 403)
 
     return user, None
+
+
+# -------------------------
+# GAME MODULE AUTHORIZATION
+# -------------------------
+
+def authorized_game_user():
+    user, error = require_user()
+
+    if error:
+        return None
+
+    return {
+        "telegram_id": int(user["id"])
+    }
 
 
 # -------------------------
@@ -199,7 +218,7 @@ def init_catalog():
     catalog = load_catalog()
 
     with database.get_db() as db:
-        for case in catalog["cases"]:
+        for sort_order, case in enumerate(catalog["cases"]):
             db.execute("""
                 INSERT INTO nft_cases (
                     code, name, price, image_url, sort_order, is_active
@@ -217,7 +236,7 @@ def init_catalog():
                 case["name"],
                 case["price_g"],
                 case.get("image_url"),
-                catalog["cases"].index(case)
+                sort_order
             ))
 
             case_row = db.execute("""
@@ -1307,6 +1326,19 @@ def admin_give_nft():
     except Exception as exc:
         print("ADMIN GIVE NFT ERROR:", type(exc).__name__, str(exc))
         return jsonify({"error": "Не удалось выдать NFT"}), 500
+
+
+# -------------------------
+# UPGRADE AND CRAFT MODULES
+# -------------------------
+
+app.register_blueprint(
+    upgrade.create_upgrade_blueprint(authorized_game_user)
+)
+
+app.register_blueprint(
+    craft.create_craft_blueprint(authorized_game_user)
+)
 
 
 # -------------------------

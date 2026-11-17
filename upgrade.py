@@ -12,11 +12,7 @@ MULTIPLIER_CHANCES = {
     10: 10.0,
 }
 
-PERCENT_CHANCES = {
-    30.0,
-    50.0,
-    75.0,
-}
+PERCENT_CHANCES = {30.0, 50.0, 75.0}
 
 BACKGROUNDS = {
     "normal": 1,
@@ -35,9 +31,7 @@ def get_user_id(user):
 def parse_positive_id(value):
     try:
         result = int(value)
-        if result <= 0:
-            return None
-        return result
+        return result if result > 0 else None
     except (TypeError, ValueError):
         return None
 
@@ -47,11 +41,7 @@ def create_upgrade_blueprint(authorized_user):
 
     def current_user():
         user = authorized_user()
-
-        if not user:
-            return None
-
-        return get_user_id(user)
+        return get_user_id(user) if user else None
 
     @upgrade_bp.route("/api/upgrade/options", methods=["GET"])
     def upgrade_options():
@@ -131,25 +121,14 @@ def create_upgrade_blueprint(authorized_user):
 
         data = request.get_json(silent=True) or {}
 
-        inventory_id = parse_positive_id(
-            data.get("inventory_id")
-        )
-
-        target_nft_id = parse_positive_id(
-            data.get("target_nft_id")
-        )
-
-        target_background = data.get(
-            "target_background",
-            "normal"
-        )
-
+        inventory_id = parse_positive_id(data.get("inventory_id"))
+        target_background = data.get("target_background", "normal")
         mode = data.get("mode", "multiplier")
 
-        if not inventory_id or not target_nft_id:
+        if not inventory_id:
             return jsonify({
                 "success": False,
-                "error": "Выбери исходный NFT и дождись подбора награды"
+                "error": "Выбери исходный NFT"
             }), 400
 
         if target_background not in BACKGROUNDS:
@@ -206,7 +185,8 @@ def create_upgrade_blueprint(authorized_user):
             with database.get_db() as conn:
                 with conn.cursor() as cur:
 
-                    # Блокируем исходный NFT.
+                    # Блокируем исходный NFT, чтобы его нельзя было
+                    # одновременно использовать в нескольких апгрейдах.
                     cur.execute("""
                         SELECT
                             i.id,
@@ -228,7 +208,24 @@ def create_upgrade_blueprint(authorized_user):
                             "error": "Исходный NFT не найден"
                         }), 404
 
-                    # Получаем выбранную системой награду.
+                    source_price = int(source["final_price"])
+
+                    if source_price <= 0:
+                        return jsonify({
+                            "success": False,
+                            "error": "Некорректная стоимость исходного NFT"
+                        }), 400
+
+                    # Рассчитываем допустимую стоимость награды.
+                    expected_price = source_price * expected_multiplier
+                    min_price = expected_price * 0.75
+                    max_price = expected_price * 1.25
+
+                    # Сервер сам выбирает случайный NFT.
+                    # Переданный браузером target_nft_id не используется.
+                    min_base_price = min_price / background_multiplier
+                    max_base_price = max_price / background_multiplier
+
                     cur.execute("""
                         SELECT
                             id,
@@ -238,50 +235,34 @@ def create_upgrade_blueprint(authorized_user):
                             base_price,
                             image_url
                         FROM nft_catalog
-                        WHERE id = %s
-                          AND is_active = TRUE
-                    """, (target_nft_id,))
+                        WHERE is_active = TRUE
+                          AND base_price BETWEEN %s AND %s
+                        ORDER BY RANDOM()
+                        LIMIT 1
+                    """, (min_base_price, max_base_price))
 
                     target = cur.fetchone()
 
                     if not target:
                         return jsonify({
                             "success": False,
-                            "error": "Целевой NFT не найден"
-                        }), 404
-
-                    source_price = int(source["final_price"])
-
-                    target_price = (
-                        int(target["base_price"])
-                        * background_multiplier
-                    )
-
-                    if source_price <= 0 or target_price <= 0:
-                        return jsonify({
-                            "success": False,
-                            "error": "Некорректная стоимость NFT"
-                        }), 400
-
-                    # Стоимость приза зависит от выбранного шанса.
-                    expected_price = (
-                        source_price * expected_multiplier
-                    )
-
-                    min_price = expected_price * 0.75
-                    max_price = expected_price * 1.25
-
-                    if not min_price <= target_price <= max_price:
-                        return jsonify({
-                            "success": False,
-                            "error": "Цена награды не подходит для выбранного шанса",
-                            "source_price": source_price,
-                            "target_price": target_price,
+                            "error": "Нет NFT подходящей стоимости. Выбери другой фон или режим.",
                             "min_price": int(min_price),
                             "max_price": int(max_price)
                         }), 400
 
-                    # Результат определяется только сервером.
+                    target_price = (
+                        int(target["base_price"]) * background_multiplier
+                    )
+
+                    # Дополнительная проверка стоимости на сервере.
+                    if not min_price <= target_price <= max_price:
+                        return jsonify({
+                            "success": False,
+                            "error": "Стоимость выбранной награды не подходит"
+                        }), 400
+
+                    # Сервер самостоятельно определяет победу.
                     won = (
                         secrets.randbelow(100000)
                         < int(chance * 1000)
@@ -325,7 +306,7 @@ def create_upgrade_blueprint(authorized_user):
                         new_item = cur.fetchone()
                         new_inventory_id = new_item["id"]
 
-                    # Сохраняем историю апгрейда.
+                    # Сохраняем историю.
                     cur.execute("""
                         INSERT INTO nft_upgrade_history (
                             user_id,
@@ -347,7 +328,7 @@ def create_upgrade_blueprint(authorized_user):
                         won
                     ))
 
-                    # Обновляем статистику игрока.
+                    # Обновляем статистику.
                     cur.execute("""
                         INSERT INTO nft_player_stats (
                             user_id,

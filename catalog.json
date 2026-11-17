@@ -1,122 +1,222 @@
 
 {
-  "version": 1,
+  "version": 2,
+  "currency": "G",
+  "backgrounds": [
+    {"id": "normal", "name": "Обычный", "multiplier": 1},
+    {"id": "gold", "name": "Gold", "multiplier": 3},
+    {"id": "onyx_black", "name": "Onyx Black", "multiplier": 5},
+    {"id": "black", "name": "Black", "multiplier": 10}
+  ],
   "cases": [
     {
       "id": "starter",
       "name": "Стартовый",
-      "price_dc": 100,
+      "price_g": 100,
+      "image_url": null,
+      "background_chances": [
+        {"background": "normal", "chance": 98.5},
+        {"background": "gold", "chance": 1},
+        {"background": "onyx_black", "chance": 0.4},
+        {"background": "black", "chance": 0.1}
+      ],
       "items": [
-        {"name": "Glock-18 | High Beam", "rarity": "Армейское", "price_dc": 30, "chance": 35},
-        {"name": "MP9 | Capillary", "rarity": "Армейское", "price_dc": 40, "chance": 25},
-        {"name": "MAC-10 | Monkeyflage", "rarity": "Армейское", "price_dc": 50, "chance": 20},
-        {"name": "P250 | Cyber Shell", "rarity": "Запрещённое", "price_dc": 100, "chance": 12},
-        {"name": "USP-S | Ticket to Hell", "rarity": "Засекреченное", "price_dc": 250, "chance": 7},
-        {"name": "AK-47 | Slate", "rarity": "Тайное", "price_dc": 1000, "chance": 1}
+        {"code": "rose", "name": "Роза", "rarity": "Обычный", "base_price": 20, "image_url": null, "chance": 40},
+        {"code": "heart", "name": "Сердце", "rarity": "Обычный", "base_price": 30, "image_url": null, "chance": 25},
+        {"code": "bear", "name": "Мишка", "rarity": "Необычный", "base_price": 45, "image_url": null, "chance": 16},
+        {"code": "cake", "name": "Торт", "rarity": "Необычный", "base_price": 70, "image_url": null, "chance": 10},
+        {"code": "star", "name": "Звезда", "rarity": "Редкий", "base_price": 100, "image_url": null, "chance": 6},
+        {"code": "rocket", "name": "Ракета", "rarity": "Эпический", "base_price": 200, "image_url": null, "chance": 2.5},
+        {"code": "trophy", "name": "Трофей", "rarity": "Легендарный", "base_price": 500, "image_url": null, "chance": 0.5}
       ]
     },
     {
-      "id": "revolution",
-      "name": "Революция",
-      "price_dc": 500,
+      "id": "pink",
+      "name": "Розовый",
+      "price_g": 500,
+      "image_url": null,
+      "background_chances": [
+        {"background": "normal", "chance": 98.5},
+        {"background": "gold", "chance": 1},
+        {"background": "onyx_black", "chance": 0.4},
+        {"background": "black", "chance": 0.1}
+      ],
       "items": [
-        {"name": "UMP-45 | Wild Child", "rarity": "Армейское", "price_dc": 150, "chance": 35},
-        {"name": "P90 | Vent Rush", "rarity": "Армейское", "price_dc": 200, "chance": 25},
-        {"name": "M4A4 | Poly Mag", "rarity": "Запрещённое", "price_dc": 350, "chance": 20},
-        {"name": "Glock-18 | Umbral Rabbit", "rarity": "Засекреченное", "price_dc": 700, "chance": 12},
-        {"name": "M4A1-S | Emphorosaur-S", "rarity": "Тайное", "price_dc": 2000, "chance": 7},
-        {"name": "AK-47 | Head Shot", "rarity": "Тайное", "price_dc": 5000, "chance": 1}
+        {"code": "pink_bouquet", "name": "Розовый букет", "rarity": "Обычный", "base_price": 100, "image_url": null, "chance": 40},
+        {"code": "pink_heart", "name": "Розовое сердце", "rarity": "Обычный", "base_price": 150, "image_url": null, "chance": 25},
+        {"code": "pink_bear", "name": "Плюшевый мишка", "rarity": "Необычный", "base_price": 220, "image_url": null, "chance": 16},
+        {"code": "pink_cake", "name": "Клубничный торт", "rarity": "Необычный", "base_price": 350, "image_url": null, "chance": 10},
+        {"code": "pink_diamond", "name": "Розовый алмаз", "rarity": "Редкий", "base_price": 500, "image_url": null, "chance": 6},
+        {"code": "pink_crown", "name": "Розовая корона", "rarity": "Эпический", "base_price": 1000, "image_url": null, "chance": 2.5},
+        {"code": "pink_phoenix", "name": "Розовый феникс", "rarity": "Легендарный", "base_price": 2500, "image_url": null, "chance": 0.5}
       ]
     },
     {
-      "id": "recoil",
-      "name": "Отдача",
-      "price_dc": 1500,
+      "id": "gold",
+      "name": "Золотой",
+      "price_g": 1500,
+      "image_url": null,
+      "background_chances": [
+        {"background": "normal", "chance": 98.5},
+        {"background": "gold", "chance": 1},
+        {"background": "onyx_black", "chance": 0.4},
+        {"background": "black", "chance": 0.1}
+      ],
       "items": [
-        {"name": "P250 | Visions", "rarity": "Армейское", "price_dc": 400, "chance": 35},
-        {"name": "Dual Berettas | Flora Carnivora", "rarity": "Армейское", "price_dc": 500, "chance": 25},
-        {"name": "Sawed-Off | Kiss♥Love", "rarity": "Запрещённое", "price_dc": 900, "chance": 20},
-        {"name": "USP-S | Printstream", "rarity": "Засекреченное", "price_dc": 2500, "chance": 12},
-        {"name": "AWP | Chromatic Aberration", "rarity": "Тайное", "price_dc": 6000, "chance": 7},
-        {"name": "AK-47 | Ice Coaled", "rarity": "Тайное", "price_dc": 12000, "chance": 1}
+        {"code": "gold_coin", "name": "Золотая монета", "rarity": "Обычный", "base_price": 300, "image_url": null, "chance": 40},
+        {"code": "gold_ring", "name": "Золотое кольцо", "rarity": "Обычный", "base_price": 450, "image_url": null, "chance": 25},
+        {"code": "gold_key", "name": "Золотой ключ", "rarity": "Необычный", "base_price": 650, "image_url": null, "chance": 16},
+        {"code": "gold_cup", "name": "Золотой кубок", "rarity": "Необычный", "base_price": 1000, "image_url": null, "chance": 10},
+        {"code": "gold_crown", "name": "Золотая корона", "rarity": "Редкий", "base_price": 1500, "image_url": null, "chance": 6},
+        {"code": "gold_dragon", "name": "Золотой дракон", "rarity": "Эпический", "base_price": 3000, "image_url": null, "chance": 2.5},
+        {"code": "gold_throne", "name": "Золотой трон", "rarity": "Легендарный", "base_price": 7500, "image_url": null, "chance": 0.5}
       ]
     },
     {
-      "id": "nightmare",
-      "name": "Кошмар",
-      "price_dc": 3000,
+      "id": "premium",
+      "name": "Премиум",
+      "price_g": 3000,
+      "image_url": null,
+      "background_chances": [
+        {"background": "normal", "chance": 98.5},
+        {"background": "gold", "chance": 1},
+        {"background": "onyx_black", "chance": 0.4},
+        {"background": "black", "chance": 0.1}
+      ],
       "items": [
-        {"name": "MP9 | Starlight Protector", "rarity": "Армейское", "price_dc": 800, "chance": 35},
-        {"name": "MAC-10 | Ensnared", "rarity": "Армейское", "price_dc": 1000, "chance": 25},
-        {"name": "USP-S | Purple DDPAT", "rarity": "Запрещённое", "price_dc": 1800, "chance": 20},
-        {"name": "XM1014 | Zombie Offensive", "rarity": "Засекреченное", "price_dc": 4000, "chance": 12},
-        {"name": "AK-47 | Nightwish", "rarity": "Тайное", "price_dc": 10000, "chance": 7},
-        {"name": "MP9 | Starlight Protector (StatTrak)", "rarity": "Тайное", "price_dc": 20000, "chance": 1}
+        {"code": "premium_watch", "name": "Премиум часы", "rarity": "Обычный", "base_price": 600, "image_url": null, "chance": 40},
+        {"code": "premium_glasses", "name": "Очки люкс", "rarity": "Обычный", "base_price": 900, "image_url": null, "chance": 25},
+        {"code": "premium_bag", "name": "Дизайнерская сумка", "rarity": "Необычный", "base_price": 1300, "image_url": null, "chance": 16},
+        {"code": "premium_car", "name": "Мини-автомобиль", "rarity": "Необычный", "base_price": 2000, "image_url": null, "chance": 10},
+        {"code": "premium_diamond", "name": "Большой алмаз", "rarity": "Редкий", "base_price": 3000, "image_url": null, "chance": 6},
+        {"code": "premium_jet", "name": "Частный самолёт", "rarity": "Эпический", "base_price": 6000, "image_url": null, "chance": 2.5},
+        {"code": "premium_palace", "name": "Дворец", "rarity": "Легендарный", "base_price": 15000, "image_url": null, "chance": 0.5}
       ]
     },
     {
-      "id": "prisma",
-      "name": "Призма",
-      "price_dc": 7500,
+      "id": "legendary",
+      "name": "Легендарный",
+      "price_g": 7500,
+      "image_url": null,
+      "background_chances": [
+        {"background": "normal", "chance": 98.5},
+        {"background": "gold", "chance": 1},
+        {"background": "onyx_black", "chance": 0.4},
+        {"background": "black", "chance": 0.1}
+      ],
       "items": [
-        {"name": "AUG | Tom Cat", "rarity": "Армейское", "price_dc": 2000, "chance": 35},
-        {"name": "P2000 | Acid Etched", "rarity": "Армейское", "price_dc": 2500, "chance": 25},
-        {"name": "SSG 08 | Fever Dream", "rarity": "Запрещённое", "price_dc": 4000, "chance": 20},
-        {"name": "AK-47 | Phantom Disruptor", "rarity": "Засекреченное", "price_dc": 9000, "chance": 12},
-        {"name": "M4A1-S | Player Two", "rarity": "Тайное", "price_dc": 25000, "chance": 7},
-        {"name": "Glock-18 | Bullet Queen", "rarity": "Тайное", "price_dc": 50000, "chance": 1}
+        {"code": "legendary_sword", "name": "Легендарный меч", "rarity": "Обычный", "base_price": 1500, "image_url": null, "chance": 40},
+        {"code": "legendary_shield", "name": "Щит героя", "rarity": "Обычный", "base_price": 2200, "image_url": null, "chance": 25},
+        {"code": "legendary_helmet", "name": "Шлем воина", "rarity": "Необычный", "base_price": 3300, "image_url": null, "chance": 16},
+        {"code": "legendary_wings", "name": "Крылья", "rarity": "Необычный", "base_price": 5000, "image_url": null, "chance": 10},
+        {"code": "legendary_dragon", "name": "Дракон", "rarity": "Редкий", "base_price": 7500, "image_url": null, "chance": 6},
+        {"code": "legendary_phoenix", "name": "Феникс", "rarity": "Эпический", "base_price": 15000, "image_url": null, "chance": 2.5},
+        {"code": "legendary_artifact", "name": "Древний артефакт", "rarity": "Легендарный", "base_price": 37500, "image_url": null, "chance": 0.5}
       ]
     },
     {
-      "id": "spectrum",
-      "name": "Спектр",
-      "price_dc": 15000,
+      "id": "cosmos",
+      "name": "Космос",
+      "price_g": 12000,
+      "image_url": null,
+      "background_chances": [
+        {"background": "normal", "chance": 98.5},
+        {"background": "gold", "chance": 1},
+        {"background": "onyx_black", "chance": 0.4},
+        {"background": "black", "chance": 0.1}
+      ],
       "items": [
-        {"name": "MP9 | Goo", "rarity": "Армейское", "price_dc": 4000, "chance": 35},
-        {"name": "SG 553 | Phantom", "rarity": "Армейское", "price_dc": 5000, "chance": 25},
-        {"name": "CZ75-Auto | Tacticat", "rarity": "Запрещённое", "price_dc": 8000, "chance": 20},
-        {"name": "AK-47 | The Empress", "rarity": "Засекреченное", "price_dc": 18000, "chance": 12},
-        {"name": "M4A1-S | Leaded Glass", "rarity": "Тайное", "price_dc": 45000, "chance": 7},
-        {"name": "AK-47 | Bloodsport", "rarity": "Тайное", "price_dc": 90000, "chance": 1}
+        {"code": "cosmos_moon", "name": "Лунный камень", "rarity": "Обычный", "base_price": 2400, "image_url": null, "chance": 40},
+        {"code": "cosmos_planet", "name": "Планета", "rarity": "Обычный", "base_price": 3600, "image_url": null, "chance": 25},
+        {"code": "cosmos_satellite", "name": "Спутник", "rarity": "Необычный", "base_price": 5200, "image_url": null, "chance": 16},
+        {"code": "cosmos_comet", "name": "Комета", "rarity": "Необычный", "base_price": 8000, "image_url": null, "chance": 10},
+        {"code": "cosmos_nebula", "name": "Туманность", "rarity": "Редкий", "base_price": 12000, "image_url": null, "chance": 6},
+        {"code": "cosmos_galaxy", "name": "Галактика", "rarity": "Эпический", "base_price": 24000, "image_url": null, "chance": 2.5},
+        {"code": "cosmos_blackhole", "name": "Чёрная дыра", "rarity": "Легендарный", "base_price": 60000, "image_url": null, "chance": 0.5}
       ]
     },
     {
-      "id": "chroma",
-      "name": "Хрома",
-      "price_dc": 25000,
+      "id": "royal",
+      "name": "Королевский",
+      "price_g": 20000,
+      "image_url": null,
+      "background_chances": [
+        {"background": "normal", "chance": 98.5},
+        {"background": "gold", "chance": 1},
+        {"background": "onyx_black", "chance": 0.4},
+        {"background": "black", "chance": 0.1}
+      ],
       "items": [
-        {"name": "P250 | Asiimov", "rarity": "Армейское", "price_dc": 7000, "chance": 35},
-        {"name": "XM1014 | Black Tie", "rarity": "Армейское", "price_dc": 9000, "chance": 25},
-        {"name": "AUG | Fleet Flock", "rarity": "Запрещённое", "price_dc": 14000, "chance": 20},
-        {"name": "M4A1-S | Chantico's Fire", "rarity": "Засекреченное", "price_dc": 30000, "chance": 12},
-        {"name": "AWP | Asiimov", "rarity": "Тайное", "price_dc": 75000, "chance": 7},
-        {"name": "M4A1-S | Hyper Beast", "rarity": "Тайное", "price_dc": 150000, "chance": 1}
+        {"code": "royal_scepter", "name": "Скипетр", "rarity": "Обычный", "base_price": 4000, "image_url": null, "chance": 40},
+        {"code": "royal_orb", "name": "Королевская сфера", "rarity": "Обычный", "base_price": 6000, "image_url": null, "chance": 25},
+        {"code": "royal_ring", "name": "Перстень короля", "rarity": "Необычный", "base_price": 8500, "image_url": null, "chance": 16},
+        {"code": "royal_crown", "name": "Королевская корона", "rarity": "Необычный", "base_price": 13000, "image_url": null, "chance": 10},
+        {"code": "royal_lion", "name": "Золотой лев", "rarity": "Редкий", "base_price": 20000, "image_url": null, "chance": 6},
+        {"code": "royal_castle", "name": "Королевский замок", "rarity": "Эпический", "base_price": 40000, "image_url": null, "chance": 2.5},
+        {"code": "royal_empire", "name": "Императорская реликвия", "rarity": "Легендарный", "base_price": 100000, "image_url": null, "chance": 0.5}
       ]
     },
     {
-      "id": "phantom",
-      "name": "Фантом",
-      "price_dc": 35000,
+      "id": "diamond",
+      "name": "Алмазный",
+      "price_g": 30000,
+      "image_url": null,
+      "background_chances": [
+        {"background": "normal", "chance": 98.5},
+        {"background": "gold", "chance": 1},
+        {"background": "onyx_black", "chance": 0.4},
+        {"background": "black", "chance": 0.1}
+      ],
       "items": [
-        {"name": "M249 | Deep Relief", "rarity": "Армейское", "price_dc": 10000, "chance": 35},
-        {"name": "P90 | Cocoa Rampage", "rarity": "Армейское", "price_dc": 12000, "chance": 25},
-        {"name": "Glock-18 | Neo-Noir", "rarity": "Запрещённое", "price_dc": 20000, "chance": 20},
-        {"name": "M4A4 | Cyber Security", "rarity": "Засекреченное", "price_dc": 45000, "chance": 12},
-        {"name": "AWP | Printstream", "rarity": "Тайное", "price_dc": 100000, "chance": 7},
-        {"name": "Glock-18 | Neo-Noir (StatTrak)", "rarity": "Тайное", "price_dc": 200000, "chance": 1}
+        {"code": "diamond_shard", "name": "Осколок алмаза", "rarity": "Обычный", "base_price": 6000, "image_url": null, "chance": 40},
+        {"code": "diamond_ring", "name": "Алмазное кольцо", "rarity": "Обычный", "base_price": 9000, "image_url": null, "chance": 25},
+        {"code": "diamond_necklace", "name": "Алмазное ожерелье", "rarity": "Необычный", "base_price": 13000, "image_url": null, "chance": 16},
+        {"code": "diamond_heart", "name": "Алмазное сердце", "rarity": "Необычный", "base_price": 20000, "image_url": null, "chance": 10},
+        {"code": "diamond_star", "name": "Звезда из алмаза", "rarity": "Редкий", "base_price": 30000, "image_url": null, "chance": 6},
+        {"code": "diamond_dragon", "name": "Алмазный дракон", "rarity": "Эпический", "base_price": 60000, "image_url": null, "chance": 2.5},
+        {"code": "diamond_universe", "name": "Алмазная вселенная", "rarity": "Легендарный", "base_price": 150000, "image_url": null, "chance": 0.5}
+      ]
+    },
+    {
+      "id": "black",
+      "name": "Чёрный",
+      "price_g": 40000,
+      "image_url": null,
+      "background_chances": [
+        {"background": "normal", "chance": 98.5},
+        {"background": "gold", "chance": 1},
+        {"background": "onyx_black", "chance": 0.4},
+        {"background": "black", "chance": 0.1}
+      ],
+      "items": [
+        {"code": "black_mask", "name": "Чёрная маска", "rarity": "Обычный", "base_price": 8000, "image_url": null, "chance": 40},
+        {"code": "black_panther", "name": "Чёрная пантера", "rarity": "Обычный", "base_price": 12000, "image_url": null, "chance": 25},
+        {"code": "black_diamond", "name": "Чёрный алмаз", "rarity": "Необычный", "base_price": 18000, "image_url": null, "chance": 16},
+        {"code": "black_phantom", "name": "Фантом", "rarity": "Необычный", "base_price": 26000, "image_url": null, "chance": 10},
+        {"code": "black_dragon", "name": "Чёрный дракон", "rarity": "Редкий", "base_price": 40000, "image_url": null, "chance": 6},
+        {"code": "black_throne", "name": "Чёрный трон", "rarity": "Эпический", "base_price": 80000, "image_url": null, "chance": 2.5},
+        {"code": "black_emperor", "name": "Чёрный император", "rarity": "Легендарный", "base_price": 200000, "image_url": null, "chance": 0.5}
       ]
     },
     {
       "id": "elite",
       "name": "Элитный",
-      "price_dc": 50000,
+      "price_g": 50000,
+      "image_url": null,
+      "background_chances": [
+        {"background": "normal", "chance": 98.5},
+        {"background": "gold", "chance": 1},
+        {"background": "onyx_black", "chance": 0.4},
+        {"background": "black", "chance": 0.1}
+      ],
       "items": [
-        {"name": "Shadow Daggers | Safari Mesh", "rarity": "Нож", "price_dc": 25000, "chance": 35},
-        {"name": "Navaja Knife | Forest DDPAT", "rarity": "Нож", "price_dc": 35000, "chance": 25},
-        {"name": "Gut Knife | Damascus Steel", "rarity": "Нож", "price_dc": 45000, "chance": 20},
-        {"name": "Huntsman Knife | Lore", "rarity": "Нож", "price_dc": 65000, "chance": 15},
-        {"name": "Sport Gloves | Omega", "rarity": "Перчатки", "price_dc": 100000, "chance": 4},
-        {"name": "Butterfly Knife | Doppler", "rarity": "Нож", "price_dc": 250000, "chance": 1}
+        {"code": "elite_watch", "name": "Часы миллионера", "rarity": "Обычный", "base_price": 10000, "image_url": null, "chance": 40},
+        {"code": "elite_car", "name": "Суперкар", "rarity": "Обычный", "base_price": 15000, "image_url": null, "chance": 25},
+        {"code": "elite_yacht", "name": "Яхта", "rarity": "Необычный", "base_price": 22000, "image_url": null, "chance": 16},
+        {"code": "elite_jet", "name": "Частный джет", "rarity": "Необычный", "base_price": 35000, "image_url": null, "chance": 10},
+        {"code": "elite_mansion", "name": "Особняк", "rarity": "Редкий", "base_price": 50000, "image_url": null, "chance": 6},
+        {"code": "elite_island", "name": "Частный остров", "rarity": "Эпический", "base_price": 100000, "image_url": null, "chance": 2.5},
+        {"code": "elite_universe", "name": "Владыка вселенной", "rarity": "Легендарный", "base_price": 250000, "image_url": null, "chance": 0.5}
       ]
     }
   ]

@@ -42,7 +42,8 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
 .admin-label{display:block;color:#a8bddf;font-size:13px;margin:14px 0 7px}
 .admin-input{width:100%;background:#080c16;border:1px solid #344767;border-radius:9px;padding:13px;color:white;font-size:16px;outline:none}
 .admin-input:focus{border-color:#498cff}
-.action-button{width:100%;margin-top:17px;font-size:15px}
+.action-button{width:100%;margin-top:14px;font-size:15px}
+.take-button{background:linear-gradient(135deg,#bd3c56,#e46b45)}
 .admin-message{margin-top:14px;padding:12px;border-radius:9px;background:#1c2940;color:#a8bddf;font-size:13px;line-height:1.5;display:none;overflow-wrap:anywhere}
 .admin-message.success{display:block;color:#80e6a0}
 .admin-message.error{display:block;color:#ff8585}
@@ -161,24 +162,29 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
     </div>
 </section>
 
-<!-- АДМИН-ПАНЕЛЬ -->
 <section class="page" id="admin">
     <h2 class="section-title">👑 Админ-панель GUADON</h2>
 
     <div class="admin-box">
         <div class="admin-status">🟢 Права администратора подтверждены</div>
-        <h3>💰 Выдать DC игроку</h3>
+
+        <h3>💰 Управление балансом</h3>
 
         <label class="admin-label" for="target-id">Telegram ID игрока</label>
-        <input class="admin-input" id="target-id"
-               type="number" placeholder="Например: 123456789">
+        <input class="admin-input" id="target-id" type="number"
+               placeholder="Например: 123456789">
 
         <label class="admin-label" for="dc-amount">Количество DC</label>
-        <input class="admin-input" id="dc-amount"
-               type="number" min="1" step="1" placeholder="Например: 500">
+        <input class="admin-input" id="dc-amount" type="number"
+               min="1" step="1" placeholder="Например: 500">
 
-        <button class="action-button" id="give-button" onclick="giveDC()">
-            ВЫДАТЬ DC
+        <button class="action-button" id="give-button" onclick="changeDC('give')">
+            💰 ВЫДАТЬ DC
+        </button>
+
+        <button class="action-button take-button" id="take-button"
+                onclick="changeDC('take')">
+            💸 ЗАБРАТЬ DC
         </button>
 
         <div class="admin-message" id="admin-message"></div>
@@ -323,10 +329,12 @@ function showAdminMessage(message, type) {
     box.className = "admin-message " + type;
 }
 
-async function giveDC() {
+async function changeDC(action) {
     const targetId = document.getElementById("target-id").value.trim();
     const amount = document.getElementById("dc-amount").value.trim();
-    const button = document.getElementById("give-button");
+
+    const giveButton = document.getElementById("give-button");
+    const takeButton = document.getElementById("take-button");
 
     if (!targetId || !amount) {
         showAdminMessage("Заполни Telegram ID и количество DC.", "error");
@@ -343,11 +351,15 @@ async function giveDC() {
         return;
     }
 
-    button.disabled = true;
-    button.textContent = "ОТПРАВКА...";
+    giveButton.disabled = true;
+    takeButton.disabled = true;
 
     try {
-        const response = await fetch(API + "/api/admin/give-dc", {
+        const endpoint = action === "give"
+            ? "/api/admin/give-dc"
+            : "/api/admin/take-dc";
+
+        const response = await fetch(API + endpoint, {
             method: "POST",
             headers: {
                 ...authHeaders(),
@@ -362,7 +374,7 @@ async function giveDC() {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || "Не удалось выдать DC");
+            throw new Error(data.error || "Операция не выполнена");
         }
 
         showAdminMessage(
@@ -380,8 +392,8 @@ async function giveDC() {
     } catch (error) {
         showAdminMessage("❌ " + error.message, "error");
     } finally {
-        button.disabled = false;
-        button.textContent = "ВЫДАТЬ DC";
+        giveButton.disabled = false;
+        takeButton.disabled = false;
     }
 }
 

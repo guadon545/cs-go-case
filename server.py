@@ -1,13 +1,15 @@
-
 import os
 import hmac
 import hashlib
 import json
 import time
+import base64
 
 from urllib.parse import parse_qsl
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 import database
 
@@ -22,14 +24,19 @@ CORS(
 
 database.init_db()
 
-# Автоматическое добавление администратора
 admin_ids = os.getenv("ADMIN_IDS", "")
 
 for admin_id in admin_ids.split(","):
     if admin_id.strip().isdigit():
         database.add_admin(int(admin_id.strip()))
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
+
+# Публичный ключ Telegram для обычного (не тестового) окружения
+TELEGRAM_PUBLIC_KEY = bytes.fromhex(
+    "e7bf03a2fa4602af4580703d88dda5bb"
+    "59f32ed8b02a56c187fe7d34caed242d"
+)
 
 
 def verify_telegram_data(init_data):
@@ -42,56 +49,98 @@ def verify_telegram_data(init_data):
         return None
 
     try:
-        data = dict(parse_qsl(init_data))
-        received_hash = data.pop("hash", None)
+        data = dict(parse_qsl(init_data, keep_blank_values=True))
 
-        if not received_hash:
-            print("AUTH DEBUG: hash missing")
-            return None
+        print("AUTH DEBUG: fields:", sorted(data.keys()))
 
         auth_date = int(data.get("auth_date", "0"))
-        age = time.time() - auth_date
 
         if auth_date > time.time() + 60:
             print("AUTH DEBUG: auth_date in future")
             return None
 
-        if age > 86400:
+        if time.time() - auth_date > 86400:
             print("AUTH DEBUG: initData expired")
             return None
 
-        check_string = "\n".join(
-            f"{key}={value}"
-            for key, value in sorted(data.items())
-        )
+        # Вариант 1: проверка HMAC через токен бота
+        received_hash = data.get("hash")
 
-        secret_key = hmac.new(
-            BOT_TOKEN.encode(),
-            b"WebAppData",
-            hashlib.sha256
-        ).digest()
+        if received_hash:
+            check_data = {
+                key: value
+                for key, value in data.items()
+                if key != "hash"
+            }
 
-        calculated_hash = hmac.new(
-            secret_key,
-            check_string.encode(),
-            hashlib.sha256
-        ).hexdigest()
+            check_string = "\n".join(
+                f"{key}={value}"
+                for key, value in sorted(check_data.items())
+            )
 
-        if not hmac.compare_digest(
-            calculated_hash,
-            received_hash
-        ):
-            print("AUTH DEBUG: hash mismatch")
-            print("AUTH DEBUG: fields:", list(data.keys()))
-            return None
+            secret_key = hmac.new(
+                b"WebAppData",
+                BOT_TOKEN.encode(),
+                hashlib.sha256
+            ).digest()
+
+            calculated_hash = hmac.new(
+                secret_key,
+                check_string.encode(),
+                hashlib.sha256
+            ).hexdigest()
+
+            if not hmac.compare_digest(
+                calculated_hash,
+                received_hash
+            ):
+                print("AUTH DEBUG: HMAC hash mismatch")
+                return None
+
+        # Вариант 2: проверка Ed25519-подписи Telegram
+        else:
+            signature = data.get("signature")
+
+            if not signature:
+                print("AUTH DEBUG: hash and signature missing")
+                return None
+
+            bot_id = BOT_TOKEN.split(":")[0]
+
+            check_data = {
+                key: value
+                for key, value in data.items()
+                if key not in ("hash", "signature")
+            }
+
+            check_string = (
+                f"{bot_id}:WebAppData\n"
+                + "\n".join(
+                    f"{key}={value}"
+                    for key, value in sorted(check_data.items())
+                )
+            )
+
+            signature_bytes = base64.urlsafe_b64decode(
+                signature + "=" * (-len(signature) % 4)
+            )
+
+            public_key = Ed25519PublicKey.from_public_bytes(
+                TELEGRAM_PUBLIC_KEY
+            )
+
+            public_key.verify(
+                signature_bytes,
+                check_string.encode()
+            )
 
         user = json.loads(data["user"])
 
-        print("AUTH DEBUG: success")
+        print("AUTH DEBUG: authorization success")
         return user
 
     except Exception as error:
-        print("AUTH DEBUG: exception:", type(error).__name__)
+        print("AUTH DEBUG: verification error:", type(error).__name__)
         return None
 
 
@@ -99,7 +148,6 @@ def get_telegram_user():
     init_data = request.headers.get(
         "X-Telegram-Init-Data", ""
     )
-
     return verify_telegram_data(init_data)
 
 
@@ -198,3 +246,4 @@ def admin_give_dc():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+

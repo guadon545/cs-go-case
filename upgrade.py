@@ -8,8 +8,7 @@ import database
 
 MULTIPLIER_CHANCES = {
     2: 50.0,
-    3: 33.33,
-    5: 20.0,
+    5: 30.0,
     10: 10.0,
 }
 
@@ -102,8 +101,7 @@ def create_upgrade_blueprint(authorized_user):
             "catalog": catalog,
             "multipliers": [
                 {"value": 2, "chance": 50},
-                {"value": 3, "chance": 33.33},
-                {"value": 5, "chance": 20},
+                {"value": 5, "chance": 30},
                 {"value": 10, "chance": 10}
             ],
             "backgrounds": [

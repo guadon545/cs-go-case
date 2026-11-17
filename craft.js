@@ -1,298 +1,221 @@
 
-(function () {
-    "use strict";
+(() => {
+ "use strict";
 
-    let inventory = [];
-    let selectedItems = [];
-    let busy = false;
-    let craftResult = null;
-    let statusMessage = "";
-    let debugMessage = "Ожидание загрузки...";
-    let httpStatus = "—";
+ const app = window.NFT_CASE;
 
-    const API = "https://cs-go-case.onrender.com";
+ if (!app) {
+  console.error("NFT_CASE не найден");
+  return;
+ }
 
-    function getHeaders() {
-        const tg = window.Telegram && window.Telegram.WebApp;
-        return {
-            "Content-Type": "application/json",
-            "X-Telegram-Init-Data": tg ? tg.initData : ""
-        };
-    }
+ const Craft = {
+  inventory: [],
+  selected: new Set(),
+  required: 5,
 
-    function getRoot() {
-        return document.getElementById("craft-app");
-    }
+  escape(value) {
+   return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+   }[char]));
+  },
 
-    async function loadCraft() {
-        const root = getRoot();
-        if (!root) return;
+  async load() {
+   try {
+    const data = await app.request("/api/craft/options");
 
-        root.innerHTML = `
-            <div style="padding:15px;color:white">
-                <h3>Загрузка крафта...</h3>
-                <p>Проверяем соединение с сервером.</p>
-            </div>
-        `;
+    this.inventory = data.inventory || [];
+    this.required = Number(data.required_items) || 5;
 
-        try {
-            const tg = window.Telegram && window.Telegram.WebApp;
+    const availableIds = new Set(
+     this.inventory.map(item => Number(item.inventory_id))
+    );
 
-            debugMessage = "Telegram: " +
-                (tg && tg.initData ? "Авторизация найдена" : "Нет initData");
+    this.selected = new Set(
+     [...this.selected].filter(id => availableIds.has(id))
+    );
 
-            const response = await fetch(API + "/api/craft", {
-                method: "GET",
-                headers: getHeaders(),
-                cache: "no-store"
-            });
+    this.render();
+   } catch (error) {
+    console.error("Ошибка загрузки крафта:", error);
+    app.notice(error.message || "Не удалось загрузить крафт");
+   }
+  },
 
-            httpStatus = response.status;
+  getSelectedItems() {
+   return this.inventory.filter(item =>
+    this.selected.has(Number(item.inventory_id))
+   );
+  },
 
-            const raw = await response.text();
-            let data;
+  getTotal() {
+   return this.getSelectedItems().reduce((sum, item) => {
+    return sum + Number(item.final_price || 0);
+   }, 0);
+  },
 
-            try {
-                data = JSON.parse(raw);
-            } catch (e) {
-                throw new Error("Сервер вернул не JSON: " + raw.slice(0, 200));
-            }
+  render() {
+   const container = document.getElementById("craftInventory");
 
-            if (!response.ok) {
-                throw new Error(data.error || "Ошибка HTTP " + response.status);
-            }
+   document.getElementById("craftSelectedCount").textContent =
+    `${this.selected.size}/${this.required}`;
 
-            if (!Array.isArray(data.inventory)) {
-                throw new Error("В ответе сервера отсутствует массив inventory");
-            }
+   document.getElementById("craftTotal").textContent =
+    app.format(this.getTotal());
 
-            inventory = data.inventory;
-            selectedItems = [];
-            statusMessage = "";
-            debugMessage = "Успешно загружено предметов: " + inventory.length;
+   const button = document.getElementById("craftButton");
 
-            render();
+   button.disabled = this.selected.size !== this.required;
 
-        } catch (error) {
-            debugMessage = "Ошибка: " + error.message;
+   if (!this.inventory.length) {
+    container.innerHTML =
+     '<div class="empty">У тебя пока нет NFT для крафта</div>';
+    return;
+   }
 
-            root.innerHTML = `
-                <div style="padding:15px;color:white">
-                    <h2>⚒️ Крафт</h2>
-                    <div style="background:#172033;padding:15px;border-radius:12px;margin-top:15px">
-                        <h3 style="color:#ff7777">Ошибка загрузки</h3>
-                        <p style="margin-top:10px;word-break:break-word">
-                            ${escapeHTML(error.message)}
-                        </p>
-                        <p style="margin-top:10px;color:#aaa">
-                            HTTP: ${httpStatus}
-                        </p>
-                        <button onclick="window.loadCraft()"
-                            style="margin-top:15px;padding:12px;background:#3478f6;color:white;border:0;border-radius:8px;width:100%">
-                            Повторить
-                        </button>
-                    </div>
-                    ${debugPanel()}
-                </div>
-            `;
-        }
-    }
+   container.innerHTML = this.inventory.map(item => {
+    const id = Number(item.inventory_id);
+    const checked = this.selected.has(id) ? "checked" : "";
+    const name = this.escape(item.name || item.code || "NFT");
 
-    function escapeHTML(value) {
-        return String(value).replace(/[&<>"']/g, function (char) {
-            return {
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&#039;"
-            }[char];
-        });
-    }
+    return `
+     <label class="item-select">
+      <input
+       type="checkbox"
+       data-craft-id="${id}"
+       ${checked}
+      >
+      <div class="item-select-info">
+       <strong>${name}</strong>
+       <span>
+        ${this.escape(item.background || "normal")}
+        · ${app.format(item.final_price)}
+       </span>
+      </div>
+     </label>
+    `;
+   }).join("");
 
-    function debugPanel() {
-        return `
-            <div style="margin-top:15px;background:#101827;padding:12px;border-radius:10px;font-size:13px">
-                <b>Диагностика</b>
-                <p style="margin-top:8px">HTTP: ${httpStatus}</p>
-                <p>${escapeHTML(debugMessage)}</p>
-            </div>
-        `;
-    }
+   container.querySelectorAll("[data-craft-id]").forEach(input => {
+    input.addEventListener("change", () => {
+     const id = Number(input.dataset.craftId);
 
-    function getSelectedPrice() {
-        return selectedItems.reduce(function (sum, item) {
-            return sum + Number(item.price || 0);
-        }, 0);
-    }
+     if (input.checked) {
+      if (this.selected.size >= this.required) {
+       input.checked = false;
+       app.notice(`Можно выбрать только ${this.required} NFT`);
+       return;
+      }
 
-    function render() {
-        const root = getRoot();
-        if (!root) return;
+      this.selected.add(id);
+     } else {
+      this.selected.delete(id);
+     }
 
-        const total = getSelectedPrice();
+     this.render();
+    });
+   });
+  },
 
-        let itemsHTML = "";
+  async play() {
+   if (this.selected.size !== this.required) {
+    app.notice(`Выбери ровно ${this.required} NFT`);
+    return;
+   }
 
-        if (inventory.length === 0) {
-            itemsHTML = `
-                <p style="color:#aaa;padding:15px">
-                    Предметы не найдены. Сервер вернул пустой инвентарь.
-                </p>
-            `;
-        } else {
-            itemsHTML = inventory.map(function (item) {
-                const count = Number(item.quantity || 0);
-                const selectedCount = selectedItems.filter(
-                    x => Number(x.skin_id) === Number(item.skin_id)
-                ).length;
+   const ids = [...this.selected];
 
-                return `
-                    <div class="craft-item"
-                        data-id="${Number(item.skin_id)}"
-                        style="
-                            background:${selectedCount ? '#263b5c' : '#172033'};
-                            border:1px solid ${selectedCount ? '#5599ff' : '#29364d'};
-                            padding:12px;
-                            border-radius:10px;
-                            margin-bottom:9px;
-                            display:flex;
-                            justify-content:space-between;
-                            align-items:center;
-                            cursor:pointer;
-                        ">
-                        <div>
-                            <b>${escapeHTML(item.name)}</b>
-                            <div style="color:#aaa;font-size:12px;margin-top:5px">
-                                ${escapeHTML(item.rarity || "Предмет")}
-                            </div>
-                            <div style="color:#aaa;font-size:12px">
-                                ${Number(item.price).toLocaleString("ru-RU")} DC
-                            </div>
-                        </div>
-                        <div style="text-align:right">
-                            <b>${selectedCount ? "✓ " + selectedCount : ""}</b>
-                            <div style="color:#aaa;font-size:12px">
-                                В наличии: ${count}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join("");
-        }
+   if (new Set(ids).size !== this.required) {
+    app.notice("Нельзя выбрать один NFT несколько раз");
+    return;
+   }
 
-        root.innerHTML = `
-            <div style="color:white;padding:12px">
-                <h2>⚒️ Крафт</h2>
-                <p style="color:#aaa;margin-top:5px">
-                    Выбери ровно 5 предметов
-                </p>
+   const total = this.getTotal();
 
-                <div style="background:#172033;padding:14px;border-radius:12px;margin:15px 0">
-                    <div>Выбрано: <b>${selectedItems.length}/5</b></div>
-                    <div style="margin-top:7px">
-                        Общая стоимость: <b>${total.toLocaleString("ru-RU")} DC</b>
-                    </div>
-                </div>
+   if (!confirm(
+    `Отправить ${this.required} NFT в крафт?\n` +
+    `Их общая стоимость: ${app.format(total)}\n\n` +
+    `Все выбранные предметы будут сожжены.`
+   )) {
+    return;
+   }
 
-                <div id="craft-items">${itemsHTML}</div>
+   const button = document.getElementById("craftButton");
 
-                <button id="craft-create"
-                    ${selectedItems.length !== 5 || busy ? "disabled" : ""}
-                    style="
-                        width:100%;
-                        padding:15px;
-                        border:0;
-                        border-radius:10px;
-                        margin-top:12px;
-                        background:${selectedItems.length === 5 && !busy ? '#3478f6' : '#354052'};
-                        color:white;
-                        font-weight:bold;
-                    ">
-                    ${busy ? "Создание..." : "Создать предмет"}
-                </button>
+   button.disabled = true;
+   button.textContent = "СОЗДАНИЕ...";
 
-                <div style="margin-top:12px;color:#aaa;font-size:13px">
-                    ${escapeHTML(statusMessage)}
-                </div>
+   try {
+    const result = await app.request("/api/craft", {
+     method: "POST",
+     body: JSON.stringify({
+      inventory_ids: ids
+     })
+    });
 
-                ${craftResult ? `
-                    <div style="background:#172b27;padding:15px;border-radius:12px;margin-top:15px">
-                        <h3>🎉 Результат крафта</h3>
-                        <p style="margin-top:8px">${escapeHTML(craftResult.name)}</p>
-                        <p>Стоимость: ${Number(craftResult.price || 0).toLocaleString("ru-RU")} DC</p>
-                    </div>
-                ` : ""}
+    this.selected.clear();
 
-                ${debugPanel()}
-            </div>
-        `;
+    const reward = result.reward || {};
 
-        root.querySelectorAll(".craft-item").forEach(function (element) {
-            element.addEventListener("click", function () {
-                if (busy || selectedItems.length >= 5) return;
+    const rewardName = this.escape(
+     reward.name || "Новый NFT"
+    );
 
-                const id = Number(element.dataset.id);
-                const item = inventory.find(x => Number(x.skin_id) === id);
+    const rewardPrice = reward.final_price ??
+     reward.price ??
+     reward.reward_price ??
+     0;
 
-                if (!item) return;
+    const image = reward.image_url
+     ? `<img src="${this.escape(reward.image_url)}" style="width:100%;height:170px;object-fit:contain">`
+     : '<div style="font-size:75px;padding:25px">🎁</div>';
 
-                const alreadySelected = selectedItems.filter(
-                    x => Number(x.skin_id) === id
-                ).length;
+    app.showModal(`
+     <div style="clear:both;text-align:center;padding-top:15px">
+      <div style="font-size:45px">✨</div>
+      <h2 style="margin:10px 0;color:#bbaaff">КРАФТ УСПЕШЕН!</h2>
+      <p class="muted small">Ты получил новый NFT</p>
+      ${image}
+      <div class="result-item">
+       <strong>${rewardName}</strong>
+       <div class="muted small">
+        ${app.format(rewardPrice)}
+       </div>
+      </div>
+      <button class="primary" id="craftResultClose">
+       ЗАБРАТЬ NFT
+      </button>
+     </div>
+    `);
 
-                if (alreadySelected >= Number(item.quantity)) return;
-
-                selectedItems.push(item);
-                render();
-            });
-        });
-
-        const createButton = root.querySelector("#craft-create");
-        if (createButton) {
-            createButton.addEventListener("click", runCraft);
-        }
-    }
-
-    async function runCraft() {
-        if (selectedItems.length !== 5 || busy) return;
-
-        busy = true;
-        statusMessage = "";
-        render();
-
-        try {
-            const response = await fetch(API + "/api/craft", {
-                method: "POST",
-                headers: getHeaders(),
-                body: JSON.stringify({
-                    items: selectedItems.map(item => Number(item.skin_id))
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(data.error || "Не удалось создать предмет");
-            }
-
-            craftResult = data.skin || data.reward || null;
-            statusMessage = data.message || "Крафт успешно завершён!";
-
-            await loadCraft();
-
-        } catch (error) {
-            statusMessage = "Ошибка: " + error.message;
-        } finally {
-            busy = false;
-            render();
-        }
-    }
-
-    window.initCraft = function () {
-        loadCraft();
+    document.getElementById("craftResultClose").onclick = () => {
+     app.closeModal();
     };
 
-    window.loadCraft = loadCraft;
+    await this.load();
+    await window.Profile?.load();
+    await window.Upgrade?.load();
 
+   } catch (error) {
+    app.notice(error.message || "Ошибка крафта");
+    await this.load();
+   } finally {
+    button.disabled = this.selected.size !== this.required;
+    button.textContent = "СОЗДАТЬ NFT";
+   }
+  },
+
+  init() {
+   document.getElementById("craftButton").onclick = () => {
+    this.play();
+   };
+  }
+ };
+
+ window.Craft = Craft;
+ Craft.init();
 })();

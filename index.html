@@ -12,14 +12,15 @@
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
  --bg:#142342;
- --glass:rgba(35,58,100,.72);
- --border:rgba(126,177,255,.28);
+ --glass:rgba(42,65,105,.68);
+ --border:rgba(160,195,255,.25);
  --blue:#398cff;
- --purple:#557dff;
+ --purple:#8065ff;
  --muted:#b0c5e8;
 }
 body{
- background:radial-gradient(ellipse at 50% -15%,#4169a8 0%,#203c6b 42%,#142342 85%);
+ background:
+ radial-gradient(ellipse at 50% -10%,#527ab4 0%,#294873 38%,#142342 85%);
  color:#fff;font-family:Arial,sans-serif;
  padding-bottom:105px;min-height:100vh;
 }
@@ -28,8 +29,8 @@ button{font-family:inherit;cursor:pointer}
  position:sticky;top:0;z-index:20;
  padding:14px 17px;display:flex;align-items:center;
  justify-content:space-between;gap:10px;
- background:rgba(19,35,65,.85);
- backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+ background:rgba(19,35,65,.78);
+ backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);
  border-bottom:1px solid rgba(139,169,255,.22);
 }
 .logo{font-size:21px;font-weight:900;letter-spacing:-.7px}
@@ -40,7 +41,8 @@ button{font-family:inherit;cursor:pointer}
 .header-right{display:flex;align-items:center;gap:9px}
 .balance-chip{
  padding:9px 12px;border:1px solid rgba(130,180,255,.45);
- border-radius:14px;background:linear-gradient(130deg,rgba(41,110,205,.45),rgba(100,75,200,.35));
+ border-radius:14px;
+ background:linear-gradient(130deg,rgba(41,110,205,.45),rgba(100,75,200,.35));
  box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
  font-size:13px;font-weight:900;color:#eaf3ff;
 }
@@ -54,10 +56,9 @@ button{font-family:inherit;cursor:pointer}
 .avatar-button img{width:100%;height:100%;object-fit:cover;display:none}
 .container{padding:17px 15px;max-width:650px;margin:auto}
 .page{display:none}.page.active{display:block}
+.page-title{font-size:21px;font-weight:900;margin:8px 0 17px}
 .section-title{font-size:19px;margin:20px 0 14px;font-weight:800}
 .sub-title{font-size:16px;margin:22px 0 12px}
-
-/* GLASS */
 .glass{
  background:linear-gradient(145deg,rgba(55,83,135,.72),rgba(27,47,83,.78));
  border:1px solid var(--border);border-radius:19px;
@@ -65,110 +66,322 @@ button{font-family:inherit;cursor:pointer}
  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
 }
 
-/* GAMES */
-.games-heading{
- display:flex;align-items:center;justify-content:space-between;
- margin:8px 2px 15px;
-}
-.games-heading h2{font-size:20px}
-.games-heading span{font-size:11px;color:#b3c9ee}
+/* ИГРЫ */
 .game-card{
  position:relative;overflow:hidden;isolation:isolate;
  border:1px solid rgba(145,190,255,.35);
  border-radius:22px;cursor:pointer;
  background:linear-gradient(145deg,#294c80,#1b3158 65%,#263d70);
  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 12px 28px rgba(0,0,0,.25);
- transition:transform .15s,border-color .15s;
+ transition:transform .15s;
 }
 .game-card:active{transform:scale(.975)}
-.game-card:before{
- content:"";position:absolute;inset:0;z-index:-1;
- background:radial-gradient(circle at 80% 75%,rgba(39,145,255,.4),transparent 48%),
- radial-gradient(circle at 15% 20%,rgba(100,100,255,.28),transparent 45%);
+.mines-card{height:205px;margin-bottom:13px}
+.small-games{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.small-game{height:178px}
+.game-art{position:absolute;inset:0;width:100%;height:100%;z-index:2}
+.game-art img{
+ width:100%;height:100%;object-fit:cover;
+ transform:scale(1.04);pointer-events:none;
 }
-.game-card:after{
- content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
- background:linear-gradient(120deg,rgba(255,255,255,.12),transparent 32%,transparent 70%,rgba(111,170,255,.1));
-}
-.mines-card{
- min-height:205px;padding:20px;margin-bottom:13px;
- display:flex;align-items:center;
-}
-.game-copy{position:relative;z-index:2;max-width:62%}
-.game-tag{
- display:inline-block;padding:5px 9px;border-radius:20px;
- background:rgba(75,132,255,.17);border:1px solid rgba(110,159,255,.3);
- color:#a9caff;font-size:9px;font-weight:800;letter-spacing:1px;
- margin-bottom:10px;
-}
-.game-title{font-size:24px;font-weight:900;letter-spacing:.3px}
-.game-description{font-size:11px;color:#c2d5f5;line-height:1.5;margin-top:7px}
-.game-open{
- display:inline-block;margin-top:15px;padding:9px 14px;border-radius:10px;
- color:white;font-size:11px;font-weight:800;
- background:linear-gradient(110deg,#277ff4,#713cf0);
- box-shadow:0 5px 18px rgba(64,105,255,.25);
+@media(min-width:520px){
+ .mines-card{height:230px}
+ .small-game{height:195px}
 }
 
-/* КАРТИНКИ НА ВСЮ ПЛОЩАДЬ КАРТОЧЕК */
-.games-heading{display:none}
-.game-card{
- padding:0 !important;
+/* КЕЙСЫ */
+.cases-heading{
+ display:flex;justify-content:space-between;align-items:center;
+ margin:5px 2px 15px;
+}
+.cases-heading span{font-size:11px;color:#b8cbed}
+.cases-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:12px;
+}
+.case-tile{
+ --case-a:#315d91;--case-b:#172e50;--case-glow:#6cbaff;
+ position:relative;overflow:hidden;isolation:isolate;
+ min-width:0;min-height:174px;padding:13px 11px 12px;
+ border-radius:20px;border:1px solid rgba(255,255,255,.22);
+ background:linear-gradient(145deg,var(--case-a),var(--case-b));
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.2),
+ 0 10px 25px rgba(0,0,0,.2);
+ cursor:pointer;transition:transform .18s,border-color .18s;
+}
+.case-tile:active{transform:scale(.97)}
+.case-tile:before{
+ content:"";position:absolute;inset:0;z-index:-1;
+ background:
+ radial-gradient(circle at 50% 43%,var(--case-glow),transparent 57%),
+ linear-gradient(130deg,rgba(255,255,255,.12),transparent 50%);
+ opacity:.45;
+}
+.case-tile:after{
+ content:"";position:absolute;inset:0;z-index:-1;
+ background:linear-gradient(120deg,rgba(255,255,255,.13),transparent 35%,transparent 70%,rgba(255,255,255,.06));
+}
+.case-art{
+ height:103px;display:flex;align-items:center;justify-content:center;
  position:relative;
+}
+.case-box-art{
+ width:88px;height:67px;position:relative;
+ border-radius:12px 12px 17px 17px;
+ background:linear-gradient(145deg,rgba(255,255,255,.36),rgba(15,25,48,.5));
+ border:2px solid rgba(255,255,255,.48);
+ box-shadow:0 12px 24px rgba(0,0,0,.3),inset 0 2px 8px rgba(255,255,255,.22);
+ transform:perspective(180px) rotateX(7deg) rotateY(-8deg);
+}
+.case-box-art:before{
+ content:"";position:absolute;left:-2px;right:-2px;top:-13px;height:17px;
+ border-radius:8px 8px 3px 3px;
+ background:linear-gradient(90deg,rgba(255,255,255,.6),var(--case-glow),rgba(255,255,255,.25));
+ border:1px solid rgba(255,255,255,.4);
+}
+.case-box-art:after{
+ content:"";position:absolute;left:50%;top:8px;bottom:8px;width:3px;
+ transform:translateX(-50%);
+ background:rgba(255,255,255,.45);border-radius:5px;
+}
+.case-box-symbol{
+ position:absolute;left:0;right:0;top:17px;text-align:center;
+ font-size:27px;filter:drop-shadow(0 3px 7px rgba(0,0,0,.4));
+}
+.case-tile-name{
+ font-size:14px;font-weight:900;text-align:center;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.case-tile-price{
+ text-align:center;font-size:12px;font-weight:900;
+ color:#fff;margin-top:6px;
+ text-shadow:0 1px 7px rgba(0,0,0,.5);
+}
+.case-tile-sub{
+ text-align:center;color:rgba(255,255,255,.7);
+ font-size:9px;margin-top:4px;
+}
+.case-tile.elite{
+ grid-column:1/-1;min-height:150px;
+ display:grid;grid-template-columns:1fr 1fr;
+ align-items:center;padding:13px 19px;
+}
+.case-tile.elite .case-art{height:120px}
+.case-tile.elite .case-box-art{width:125px;height:91px}
+.case-tile.elite .case-box-symbol{font-size:40px;top:22px}
+.case-tile.elite .case-tile-name{text-align:left;font-size:19px}
+.case-tile.elite .case-tile-price{text-align:left;font-size:15px}
+.case-tile.elite .case-tile-sub{text-align:left}
+.case-tile.elite .case-tile-info{min-width:0}
+.case-tile.elite .case-box-art:before{height:20px;top:-15px}
+
+/* ЦВЕТА КЕЙСОВ */
+.case-starter{--case-a:#4776a7;--case-b:#193b61;--case-glow:#91caff}
+.case-revolution{--case-a:#8148a1;--case-b:#321d58;--case-glow:#d18cff}
+.case-recoil{--case-a:#a64d43;--case-b:#4b202d;--case-glow:#ff9a75}
+.case-nightmare{--case-a:#65418c;--case-b:#211a43;--case-glow:#bd83ff}
+.case-prisma{--case-a:#8061ba;--case-b:#32265e;--case-glow:#d3a5ff}
+.case-spectrum{--case-a:#287d9c;--case-b:#18304f;--case-glow:#7ce5ff}
+.case-chroma{--case-a:#b16c3e;--case-b:#4c2a26;--case-glow:#ffc17b}
+.case-phantom{--case-a:#4c4d80;--case-b:#20233f;--case-glow:#9b9dff}
+.case-elite{--case-a:#a47c2f;--case-b:#443015;--case-glow:#ffe18b}
+
+/* МЕНЮ КЕЙСА */
+.case-menu{
+ display:none;margin-top:12px;padding:16px;
+ border:1px solid var(--border);border-radius:23px;
+ background:linear-gradient(145deg,rgba(53,79,125,.8),rgba(20,37,68,.88));
+ backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+ box-shadow:0 15px 40px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.14);
+}
+.back-button{
+ background:rgba(255,255,255,.09);color:#e0ecff;
+ border:1px solid rgba(160,195,255,.28);
+ border-radius:12px;padding:10px 14px;margin-bottom:15px;
+}
+.case-menu-hero{
+ position:relative;overflow:hidden;text-align:center;
+ border-radius:19px;padding:20px 12px;margin-bottom:16px;
+ background:linear-gradient(145deg,var(--case-a,#315d91),var(--case-b,#172e50));
+ border:1px solid rgba(255,255,255,.18);
+}
+.case-menu-hero .case-box-art{
+ margin:16px auto 8px;width:112px;height:82px;
+}
+.case-menu-title{font-size:22px;font-weight:900}
+.case-menu-price{font-size:14px;color:#d8eaff;margin-top:7px;font-weight:bold}
+.items-heading{font-size:15px;font-weight:900;margin:17px 0 10px}
+.items-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.item-card{
+ min-width:0;padding:11px;border-radius:15px;
+ background:rgba(20,38,68,.55);
+ border:1px solid rgba(153,190,255,.2);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.07);
+}
+.item-icon{
+ height:56px;display:flex;align-items:center;justify-content:center;
+ font-size:32px;margin-bottom:7px;
+}
+.item-name{font-size:11px;font-weight:bold;line-height:1.4;overflow-wrap:anywhere}
+.item-rarity{font-size:10px;color:#d0c5ff;margin-top:5px}
+.item-price{font-size:11px;color:#a9ceff;margin-top:5px}
+.item-chance{font-size:10px;color:#91e0ad;margin-top:5px}
+.quantity-title{font-size:14px;font-weight:bold;margin:19px 0 10px}
+.quantity-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.quantity-controls{display:flex;align-items:center;gap:9px}
+.quantity-button{
+ width:39px;height:39px;border:1px solid rgba(155,190,255,.35);
+ border-radius:13px;background:rgba(255,255,255,.1);
+ color:white;font-size:22px;
+}
+.quantity-value{font-size:22px;font-weight:900;min-width:26px;text-align:center}
+.quantity-picks{display:flex;gap:6px}
+.quantity-pick{
+ min-width:34px;padding:8px 5px;border-radius:10px;
+ border:1px solid rgba(155,190,255,.25);
+ color:#dceaff;background:rgba(255,255,255,.07);
+ font-size:12px;font-weight:bold;
+}
+.quantity-pick.active{
+ color:white;border-color:#80baff;
+ background:linear-gradient(130deg,#347cff,#7655ff);
+ box-shadow:0 3px 12px rgba(65,120,255,.3);
+}
+.skip-row{
+ display:flex;align-items:center;justify-content:space-between;
+ margin-top:16px;padding:12px 13px;border-radius:14px;
+ background:rgba(255,255,255,.06);
+ border:1px solid rgba(155,190,255,.17);
+ font-size:12px;color:#d8e7ff;
+}
+.switch{position:relative;width:44px;height:25px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch-slider{
+ position:absolute;inset:0;border-radius:20px;
+ background:#52627c;transition:.2s;
+}
+.switch-slider:before{
+ content:"";position:absolute;width:19px;height:19px;
+ left:3px;top:3px;border-radius:50%;background:white;transition:.2s;
+}
+.switch input:checked+.switch-slider{background:#398cff}
+.switch input:checked+.switch-slider:before{transform:translateX(19px)}
+.total-price{
+ text-align:center;color:#c7ddff;font-size:13px;
+ margin:15px 0 12px;font-weight:bold;
+}
+.main-open-button{
+ width:100%;padding:15px;
+ background:linear-gradient(110deg,#348aff,#7653ff);
+ border:1px solid rgba(255,255,255,.22);
+ border-radius:15px;color:white;font-size:14px;font-weight:900;
+ box-shadow:0 8px 22px rgba(54,112,255,.25),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.main-open-button:disabled{opacity:.5}
+
+/* РУЛЕТКА */
+.roulette-overlay{
+ display:none;position:fixed;inset:0;z-index:100;
+ align-items:center;justify-content:center;padding:17px;
+ background:rgba(5,12,27,.82);
+ backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.roulette-overlay.show{display:flex;animation:fadeIn .25s ease}
+.roulette-panel{
+ width:100%;max-width:520px;padding:18px 13px 20px;
+ border-radius:25px;
+ background:linear-gradient(145deg,rgba(52,78,126,.97),rgba(18,33,61,.98));
+ border:1px solid rgba(160,195,255,.32);
+ box-shadow:0 25px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.15);
  overflow:hidden;
- min-height:0;
 }
-.mines-card{
- height:205px;
- min-height:205px;
- margin-bottom:13px;
+.roulette-title{text-align:center;font-size:18px;font-weight:900}
+.roulette-subtitle{text-align:center;color:#b8cbed;font-size:11px;margin-top:6px}
+.roulette-window{
+ position:relative;overflow:hidden;height:135px;margin:22px 0 17px;
+ border-radius:16px;border:1px solid rgba(166,200,255,.3);
+ background:rgba(8,19,39,.65);
+ box-shadow:inset 0 0 25px rgba(0,0,0,.3);
 }
-.small-game{
- height:178px;
- min-height:178px;
-}
-.game-copy{display:none !important}
-.game-art{
- position:absolute;
- inset:0;
- width:100% !important;
- height:100%;
- z-index:2;
- overflow:hidden;
-}
-.game-art img{
- position:absolute;
- inset:0;
- width:100%;
- height:100%;
- max-height:none !important;
- object-fit:cover;
- object-position:center;
- transform:scale(1.08);
- filter:drop-shadow(0 8px 20px rgba(65,100,255,.5));
+.roulette-window:before,.roulette-window:after{
+ content:"";position:absolute;top:0;bottom:0;width:45px;z-index:3;
  pointer-events:none;
 }
-.game-particles{display:none}
-.game-art .art-icon{
- font-size:100px;filter:drop-shadow(0 8px 20px rgba(46,125,255,.65));
- transform:rotate(-12deg);
+.roulette-window:before{left:0;background:linear-gradient(90deg,rgba(8,19,39,.95),transparent)}
+.roulette-window:after{right:0;background:linear-gradient(270deg,rgba(8,19,39,.95),transparent)}
+.roulette-pointer{
+ position:absolute;z-index:5;left:50%;top:0;bottom:0;width:3px;
+ transform:translateX(-50%);
+ background:#fff;
+ box-shadow:0 0 9px #6dbaff,0 0 20px #398cff;
 }
-.mines-card .art-icon{font-size:112px;transform:rotate(-17deg)}
-.small-games{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.small-game .game-title{font-size:17px}
-.small-game .game-description{font-size:10px}
-.small-game .art-icon{font-size:72px;transform:rotate(-12deg)}
-.small-game .game-copy{max-width:100%}
-.small-game .game-open{margin-top:9px;padding:8px 10px;font-size:10px}
-.art-upgrade .art-icon{filter:drop-shadow(0 5px 15px #236dff)}
-.art-craft .art-icon{filter:drop-shadow(0 5px 15px #8a40ff)}
-.coming-label{
- position:absolute;right:12px;top:12px;font-size:9px;
- color:#c8d8ff;background:rgba(10,17,38,.55);
- border:1px solid rgba(150,180,255,.2);padding:5px 8px;border-radius:10px;
+.roulette-pointer:before{
+ content:"";position:absolute;top:0;left:50%;
+ transform:translateX(-50%);
+ border-left:9px solid transparent;border-right:9px solid transparent;
+ border-top:14px solid #fff;
 }
+.roulette-track{
+ position:absolute;left:0;top:0;height:100%;
+ display:flex;align-items:center;gap:8px;
+ padding:0 8px;will-change:transform;
+}
+.roulette-item{
+ flex:0 0 112px;width:112px;height:105px;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ padding:7px;border-radius:12px;
+ background:linear-gradient(145deg,rgba(75,105,153,.75),rgba(27,44,75,.9));
+ border:1px solid rgba(158,190,245,.25);
+ text-align:center;
+}
+.roulette-item .weapon-icon{font-size:29px;margin-bottom:6px}
+.roulette-item .weapon-name{
+ font-size:9px;line-height:1.3;font-weight:bold;
+ display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+ overflow:hidden;
+}
+.roulette-item .weapon-rarity{font-size:8px;color:#c4b4ff;margin-top:4px}
+.roulette-progress{text-align:center;color:#b8cbed;font-size:11px}
+.roulette-skip{
+ display:block;margin:15px auto 0;padding:9px 15px;
+ border-radius:11px;background:rgba(255,255,255,.08);
+ color:white;border:1px solid rgba(255,255,255,.2);font-size:12px;
+}
+.roulette-status{text-align:center;font-size:12px;color:#d5e5ff;margin-top:12px}
 
-/* CASES AND OTHER CARDS */
+/* РЕЗУЛЬТАТ */
+.result-box{
+ display:none;margin-top:15px;padding:16px;
+ border-radius:21px;
+ background:linear-gradient(145deg,rgba(55,88,145,.82),rgba(27,42,80,.9));
+ border:1px solid rgba(145,190,255,.35);
+ box-shadow:0 12px 35px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.14);
+}
+.result-box.show{display:block;animation:appear .35s ease}
+.result-heading{text-align:center;font-weight:900;font-size:19px;margin-bottom:15px}
+.result-item{
+ background:rgba(17,34,62,.68);border:1px solid rgba(150,190,255,.22);
+ border-radius:15px;padding:13px;margin-bottom:9px;
+}
+.result-item-top{display:flex;justify-content:space-between;gap:8px}
+.result-item-name{font-size:13px;font-weight:bold;overflow-wrap:anywhere}
+.result-item-price{font-size:12px;color:#b6d2fa;margin-top:6px}
+.result-item button{margin-top:10px;width:100%}
+.result-sold{color:#80e6a0;font-size:12px;margin-top:10px}
+.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+.result-actions button{padding:13px 5px}
+.again-button,.sell-all-button{
+ color:white;border:0;border-radius:12px;font-weight:bold;
+}
+.again-button{background:linear-gradient(120deg,#347cff,#754bff)}
+.sell-all-button{background:linear-gradient(120deg,#148b58,#22b875)}
+.sell-button{
+ background:linear-gradient(120deg,#148b58,#22b875);
+ color:white;border:none;border-radius:10px;padding:11px 13px;font-weight:bold;
+}
+.sell-button:disabled{opacity:.5}
+
+/* ПРОЧЕЕ */
 .case-card,.skin-card{
  background:var(--glass);border:1px solid var(--border);
  border-radius:16px;padding:14px;margin-bottom:11px;
@@ -179,101 +392,27 @@ button{font-family:inherit;cursor:pointer}
 .case-price,.skin-price{color:#a9ceff;font-size:13px}
 .skin-info{min-width:0;overflow-wrap:anywhere}
 .rarity{font-size:11px;color:#c0d0e8;margin-top:5px}
-.open-button,.action-button,.sell-button{
+.open-button,.action-button{
  background:linear-gradient(120deg,#347cff,#754bff);
- color:white;border:none;border-radius:10px;
- padding:11px 13px;font-weight:bold;
+ color:white;border:none;border-radius:10px;padding:11px 13px;font-weight:bold;
 }
-.open-button:disabled,.action-button:disabled,.sell-button:disabled{opacity:.5;cursor:wait}
-.sell-button{background:linear-gradient(120deg,#148b58,#22b875);font-size:12px}
 .placeholder,.empty{
  background:var(--glass);border:1px solid var(--border);
  border-radius:16px;padding:22px;text-align:center;
  color:#d0def5;line-height:1.7;
 }
 .small-note{color:#a6badb;font-size:11px;text-align:center;margin-top:15px;line-height:1.6}
-.page-title{font-size:21px;font-weight:900;margin:8px 0 17px}
-
-/* CASE OPENING */
-.case-menu{
- background:var(--glass);border:1px solid var(--border);
- border-radius:18px;padding:15px;margin-top:12px;
-}
-.back-button{
- background:rgba(55,85,135,.75);color:#e0ecff;
- border:1px solid #6684b5;border-radius:9px;padding:10px 13px;margin-bottom:15px;
-}
-.case-menu-title{font-size:21px;font-weight:bold;margin-bottom:7px}
-.case-menu-price{color:#a9ceff;font-size:14px;margin-bottom:17px}
-.items-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.item-card{
- background:rgba(38,60,95,.9);border:1px solid #506c98;
- border-radius:12px;padding:10px;min-width:0;
-}
-.item-icon{font-size:25px;margin-bottom:7px}
-.item-name{font-size:12px;font-weight:bold;line-height:1.4;overflow-wrap:anywhere}
-.item-rarity{font-size:10px;color:#c5b7ff;margin-top:5px}
-.item-price{font-size:11px;color:#a9ceff;margin-top:5px}
-.item-chance{font-size:11px;color:#91e0ad;margin-top:5px}
-.quantity-title{font-size:14px;font-weight:bold;margin:20px 0 10px}
-.quantity-controls{display:flex;align-items:center;justify-content:center;gap:18px}
-.quantity-button{
- width:43px;height:43px;border:1px solid #668ac0;border-radius:11px;
- background:#294a78;color:white;font-size:23px;
-}
-.quantity-value{font-size:25px;font-weight:bold;min-width:25px;text-align:center}
-.total-price{text-align:center;color:#b7d2f7;font-size:13px;margin:13px 0}
-.main-open-button{
- width:100%;padding:15px;background:linear-gradient(120deg,#347cff,#754bff);
- border:0;border-radius:12px;color:white;font-size:15px;font-weight:bold;
-}
-.result-box{
- display:none;background:linear-gradient(135deg,#254875,#3b3275);
- border:1px solid #83aaff;border-radius:17px;padding:17px;margin:15px 0;
-}
-.result-box.show{display:block;animation:appear .3s ease}
-.result-heading{text-align:center;font-weight:bold;font-size:19px;margin-bottom:15px}
-.result-item{
- background:#1c3150;border:1px solid #59749d;border-radius:12px;
- padding:12px;margin-bottom:9px;
-}
-.result-item-top{display:flex;justify-content:space-between;gap:8px}
-.result-item-name{font-size:13px;font-weight:bold;overflow-wrap:anywhere}
-.result-item-price{font-size:12px;color:#b6d2fa;margin-top:6px}
-.result-item button{margin-top:10px;width:100%}
-.result-sold{color:#80e6a0;font-size:12px;margin-top:10px}
-.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
-.result-actions button{padding:13px 5px}
-.again-button{
- background:linear-gradient(120deg,#347cff,#754bff);
- color:white;border:0;border-radius:10px;font-weight:bold;
-}
-.sell-all-button{
- background:linear-gradient(120deg,#148b58,#22b875);
- color:white;border:0;border-radius:10px;font-weight:bold;
-}
 .history-item{
  background:var(--glass);border:1px solid var(--border);
  border-radius:12px;padding:13px;margin-bottom:9px;font-size:13px;line-height:1.6;
 }
 .history-item strong{color:#b7d2ff}
-
-/* PROFILE / ADMIN */
-.profile-box{
- padding:17px;border-radius:17px;
- background:var(--glass);border:1px solid var(--border);
-}
+.profile-box{padding:17px;border-radius:17px;background:var(--glass);border:1px solid var(--border)}
 #profile-name{font-size:18px;font-weight:bold}
 #profile-id{font-size:12px;color:var(--muted)}
-.admin-box{
- background:var(--glass);border:1px solid #668ac5;
- border-radius:15px;padding:18px;margin-bottom:15px;
-}
+.admin-box{background:var(--glass);border:1px solid #668ac5;border-radius:15px;padding:18px;margin-bottom:15px}
 .admin-label{display:block;color:#c3d5f1;font-size:13px;margin:14px 0 7px}
-.admin-input{
- width:100%;background:#172b4b;border:1px solid #6680a8;
- border-radius:9px;padding:13px;color:white;font-size:16px;
-}
+.admin-input{width:100%;background:#172b4b;border:1px solid #6680a8;border-radius:9px;padding:13px;color:white;font-size:16px}
 .action-button{width:100%;margin-top:14px;font-size:15px}
 .take-button{background:linear-gradient(135deg,#bd3c56,#e46b45)}
 .admin-message,.notice{
@@ -285,7 +424,7 @@ button{font-family:inherit;cursor:pointer}
 .admin-message.error,.notice.error{display:block;color:#ff9999}
 .admin-status{color:#80e6a0;font-size:13px;margin-bottom:12px}
 
-/* BOTTOM NAV */
+/* НАВИГАЦИЯ */
 .bottom-nav{
  position:fixed;bottom:10px;left:10px;right:10px;z-index:30;
  display:flex;justify-content:space-around;align-items:center;
@@ -299,16 +438,11 @@ button{font-family:inherit;cursor:pointer}
  flex:1;min-width:0;background:none;border:0;color:#b0c3e2;
  font-size:9px;padding:5px 0;border-radius:13px;
 }
-.nav-button.active{
- color:#fff;background:linear-gradient(140deg,rgba(54,125,255,.4),rgba(126,65,255,.3));
-}
+.nav-button.active{color:#fff;background:linear-gradient(140deg,rgba(54,125,255,.4),rgba(126,65,255,.3))}
 .nav-icon{display:block;font-size:20px;margin-bottom:4px}
 #admin-nav{display:none}
 @keyframes appear{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
-@media(min-width:520px){
- .mines-card{height:230px;min-height:230px}
- .small-game{height:195px;min-height:195px}
-}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 
@@ -327,33 +461,20 @@ button{font-family:inherit;cursor:pointer}
 
 <main class="container">
 
-<!-- ИГРЫ -->
 <section class="page active" id="home">
-
  <div class="game-card mines-card" onclick="showPage('mines')">
-  <div class="game-art">
-   <img src="mines-blue.png" alt="Мины">
-  </div>
+  <div class="game-art"><img src="mines-blue.png" alt="Мины"></div>
  </div>
-
  <div class="small-games">
-
   <div class="game-card small-game" onclick="showPage('upgrade')">
-   <div class="game-art">
-    <img src="upgrade-blue.png" alt="Апгрейд">
-   </div>
+   <div class="game-art"><img src="upgrade-blue.png" alt="Апгрейд"></div>
   </div>
-
   <div class="game-card small-game" onclick="showPage('craft')">
-   <div class="game-art">
-    <img src="craft-blue.png" alt="Крафт">
-   </div>
+   <div class="game-art"><img src="craft-blue.png" alt="Крафт"></div>
   </div>
-
  </div>
 </section>
 
-<!-- МИНЫ: ПОКА ЗАГЛУШКА -->
 <section class="page" id="mines">
  <h2 class="page-title">💣 Мины</h2>
  <div class="placeholder">
@@ -363,23 +484,49 @@ button{font-family:inherit;cursor:pointer}
  </div>
 </section>
 
-<!-- КЕЙСЫ -->
 <section class="page" id="cases">
- <h2 class="page-title">📦 Магазин кейсов</h2>
+ <div class="cases-heading">
+  <h2 class="page-title" style="margin:8px 0">Кейсы</h2>
+  <span>9 КЕЙСОВ</span>
+ </div>
+
  <div id="cases-list"><div class="empty">Загрузка кейсов...</div></div>
 
- <div id="case-menu" class="case-menu" style="display:none">
+ <div id="case-menu" class="case-menu">
   <button class="back-button" onclick="backToCases()">← Назад к кейсам</button>
-  <div class="case-menu-title" id="menu-case-name"></div>
-  <div class="case-menu-price" id="menu-case-price"></div>
-  <h3 class="section-title" style="font-size:16px;margin:10px 0">🎁 Содержимое кейса</h3>
-  <div class="items-grid" id="case-items"></div>
-  <div class="quantity-title">Количество кейсов</div>
-  <div class="quantity-controls">
-   <button class="quantity-button" onclick="changeQuantity(-1)">−</button>
-   <div class="quantity-value" id="quantity-value">1</div>
-   <button class="quantity-button" onclick="changeQuantity(1)">+</button>
+  <div class="case-menu-hero" id="case-menu-hero">
+   <div class="case-menu-title" id="menu-case-name"></div>
+   <div class="case-box-art"><div class="case-box-symbol">✦</div></div>
+   <div class="case-menu-price" id="menu-case-price"></div>
   </div>
+
+  <div class="items-heading">🎁 Содержимое кейса</div>
+  <div class="items-grid" id="case-items"></div>
+
+  <div class="quantity-title">Количество кейсов</div>
+  <div class="quantity-row">
+   <div class="quantity-controls">
+    <button class="quantity-button" onclick="changeQuantity(-1)">−</button>
+    <div class="quantity-value" id="quantity-value">1</div>
+    <button class="quantity-button" onclick="changeQuantity(1)">+</button>
+   </div>
+   <div class="quantity-picks">
+    <button class="quantity-pick active" data-quantity="1">×1</button>
+    <button class="quantity-pick" data-quantity="2">×2</button>
+    <button class="quantity-pick" data-quantity="3">×3</button>
+    <button class="quantity-pick" data-quantity="4">×4</button>
+    <button class="quantity-pick" data-quantity="5">×5</button>
+   </div>
+  </div>
+
+  <div class="skip-row">
+   <span>Пропустить анимацию</span>
+   <label class="switch">
+    <input type="checkbox" id="skip-animation">
+    <span class="switch-slider"></span>
+   </label>
+  </div>
+
   <div class="total-price" id="total-price"></div>
   <button class="main-open-button" id="open-selected-button" onclick="openSelectedCase()">ОТКРЫТЬ КЕЙС</button>
  </div>
@@ -395,35 +542,22 @@ button{font-family:inherit;cursor:pointer}
  <div id="case-notice" class="notice"></div>
 </section>
 
-<!-- АПГРЕЙД -->
 <section class="page" id="upgrade">
  <h2 class="page-title">⚡ Апгрейд</h2>
  <div class="placeholder">Загрузка апгрейда...</div>
 </section>
 
-<!-- КРАФТ -->
-<section class="page" id="craft">
- <div id="craft-app"></div>
-</section>
-
-<!-- ЗАРАБОТОК -->
-<section class="page" id="clicker">
- <div class="placeholder">Загрузка заработка...</div>
-</section>
-
-<!-- КОНТРАКТЫ -->
+<section class="page" id="craft"><div id="craft-app"></div></section>
+<section class="page" id="clicker"><div class="placeholder">Загрузка заработка...</div></section>
 <section class="page" id="contracts">
  <h2 class="page-title">📝 Контракты</h2>
  <div class="placeholder">Выбирай 10 скинов и получай один случайный предмет.<br><br>Скоро подключим.</div>
 </section>
-
-<!-- РЕЙТИНГ -->
 <section class="page" id="rating">
  <h2 class="page-title">🏆 Рейтинг игроков</h2>
  <div class="placeholder">Здесь появится общий рейтинг игроков.</div>
 </section>
 
-<!-- ПРОФИЛЬ И ИНВЕНТАРЬ -->
 <section class="page" id="profile">
  <h2 class="page-title">👤 Профиль</h2>
  <div class="profile-box">
@@ -431,18 +565,14 @@ button{font-family:inherit;cursor:pointer}
   <div id="profile-id" style="margin-top:7px">Telegram ID: —</div>
   <div style="font-size:11px;color:#b0c5e8;margin-top:12px">Проект CS GO CASE</div>
  </div>
-
  <div id="profile-stats-container"></div>
-
  <h2 class="section-title">🔫 Мой инвентарь</h2>
  <div id="inventory-list"><div class="empty">Загрузка инвентаря...</div></div>
  <div id="inventory-notice" class="notice"></div>
-
  <h2 class="section-title">📜 История операций</h2>
  <div id="history-list"><div class="empty">Загрузка истории...</div></div>
 </section>
 
-<!-- АДМИН -->
 <section class="page" id="admin">
  <h2 class="page-title">👑 Админ-панель</h2>
  <div class="admin-box">
@@ -461,7 +591,21 @@ button{font-family:inherit;cursor:pointer}
 
 </main>
 
-<!-- НИЖНЯЯ НАВИГАЦИЯ -->
+<!-- ОКНО РУЛЕТКИ -->
+<div class="roulette-overlay" id="roulette-overlay">
+ <div class="roulette-panel">
+  <div class="roulette-title" id="roulette-title">ОТКРЫТИЕ КЕЙСА</div>
+  <div class="roulette-subtitle" id="roulette-subtitle">Удачи!</div>
+  <div class="roulette-window">
+   <div class="roulette-pointer"></div>
+   <div class="roulette-track" id="roulette-track"></div>
+  </div>
+  <div class="roulette-progress" id="roulette-progress"></div>
+  <div class="roulette-status" id="roulette-status">Определяем выигрыш...</div>
+  <button class="roulette-skip" id="roulette-skip" onclick="skipCurrentAnimation()">Пропустить анимацию</button>
+ </div>
+</div>
+
 <nav class="bottom-nav">
  <button class="nav-button active" data-page="home" onclick="showPage('home',this)">
   <span class="nav-icon">🎮</span>Игры
@@ -494,14 +638,32 @@ let casesCache=[];
 let selectedCase=null;
 let selectedQuantity=1;
 let resultSkins=[];
+let animationSkipped=false;
+let animationResolve=null;
+
+const caseStyles={
+ starter:"case-starter",
+ revolution:"case-revolution",
+ recoil:"case-recoil",
+ nightmare:"case-nightmare",
+ prisma:"case-prisma",
+ spectrum:"case-spectrum",
+ chroma:"case-chroma",
+ phantom:"case-phantom",
+ elite:"case-elite"
+};
+
+const caseSymbols={
+ starter:"🔹",revolution:"⚡",recoil:"🔥",
+ nightmare:"🌙",prisma:"💎",spectrum:"🌈",
+ chroma:"✨",phantom:"👻",elite:"👑"
+};
 
 if(tg.initDataUnsafe&&tg.initDataUnsafe.user){
  const user=tg.initDataUnsafe.user;
- const name=user.first_name||"Игрок";
  currentUserId=user.id;
- document.getElementById("profile-name").textContent=name;
+ document.getElementById("profile-name").textContent=user.first_name||"Игрок";
  document.getElementById("profile-id").textContent="Telegram ID: "+user.id;
-
  if(user.photo_url){
   const avatar=document.getElementById("telegram-avatar");
   avatar.src=user.photo_url;
@@ -516,25 +678,20 @@ function formatBalance(value){
  if(n>=1000)return (n/1000).toFixed(n%1000===0?0:1).replace(".",",")+"К";
  return n.toLocaleString("ru-RU");
 }
-
 function updateHeaderBalance(value){
  document.getElementById("balance").textContent=formatBalance(value)+" DC";
 }
-
 function authHeaders(){return {"X-Telegram-Init-Data":tg.initData}}
-
 function escapeHtml(value){
  return String(value??"").replace(/[&<>"']/g,char=>({
   "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
  })[char]);
 }
-
 function showNotice(id,message,type){
  const box=document.getElementById(id);
  box.textContent=message;
  box.className="notice "+type;
 }
-
 async function apiRequest(path,options={}){
  if(!tg.initData)throw new Error("Открой приложение через Telegram");
  const response=await fetch(API+path,{
@@ -545,7 +702,6 @@ async function apiRequest(path,options={}){
  if(!response.ok)throw new Error(data.error||"Ошибка сервера");
  return data;
 }
-
 async function loadBalance(){
  const element=document.getElementById("balance");
  if(!tg.initData){element.textContent="Открой в Telegram";return}
@@ -553,11 +709,9 @@ async function loadBalance(){
   const data=await apiRequest("/api/balance");
   updateHeaderBalance(data.balance);
  }catch(error){
-  console.error(error);
-  element.textContent="Ошибка";
+  console.error(error);element.textContent="Ошибка";
  }
 }
-
 async function checkAdmin(){
  if(!tg.initData)return;
  try{
@@ -571,33 +725,23 @@ function showPage(page,button){
  const selected=document.getElementById(page);
  if(!selected)return;
  selected.classList.add("active");
-
  document.querySelectorAll(".nav-button").forEach(el=>el.classList.remove("active"));
-
- if(button){
-  button.classList.add("active");
- }else{
+ if(button)button.classList.add("active");
+ else{
   let navPage=page;
   if(["upgrade","craft","mines","contracts","rating"].includes(page))navPage="home";
   const nav=document.querySelector('.nav-button[data-page="'+navPage+'"]');
   if(nav)nav.classList.add("active");
  }
-
  window.scrollTo(0,0);
-
  if(page==="cases")loadCases();
- if(page==="profile"){
-  loadInventory();
-  loadHistory();
- }
+ if(page==="profile"){loadInventory();loadHistory()}
  if(page==="upgrade"&&window.initUpgrade)window.initUpgrade();
  if(page==="craft"&&window.initCraft)window.initCraft();
  if(page==="clicker"&&window.loadClicker)window.loadClicker();
 }
 
-// -------------------------
-// CASE MENU
-// -------------------------
+/* КАТАЛОГ КЕЙСОВ */
 async function loadCases(){
  const list=document.getElementById("cases-list");
  if(casesCache.length){renderCases();return}
@@ -609,20 +753,27 @@ async function loadCases(){
   list.innerHTML='<div class="empty">Не удалось загрузить кейсы: '+escapeHtml(error.message)+'</div>';
  }
 }
-
 function renderCases(){
  const list=document.getElementById("cases-list");
  if(!casesCache.length){list.innerHTML='<div class="empty">Кейсов пока нет.</div>';return}
- list.innerHTML=casesCache.map(item=>`
-  <div class="case-card">
-   <div>
-    <div class="case-name">📦 ${escapeHtml(item.name)}</div>
-    <div class="case-price">${Number(item.price_dc).toLocaleString("ru-RU")} DC</div>
-    <div class="rarity">${(item.items||[]).length} предметов внутри</div>
+ list.innerHTML='<div class="cases-grid">'+casesCache.map(item=>{
+  const id=String(item.catalog_id||"");
+  const style=caseStyles[id]||"case-starter";
+  const symbol=caseSymbols[id]||"📦";
+  const elite=id==="elite";
+  return `
+   <div class="case-tile ${style} ${elite?"elite":""}" data-select-case="${Number(item.id)}">
+    <div class="case-art">
+     <div class="case-box-art"><div class="case-box-symbol">${symbol}</div></div>
+    </div>
+    <div class="case-tile-info">
+     <div class="case-tile-name">${escapeHtml(item.name)}</div>
+     <div class="case-tile-price">${Number(item.price_dc).toLocaleString("ru-RU")} DC</div>
+     <div class="case-tile-sub">${(item.items||[]).length} предметов внутри</div>
+    </div>
    </div>
-   <button class="open-button" data-select-case="${Number(item.id)}">Выбрать</button>
-  </div>
- `).join("");
+  `;
+ }).join("")+'</div>';
 }
 
 function selectCase(caseId){
@@ -635,8 +786,14 @@ function selectCase(caseId){
  document.getElementById("case-menu").style.display="block";
  document.getElementById("case-result").classList.remove("show");
  document.getElementById("case-notice").className="notice";
+
+ const id=String(item.catalog_id||"");
+ const style=caseStyles[id]||"case-starter";
+ const hero=document.getElementById("case-menu-hero");
+ hero.className="case-menu-hero "+style;
  document.getElementById("menu-case-name").textContent=item.name;
- document.getElementById("menu-case-price").textContent=Number(item.price_dc).toLocaleString("ru-RU")+" DC за открытие";
+ document.getElementById("menu-case-price").textContent=
+  Number(item.price_dc).toLocaleString("ru-RU")+" DC за открытие";
 
  document.getElementById("case-items").innerHTML=(item.items||[]).map(skin=>`
   <div class="item-card">
@@ -650,7 +807,6 @@ function selectCase(caseId){
  updateQuantity();
  window.scrollTo(0,0);
 }
-
 function backToCases(){
  document.getElementById("case-menu").style.display="none";
  document.getElementById("case-result").classList.remove("show");
@@ -658,23 +814,125 @@ function backToCases(){
  document.getElementById("case-notice").className="notice";
  window.scrollTo(0,0);
 }
-
 function changeQuantity(change){
- selectedQuantity=Math.max(1,Math.min(5,selectedQuantity+change));
+ setQuantity(selectedQuantity+change);
+}
+function setQuantity(value){
+ selectedQuantity=Math.max(1,Math.min(5,Number(value)||1));
+ document.getElementById("quantity-value").textContent=selectedQuantity;
+ document.querySelectorAll(".quantity-pick").forEach(button=>{
+  button.classList.toggle("active",Number(button.dataset.quantity)===selectedQuantity);
+ });
  updateQuantity();
 }
-
 function updateQuantity(){
  if(!selectedCase)return;
- document.getElementById("quantity-value").textContent=selectedQuantity;
  const total=Number(selectedCase.price_dc)*selectedQuantity;
- document.getElementById("total-price").textContent="Итого: "+total.toLocaleString("ru-RU")+" DC";
- document.getElementById("open-selected-button").textContent="ОТКРЫТЬ ЗА "+total.toLocaleString("ru-RU")+" DC";
+ document.getElementById("total-price").textContent=
+  "Итого: "+total.toLocaleString("ru-RU")+" DC";
+ document.getElementById("open-selected-button").textContent=
+  "ОТКРЫТЬ ×"+selectedQuantity+" · "+total.toLocaleString("ru-RU")+" DC";
 }
 
-// -------------------------
-// OPEN CASES
-// -------------------------
+/* РУЛЕТКА */
+function rarityColor(rarity){
+ const value=String(rarity||"").toLowerCase();
+ if(value.includes("нож")||value.includes("перчат"))return "#e6a2ff";
+ if(value.includes("тайное"))return "#ff6c9b";
+ if(value.includes("засекреч"))return "#d58cff";
+ if(value.includes("запрещ"))return "#8aa7ff";
+ return "#83c8ff";
+}
+function rouletteCard(skin){
+ return `
+  <div class="roulette-item" style="border-bottom:3px solid ${rarityColor(skin.rarity)}">
+   <div class="weapon-icon">🔫</div>
+   <div class="weapon-name">${escapeHtml(skin.name)}</div>
+   <div class="weapon-rarity">${escapeHtml(skin.rarity)}</div>
+  </div>
+ `;
+}
+function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+function skipCurrentAnimation(){
+ animationSkipped=true;
+ if(animationResolve){animationResolve();animationResolve=null}
+}
+async function animateOneSkin(skin,index,total){
+ if(document.getElementById("skip-animation").checked){
+  document.getElementById("roulette-status").textContent="Анимация пропущена";
+  await wait(180);
+  return;
+ }
+
+ animationSkipped=false;
+ document.getElementById("roulette-title").textContent="ОТКРЫТИЕ КЕЙСА";
+ document.getElementById("roulette-subtitle").textContent=selectedCase.name;
+ document.getElementById("roulette-progress").textContent=
+  "Предмет "+(index+1)+" из "+total;
+ document.getElementById("roulette-status").textContent="Рулетка запускается...";
+ document.getElementById("roulette-skip").style.display="block";
+
+ const track=document.getElementById("roulette-track");
+ const pool=(selectedCase.items||[]);
+ const targetIndex=32;
+ const cards=[];
+ for(let i=0;i<45;i++){
+  if(i===targetIndex)cards.push(skin);
+  else cards.push(pool[Math.floor(Math.random()*pool.length)]||skin);
+ }
+ track.innerHTML=cards.map(rouletteCard).join("");
+ track.style.transition="none";
+ track.style.transform="translateX(0px)";
+ document.getElementById("roulette-overlay").classList.add("show");
+
+ await wait(100);
+ if(animationSkipped)return;
+
+ const windowElement=document.querySelector(".roulette-window");
+ const card=track.children[targetIndex];
+ if(!card)return;
+ const center=windowElement.clientWidth/2;
+ const cardCenter=card.offsetLeft+card.offsetWidth/2;
+ const distance=center-cardCenter;
+
+ document.getElementById("roulette-status").textContent="Ищем твой предмет...";
+ await wait(80);
+ if(animationSkipped)return;
+
+ track.style.transition="transform 5.2s cubic-bezier(.08,.72,.12,1)";
+ track.style.transform="translateX("+distance+"px)";
+
+ await new Promise(resolve=>{
+  let finished=false;
+  const finish=()=>{
+   if(finished)return;
+   finished=true;
+   animationResolve=null;
+   resolve();
+  };
+  animationResolve=finish;
+  const onEnd=()=>{track.removeEventListener("transitionend",onEnd);finish()};
+  track.addEventListener("transitionend",onEnd);
+  setTimeout(finish,5500);
+ });
+ if(animationSkipped){
+  track.style.transition="transform .15s ease";
+  track.style.transform="translateX("+distance+"px)";
+ }
+ document.getElementById("roulette-status").textContent="Выпал предмет!";
+ if(tg.HapticFeedback)tg.HapticFeedback.impactOccurred("medium");
+ await wait(450);
+}
+async function playOpeningAnimation(skins){
+ if(!skins.length)return;
+ document.getElementById("roulette-overlay").classList.add("show");
+ for(let i=0;i<skins.length;i++){
+  await animateOneSkin(skins[i],i,skins.length);
+ }
+ document.getElementById("roulette-overlay").classList.remove("show");
+}
+
+/* ОТКРЫТИЕ КЕЙСОВ */
 async function openSelectedCase(){
  if(!selectedCase||openingCase)return;
  openingCase=true;
@@ -685,12 +943,21 @@ async function openSelectedCase(){
   const data=await apiRequest("/api/cases/open",{
    method:"POST",
    headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({case_id:Number(selectedCase.id),count:selectedQuantity})
+   body:JSON.stringify({
+    case_id:Number(selectedCase.id),
+    count:selectedQuantity
+   })
   });
   resultSkins=(data.skins||(data.skin?[data.skin]:[])).map(skin=>({...skin,sold:false}));
   if(!resultSkins.length)throw new Error("Сервер не вернул результат открытия");
-  renderResults();
+
+  updateHeaderBalance(data.balance);
   document.getElementById("case-menu").style.display="none";
+
+  if(tg.HapticFeedback)tg.HapticFeedback.impactOccurred("medium");
+  await playOpeningAnimation(resultSkins);
+
+  renderResults();
   document.getElementById("case-result").classList.add("show");
   document.getElementById("case-notice").className="notice";
   await loadBalance();
@@ -698,6 +965,8 @@ async function openSelectedCase(){
   if(tg.HapticFeedback)tg.HapticFeedback.notificationOccurred("success");
   window.scrollTo(0,0);
  }catch(error){
+  document.getElementById("roulette-overlay").classList.remove("show");
+  document.getElementById("case-menu").style.display="block";
   showNotice("case-notice","❌ "+error.message,"error");
   if(tg.HapticFeedback)tg.HapticFeedback.notificationOccurred("error");
  }finally{
@@ -750,15 +1019,13 @@ async function sellResult(index){
   showNotice("case-notice","❌ "+error.message,"error");
  }finally{sellingSkin=false}
 }
-
 async function sellAllResults(){
  if(sellingSkin)return;
  const unsold=resultSkins.map((skin,index)=>({skin,index})).filter(item=>!item.skin.sold);
  if(!unsold.length)return;
  sellingSkin=true;
  const button=document.getElementById("sell-all-button");
- button.disabled=true;
- button.textContent="ПРОДАЖА...";
+ button.disabled=true;button.textContent="ПРОДАЖА...";
  let received=0,soldCount=0,errors=[];
  try{
   for(const item of unsold){
@@ -768,24 +1035,19 @@ async function sellAllResults(){
      body:JSON.stringify({skin_id:Number(item.skin.id),quantity:1})
     });
     resultSkins[item.index].sold=true;
-    received+=Number(data.received||0);
-    soldCount++;
+    received+=Number(data.received||0);soldCount++;
    }catch(error){errors.push(item.skin.name+": "+error.message)}
   }
   renderResults();
-  await loadBalance();
-  await loadInventory();
+  await loadBalance();await loadInventory();
   if(errors.length){
-   showNotice("case-notice","Продано предметов: "+soldCount+"\nПолучено: "+received+" DC\nОшибки: "+errors.join("; "),"error");
+   showNotice("case-notice","Продано предметов: "+soldCount+
+    "\nПолучено: "+received+" DC\nОшибки: "+errors.join("; "),"error");
   }else{
    showNotice("case-notice","✅ Все предметы проданы!\nПолучено: "+received+" DC","success");
   }
- }finally{
-  sellingSkin=false;
-  renderResults();
- }
+ }finally{sellingSkin=false;renderResults()}
 }
-
 function openAgain(){
  if(!selectedCase)return;
  resultSkins=[];
@@ -795,9 +1057,7 @@ function openAgain(){
  window.scrollTo(0,0);
 }
 
-// -------------------------
-// INVENTORY
-// -------------------------
+/* ИНВЕНТАРЬ */
 async function loadInventory(){
  const list=document.getElementById("inventory-list");
  try{
@@ -825,30 +1085,24 @@ async function loadInventory(){
   list.innerHTML='<div class="empty">Ошибка инвентаря: '+escapeHtml(error.message)+'</div>';
  }
 }
-
 async function sellSkin(skinId,button){
  if(sellingSkin)return;
- sellingSkin=true;
- button.disabled=true;
- button.textContent="Продажа...";
+ sellingSkin=true;button.disabled=true;button.textContent="Продажа...";
  try{
   const data=await apiRequest("/api/skins/sell",{
    method:"POST",headers:{"Content-Type":"application/json"},
    body:JSON.stringify({skin_id:Number(skinId),quantity:1})
   });
-  showNotice("inventory-notice","✅ "+data.message+"\nПолучено: "+data.received+" DC\nБаланс: "+data.balance+" DC","success");
-  await loadBalance();
-  await loadInventory();
+  showNotice("inventory-notice","✅ "+data.message+"\nПолучено: "+data.received+
+   " DC\nБаланс: "+data.balance+" DC","success");
+  await loadBalance();await loadInventory();
  }catch(error){
   showNotice("inventory-notice","❌ "+error.message,"error");
-  button.disabled=false;
-  button.textContent="Продать";
+  button.disabled=false;button.textContent="Продать";
  }finally{sellingSkin=false}
 }
 
-// -------------------------
-// HISTORY
-// -------------------------
+/* ИСТОРИЯ */
 async function loadHistory(){
  const list=document.getElementById("history-list");
  try{
@@ -882,31 +1136,24 @@ async function loadHistory(){
  }
 }
 
-// -------------------------
-// ADMIN
-// -------------------------
+/* АДМИН */
 function showAdminMessage(message,type){
  const box=document.getElementById("admin-message");
- box.textContent=message;
- box.className="admin-message "+type;
+ box.textContent=message;box.className="admin-message "+type;
 }
-
 async function changeDC(action){
  const targetId=document.getElementById("target-id").value.trim();
  const amount=document.getElementById("dc-amount").value.trim();
  const giveButton=document.getElementById("give-button");
  const takeButton=document.getElementById("take-button");
-
  if(!targetId||!amount){
-  showAdminMessage("Заполни Telegram ID и количество DC.","error");
-  return;
+  showAdminMessage("Заполни Telegram ID и количество DC.","error");return;
  }
- if(!/^\d+$/.test(targetId)||Number(targetId)<=0||!/^\d+$/.test(amount)||Number(amount)<=0){
-  showAdminMessage("Проверь ID и количество DC.","error");
-  return;
+ if(!/^\d+$/.test(targetId)||Number(targetId)<=0||
+    !/^\d+$/.test(amount)||Number(amount)<=0){
+  showAdminMessage("Проверь ID и количество DC.","error");return;
  }
- giveButton.disabled=true;
- takeButton.disabled=true;
+ giveButton.disabled=true;takeButton.disabled=true;
  try{
   const endpoint=action==="give"?"/api/admin/give-dc":"/api/admin/take-dc";
   const data=await apiRequest(endpoint,{
@@ -919,32 +1166,28 @@ async function changeDC(action){
  }catch(error){
   showAdminMessage("❌ "+error.message,"error");
  }finally{
-  giveButton.disabled=false;
-  takeButton.disabled=false;
+  giveButton.disabled=false;takeButton.disabled=false;
  }
 }
 
-// -------------------------
-// CLICK EVENTS
-// -------------------------
+/* СОБЫТИЯ */
 document.getElementById("cases-list").addEventListener("click",event=>{
- const button=event.target.closest("[data-select-case]");
- if(button)selectCase(button.dataset.selectCase);
+ const tile=event.target.closest("[data-select-case]");
+ if(tile)selectCase(tile.dataset.selectCase);
 });
-
+document.querySelectorAll(".quantity-pick").forEach(button=>{
+ button.addEventListener("click",()=>setQuantity(button.dataset.quantity));
+});
 document.getElementById("result-items").addEventListener("click",event=>{
  const button=event.target.closest("[data-result-sell]");
  if(button)sellResult(Number(button.dataset.resultSell));
 });
-
 document.getElementById("inventory-list").addEventListener("click",event=>{
  const button=event.target.closest("[data-sell-id]");
  if(button)sellSkin(button.dataset.sellId,button);
 });
 
-// -------------------------
-// START
-// -------------------------
+/* ЗАПУСК */
 loadBalance();
 checkAdmin();
 </script>

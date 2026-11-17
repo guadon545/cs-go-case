@@ -5,276 +5,303 @@ from flask import Blueprint, request, jsonify
 import database
 
 
-OPTIONS = {
-    "multiplier": {
-        "x2": {
-            "chance": 50.0,
-            "multiplier": 2.0
-        },
-        "x5": {
-            "chance": 30.0,
-            "multiplier": 5.0
-        },
-        "x10": {
-            "chance": 10.0,
-            "multiplier": 10.0
-        }
-    },
-    "chance": {
-        "30": {
-            "chance": 30.0,
-            "multiplier": 3.5
-        },
-        "50": {
-            "chance": 50.0,
-            "multiplier": 2.0
-        },
-        "75": {
-            "chance": 75.0,
-            "multiplier": 1.333333
-        }
-    }
+MULTIPLIER_CHANCES = {
+    2: 50.0,
+    3: 33.33,
+    5: 20.0,
+    10: 10.0,
 }
+
+BACKGROUNDS = {
+    "normal": 1,
+    "gold": 3,
+    "onyx_black": 5,
+    "black": 10,
+}
+
+
+def get_user_id(user):
+    if isinstance(user, dict):
+        return user.get("telegram_id")
+    return user
 
 
 def create_upgrade_blueprint(authorized_user):
     upgrade_bp = Blueprint("upgrade_api", __name__)
 
+    def current_user():
+        user = authorized_user()
+        if not user:
+            return None
+        return get_user_id(user)
+
+    @upgrade_bp.route("/api/upgrade/options", methods=["GET"])
+    def upgrade_options():
+        user_id = current_user()
+
+        if not user_id:
+            return jsonify({"error": "Необходима авторизация"}), 401
+
+        with database.get_db() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT
+                        i.id AS inventory_id,
+                        i.nft_id,
+                        c.code,
+                        c.name,
+                        c.rarity,
+                        c.base_price,
+                        c.image_url,
+                        i.background,
+                        i.background_multiplier,
+                        i.final_price,
+                        i.acquired_at
+                    FROM nft_inventory i
+                    JOIN nft_catalog c ON c.id = i.nft_id
+                    WHERE i.user_id = %s
+                    ORDER BY i.final_price DESC, i.acquired_at DESC
+                """, (user_id,))
+                inventory = cur.fetchall()
+
+                cur.execute("""
+                    SELECT
+                        id,
+                        code,
+                        name,
+                        rarity,
+                        base_price,
+                        image_url
+                    FROM nft_catalog
+                    WHERE is_active = TRUE
+                    ORDER BY base_price ASC
+                """)
+                catalog = cur.fetchall()
+
+        return jsonify({
+            "inventory": inventory,
+            "catalog": catalog,
+            "multipliers": [
+                {"value": 2, "chance": 50},
+                {"value": 3, "chance": 33.33},
+                {"value": 5, "chance": 20},
+                {"value": 10, "chance": 10}
+            ],
+            "backgrounds": [
+                {"code": "normal", "multiplier": 1},
+                {"code": "gold", "multiplier": 3},
+                {"code": "onyx_black", "multiplier": 5},
+                {"code": "black", "multiplier": 10}
+            ]
+        })
+
     @upgrade_bp.route("/api/upgrade", methods=["POST"])
     def perform_upgrade():
-        user = authorized_user()
+        user_id = current_user()
 
-        if not user:
-            return jsonify({
-                "success": False,
-                "error": "Telegram authorization failed"
-            }), 401
+        if not user_id:
+            return jsonify({"error": "Необходима авторизация"}), 401
 
-        user_id = int(user["id"])
         data = request.get_json(silent=True) or {}
 
-        try:
-            source_id = int(data.get("source_skin_id"))
-        except (TypeError, ValueError):
+        inventory_id = data.get("inventory_id")
+        target_nft_id = data.get("target_nft_id")
+        target_background = data.get("target_background", "normal")
+        mode = data.get("mode", "multiplier")
+
+        if not inventory_id or not target_nft_id:
             return jsonify({
-                "success": False,
-                "error": "Неверный ID исходного скина"
+                "error": "Выбери NFT для апгрейда и желаемый NFT"
             }), 400
 
-        mode = str(data.get("mode", ""))
-        option = str(data.get("option", ""))
+        if target_background not in BACKGROUNDS:
+            return jsonify({"error": "Неверный фон"}), 400
 
-        config = OPTIONS.get(mode, {}).get(option)
+        if mode == "multiplier":
+            try:
+                multiplier = int(data.get("multiplier"))
+            except (TypeError, ValueError):
+                return jsonify({"error": "Неверный множитель"}), 400
 
-        if not config:
-            return jsonify({
-                "success": False,
-                "error": "Неверный режим апгрейда"
-            }), 400
+            if multiplier not in MULTIPLIER_CHANCES:
+                return jsonify({"error": "Недоступный множитель"}), 400
 
-        if source_id <= 0:
-            return jsonify({
-                "success": False,
-                "error": "Неверный ID скина"
-            }), 400
+            chance = MULTIPLIER_CHANCES[multiplier]
 
-        chance = float(config["chance"])
-        multiplier = float(config["multiplier"])
+        elif mode == "percent":
+            try:
+                chance = float(data.get("chance"))
+            except (TypeError, ValueError):
+                return jsonify({"error": "Укажи процент"}), 400
 
-        if chance <= 0 or chance > 80:
-            return jsonify({
-                "success": False,
-                "error": "Недопустимый шанс"
-            }), 400
+            if not 5 <= chance <= 90:
+                return jsonify({
+                    "error": "Процент должен быть от 5 до 90"
+                }), 400
 
-        try:
-            with database.get_db() as db:
+            multiplier = 0
 
-                player = db.execute("""
-                    SELECT is_banned
-                    FROM users
-                    WHERE telegram_id = %s
-                    FOR UPDATE
-                """, (user_id,)).fetchone()
+        else:
+            return jsonify({"error": "Неверный режим апгрейда"}), 400
 
-                if not player:
-                    return jsonify({
-                        "success": False,
-                        "error": "Игрок не найден"
-                    }), 404
+        background_multiplier = BACKGROUNDS[target_background]
 
-                if player["is_banned"]:
-                    return jsonify({
-                        "success": False,
-                        "error": "Аккаунт заблокирован"
-                    }), 403
+        with database.get_db() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT
+                        i.id,
+                        i.nft_id,
+                        i.background,
+                        i.background_multiplier,
+                        i.final_price,
+                        c.name
+                    FROM nft_inventory i
+                    JOIN nft_catalog c ON c.id = i.nft_id
+                    WHERE i.id = %s AND i.user_id = %s
+                    FOR UPDATE OF i
+                """, (inventory_id, user_id))
 
-                source = db.execute("""
-                    SELECT id, name, rarity, price
-                    FROM skins
-                    WHERE id = %s
-                """, (source_id,)).fetchone()
+                source = cur.fetchone()
 
                 if not source:
                     return jsonify({
-                        "success": False,
-                        "error": "Исходный скин не найден"
+                        "error": "Исходный NFT не найден в инвентаре"
                     }), 404
 
-                source_price = int(source["price"])
+                cur.execute("""
+                    SELECT id, code, name, rarity, base_price, image_url
+                    FROM nft_catalog
+                    WHERE id = %s AND is_active = TRUE
+                """, (target_nft_id,))
 
-                if source_price <= 0:
+                target = cur.fetchone()
+
+                if not target:
                     return jsonify({
-                        "success": False,
-                        "error": "Некорректная цена исходного скина"
-                    }), 400
+                        "error": "Целевой NFT не найден"
+                    }), 404
 
-                item = db.execute("""
-                    SELECT quantity
-                    FROM inventory
-                    WHERE user_id = %s
-                    AND skin_id = %s
-                    FOR UPDATE
-                """, (user_id, source_id)).fetchone()
+                source_price = int(source["final_price"])
+                target_price = int(target["base_price"]) * background_multiplier
 
-                if not item or int(item["quantity"]) < 1:
-                    return jsonify({
-                        "success": False,
-                        "error": "Исходного скина нет в инвентаре"
-                    }), 400
+                if mode == "multiplier":
+                    expected_price = source_price * multiplier
 
-                desired_price = int(round(
-                    source_price * multiplier
-                ))
+                    min_price = expected_price * 0.75
+                    max_price = expected_price * 1.25
 
-                min_price = max(
-                    source_price + 1,
-                    int(desired_price * 0.80)
-                )
+                    if not min_price <= target_price <= max_price:
+                        return jsonify({
+                            "error": "Цена выбранного NFT не подходит под этот множитель",
+                            "expected_price": expected_price,
+                            "target_price": target_price
+                        }), 400
 
-                max_price = int(desired_price * 1.20)
+                won = secrets.randbelow(100000) < int(chance * 1000)
 
-                candidates = db.execute("""
-                    SELECT id, name, rarity, price
-                    FROM skins
-                    WHERE id <> %s
-                    AND price >= %s
-                    AND price <= %s
-                    ORDER BY ABS(price - %s) ASC
-                    LIMIT 30
-                """, (
-                    source_id,
-                    min_price,
-                    max_price,
-                    desired_price
-                )).fetchall()
+                cur.execute("""
+                    DELETE FROM nft_inventory
+                    WHERE id = %s AND user_id = %s
+                """, (inventory_id, user_id))
 
-                if not candidates:
-                    return jsonify({
-                        "success": False,
-                        "error": (
-                            "Нет скинов подходящей стоимости "
-                            "для этого режима. Попробуй другой "
-                            "множитель или ставку."
-                        )
-                    }), 400
-
-                target = secrets.choice(candidates)
-
-                target_id = int(target["id"])
-                target_price = int(target["price"])
-
-                roll = secrets.randbelow(10000) / 100
-                won = roll < chance
-
-                # Списываем исходный скин.
-                if int(item["quantity"]) == 1:
-                    db.execute("""
-                        DELETE FROM inventory
-                        WHERE user_id = %s
-                        AND skin_id = %s
-                    """, (user_id, source_id))
-                else:
-                    db.execute("""
-                        UPDATE inventory
-                        SET quantity = quantity - 1
-                        WHERE user_id = %s
-                        AND skin_id = %s
-                    """, (user_id, source_id))
-
-                # При победе выдаём целевой скин.
                 if won:
-                    db.execute("""
-                        INSERT INTO inventory
-                        (user_id, skin_id, quantity)
-                        VALUES (%s, %s, 1)
-                        ON CONFLICT (user_id, skin_id)
-                        DO UPDATE SET quantity =
-                            inventory.quantity + EXCLUDED.quantity
-                    """, (user_id, target_id))
-
-                    db.execute("""
-                        INSERT INTO profile_stats (user_id)
-                        VALUES (%s)
-                        ON CONFLICT (user_id) DO NOTHING
-                    """, (user_id,))
-
-                    db.execute("""
-                        UPDATE profile_stats
-                        SET successful_upgrades =
-                            successful_upgrades + 1
-                        WHERE user_id = %s
-                    """, (user_id,))
-
-                    db.execute("""
-                        INSERT INTO item_history
-                        (user_id, skin_id, skin_name,
-                         skin_price, source)
-                        VALUES (%s, %s, %s, %s, %s)
+                    cur.execute("""
+                        INSERT INTO nft_inventory (
+                            user_id,
+                            nft_id,
+                            background,
+                            background_multiplier,
+                            final_price,
+                            source
+                        )
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        RETURNING id
                     """, (
                         user_id,
-                        target_id,
-                        target["name"],
+                        target["id"],
+                        target_background,
+                        background_multiplier,
                         target_price,
                         "upgrade"
                     ))
 
-                return jsonify({
-                    "success": True,
-                    "won": won,
-                    "chance": chance,
-                    "roll": round(roll, 2),
-                    "mode": mode,
-                    "option": option,
-                    "multiplier": multiplier,
-                    "source": {
-                        "id": source_id,
-                        "name": source["name"],
-                        "price": source_price
-                    },
-                    "target": {
-                        "id": target_id,
-                        "name": target["name"],
-                        "rarity": target["rarity"],
-                        "price": target_price
-                    },
-                    "message": (
-                        "Апгрейд успешен!"
-                        if won else
-                        "Неудача! Исходный скин сгорел."
+                    new_inventory = cur.fetchone()
+                    new_inventory_id = new_inventory["id"]
+                else:
+                    new_inventory_id = None
+
+                cur.execute("""
+                    INSERT INTO nft_upgrade_history (
+                        user_id,
+                        source_inventory_id,
+                        target_nft_id,
+                        target_background,
+                        multiplier,
+                        chance,
+                        won
                     )
-                })
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    user_id,
+                    inventory_id,
+                    target["id"],
+                    target_background,
+                    multiplier,
+                    chance,
+                    won
+                ))
 
-        except Exception as error:
-            print(
-                "UPGRADE ERROR:",
-                type(error).__name__,
-                str(error)
-            )
+                cur.execute("""
+                    INSERT INTO nft_player_stats (
+                        user_id,
+                        upgrades_played,
+                        upgrades_won
+                    )
+                    VALUES (%s, 1, %s)
+                    ON CONFLICT (user_id)
+                    DO UPDATE SET
+                        upgrades_played =
+                            nft_player_stats.upgrades_played + 1,
+                        upgrades_won =
+                            nft_player_stats.upgrades_won + EXCLUDED.upgrades_won
+                """, (
+                    user_id,
+                    1 if won else 0
+                ))
 
+        if won:
             return jsonify({
-                "success": False,
-                "error": "Ошибка выполнения апгрейда"
-            }), 500
+                "success": True,
+                "won": True,
+                "chance": chance,
+                "message": "ПОБЕДА!",
+                "source": {
+                    "name": source["name"],
+                    "price": source_price
+                },
+                "reward": {
+                    "inventory_id": new_inventory_id,
+                    "id": target["id"],
+                    "code": target["code"],
+                    "name": target["name"],
+                    "rarity": target["rarity"],
+                    "price": target_price,
+                    "image_url": target["image_url"],
+                    "background": target_background,
+                    "background_multiplier": background_multiplier
+                }
+            })
+
+        return jsonify({
+            "success": True,
+            "won": False,
+            "chance": chance,
+            "message": "НЕУДАЧА! NFT сгорел",
+            "lost": {
+                "name": source["name"],
+                "price": source_price
+            }
+        })
 
     return upgrade_bp

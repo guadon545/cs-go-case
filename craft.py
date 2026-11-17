@@ -1,8 +1,8 @@
 
 import random
 from collections import Counter
-from flask import Blueprint, request, jsonify
 
+from flask import Blueprint, request, jsonify
 import database
 
 
@@ -31,10 +31,13 @@ def create_craft_blueprint(authorized_user):
             player = db.execute("""
                 SELECT is_banned
                 FROM users
-                WHERE telegram_id = ?
+                WHERE telegram_id = %s
             """, (user["id"],)).fetchone()
 
-            if not player or player["is_banned"]:
+            if not player:
+                return jsonify({"error": "Игрок не найден"}), 404
+
+            if player["is_banned"]:
                 return jsonify({"error": "Аккаунт заблокирован"}), 403
 
             inventory = db.execute("""
@@ -46,7 +49,7 @@ def create_craft_blueprint(authorized_user):
                     inventory.quantity
                 FROM inventory
                 JOIN skins ON skins.id = inventory.skin_id
-                WHERE inventory.user_id = ?
+                WHERE inventory.user_id = %s
                   AND inventory.quantity > 0
                 ORDER BY skins.price DESC
             """, (user["id"],)).fetchall()
@@ -87,16 +90,16 @@ def create_craft_blueprint(authorized_user):
             return jsonify({"error": "Неверные ID предметов"}), 400
 
         required = Counter(skin_ids)
+        user_id = int(user["id"])
 
         try:
             with database.get_db() as db:
-                db.execute("BEGIN IMMEDIATE")
-
                 player = db.execute("""
                     SELECT is_banned
                     FROM users
-                    WHERE telegram_id = ?
-                """, (user["id"],)).fetchone()
+                    WHERE telegram_id = %s
+                    FOR UPDATE
+                """, (user_id,)).fetchone()
 
                 if not player:
                     return jsonify({"error": "Игрок не найден"}), 404
@@ -104,7 +107,9 @@ def create_craft_blueprint(authorized_user):
                 if player["is_banned"]:
                     return jsonify({"error": "Аккаунт заблокирован"}), 403
 
-                placeholders = ",".join("?" for _ in required)
+                placeholders = ",".join(
+                    ["%s"] * len(required)
+                )
 
                 rows = db.execute(f"""
                     SELECT
@@ -115,9 +120,10 @@ def create_craft_blueprint(authorized_user):
                         inventory.quantity
                     FROM inventory
                     JOIN skins ON skins.id = inventory.skin_id
-                    WHERE inventory.user_id = ?
+                    WHERE inventory.user_id = %s
                       AND skins.id IN ({placeholders})
-                """, (user["id"], *required.keys())).fetchall()
+                    FOR UPDATE OF inventory
+                """, (user_id, *required.keys())).fetchall()
 
                 available = {
                     row["id"]: row for row in rows
@@ -143,11 +149,14 @@ def create_craft_blueprint(authorized_user):
 
                 result = random.choices(
                     MULTIPLIERS,
-                    weights=[item["chance"] for item in MULTIPLIERS],
+                    weights=[
+                        item["chance"] for item in MULTIPLIERS
+                    ],
                     k=1
                 )[0]
 
                 multiplier = result["value"]
+
                 reward_price = (
                     total_price * result["numerator"]
                     // result["denominator"]
@@ -161,39 +170,37 @@ def create_craft_blueprint(authorized_user):
                 for skin_id, amount in required.items():
                     db.execute("""
                         UPDATE inventory
-                        SET quantity = quantity - ?
-                        WHERE user_id = ? AND skin_id = ?
-                    """, (amount, user["id"], skin_id))
+                        SET quantity = quantity - %s
+                        WHERE user_id = %s AND skin_id = %s
+                    """, (amount, user_id, skin_id))
 
                     db.execute("""
                         DELETE FROM inventory
-                        WHERE user_id = ?
-                          AND skin_id = ?
+                        WHERE user_id = %s
+                          AND skin_id = %s
                           AND quantity <= 0
-                    """, (user["id"], skin_id))
+                    """, (user_id, skin_id))
 
                 multiplier_name = str(multiplier).replace(".", ",")
 
-                cursor = db.execute("""
+                new_skin = db.execute("""
                     INSERT INTO skins (name, rarity, price)
-                    VALUES (?, 'Craft', ?)
+                    VALUES (%s, 'Craft', %s)
+                    RETURNING id, name, rarity, price
                 """, (
                     f"GUADON CRAFT ×{multiplier_name}",
                     reward_price
-                ))
+                )).fetchone()
 
-                new_skin_id = cursor.lastrowid
+                new_skin_id = new_skin["id"]
 
                 db.execute("""
                     INSERT INTO inventory (user_id, skin_id, quantity)
-                    VALUES (?, ?, 1)
-                """, (user["id"], new_skin_id))
-
-                new_skin = db.execute("""
-                    SELECT id, name, rarity, price
-                    FROM skins
-                    WHERE id = ?
-                """, (new_skin_id,)).fetchone()
+                    VALUES (%s, %s, 1)
+                    ON CONFLICT (user_id, skin_id)
+                    DO UPDATE SET quantity =
+                        inventory.quantity + EXCLUDED.quantity
+                """, (user_id, new_skin_id))
 
             return jsonify({
                 "success": True,

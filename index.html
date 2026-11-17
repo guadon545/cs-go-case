@@ -119,6 +119,11 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
             <div class="card-name">Апгрейд</div>
             <div class="card-description">Улучшай свои скины</div>
         </div>
+        <div class="card" onclick="showPage('craft')">
+            <div class="card-icon">⚒️</div>
+            <div class="card-name">Крафт</div>
+            <div class="card-description">Объединяй 5 предметов</div>
+        </div>
         <div class="card" onclick="showPage('contracts')">
             <div class="card-icon">📝</div>
             <div class="card-name">Контракты</div>
@@ -193,6 +198,10 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
     <div class="placeholder">Выбирай исходный скин и предмет, который хочешь получить.<br><br>Максимальный шанс — 90%.<br>Скоро подключим.</div>
 </section>
 
+<section class="page" id="craft">
+    <div id="craft-app"></div>
+</section>
+
 <section class="page" id="contracts">
     <h2 class="section-title">📝 Контракты</h2>
     <div class="placeholder">Выбирай 10 скинов и получай один случайный предмет.<br><br>Скоро подключим.</div>
@@ -239,6 +248,7 @@ body{background:#080c16;color:white;font-family:Arial,sans-serif;padding-bottom:
 <nav class="bottom-nav">
     <button class="nav-button active" onclick="showPage('home',this)"><span class="nav-icon">🏠</span>Главная</button>
     <button class="nav-button" onclick="showPage('cases',this)"><span class="nav-icon">📦</span>Кейсы</button>
+    <button class="nav-button" onclick="showPage('craft',this)"><span class="nav-icon">⚒️</span>Крафт</button>
     <button class="nav-button" onclick="showPage('inventory',this)"><span class="nav-icon">🔫</span>Инвентарь</button>
     <button class="nav-button" onclick="showPage('profile',this)"><span class="nav-icon">👤</span>Профиль</button>
     <button class="nav-button" id="admin-nav" style="display:none" onclick="showPage('admin',this)"><span class="nav-icon">👑</span>Админ</button>
@@ -344,6 +354,7 @@ function showPage(page,button) {
     if (page==="cases") loadCases();
     if (page==="inventory") loadInventory();
     if (page==="profile") loadHistory();
+    if (page==="craft" && window.initCraft) window.initCraft();
 }
 
 // -------------------------
@@ -440,7 +451,7 @@ function updateQuantity() {
     const total=Number(selectedCase.price_dc)*selectedQuantity;
     document.getElementById("total-price").textContent=
         "Итого: "+total.toLocaleString("ru-RU")+" DC";
-    
+
     document.getElementById("open-selected-button").textContent=
         "ОТКРЫТЬ ЗА "+total.toLocaleString("ru-RU")+" DC";
 }
@@ -815,7 +826,10 @@ loadBalance();
 checkAdmin();
 
 </script>
+
 <script src="upgrade.js"></script>
 <script src="clicker.js"></script>
+<script src="craft.js"></script>
+
 </body>
 </html>

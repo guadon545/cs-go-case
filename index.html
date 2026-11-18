@@ -85,7 +85,25 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .modal-close{float:right;background:var(--panel2);border-radius:10px;padding:7px 11px}
 .result-item{padding:12px;border-radius:13px;background:var(--panel2);margin:8px 0}
 hr{border:0;border-top:1px solid var(--border);margin:14px 0}
-@media(min-width:500px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.case-art,.nft-art{height:125px}}
+
+@media(min-width:500px){
+ .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .case-art,.nft-art{height:125px}
+}
+
+/* Для кейсов всегда два столбца, независимо от ширины экрана */
+#casesGrid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:11px;
+}
+
+@media(max-width:360px){
+ .app{padding:11px}
+ .case-card{padding:9px}
+ .case-name{font-size:12px}
+ .card-button{font-size:11px}
+}
 </style>
 </head>
 

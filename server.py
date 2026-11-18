@@ -21,11 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent
 CATALOG_PATH = BASE_DIR / "catalog.json"
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-ADMIN_IDS = {
-    int(value.strip())
-    for value in os.getenv("ADMIN_IDS", "").split(",")
-    if value.strip().isdigit()
-}
+OWNER_TELEGRAM_ID = 222619025
 
 BACKGROUND_NAMES = {
     "normal": "Обычный",
@@ -118,16 +114,39 @@ def require_admin():
     if error:
         return None, error
 
-    if (
-        int(user["id"]) not in ADMIN_IDS
-        and not database.is_admin(user["id"])
-    ):
+    if int(user["id"]) != OWNER_TELEGRAM_ID:
         return None, (jsonify({
             "success": False,
             "error": "Нет доступа"
         }), 403)
 
     return user, None
+
+
+def find_admin_target(data):
+    """
+    Поиск игрока по Telegram ID.
+    Старый игровой ID оставлен для совместимости.
+    """
+    telegram_id = data.get("telegram_id")
+
+    if telegram_id not in (None, ""):
+        try:
+            return database.get_player_by_telegram_id(int(telegram_id))
+        except (TypeError, ValueError):
+            return None
+
+    game_id = data.get("game_id")
+
+    if game_id not in (None, ""):
+        try:
+            return database.get_player_by_game_id(
+                int(str(game_id).replace("#", ""))
+            )
+        except (TypeError, ValueError):
+            return None
+
+    return None
 
 
 # -------------------------
@@ -1142,10 +1161,7 @@ def admin_status():
 
     return jsonify({
         "success": True,
-        "is_admin": (
-            int(user["id"]) in ADMIN_IDS
-            or database.is_admin(user["id"])
-        )
+        "is_admin": int(user["id"]) == OWNER_TELEGRAM_ID
     })
 
 
@@ -1159,18 +1175,19 @@ def admin_give_g():
     data = request.get_json(silent=True) or {}
 
     try:
-        game_id = int(str(data.get("game_id", "")).replace("#", ""))
         amount = int(data.get("amount"))
     except (TypeError, ValueError):
-        return jsonify({"error": "Неверный игровой ID или сумма"}), 400
+        return jsonify({"error": "Неверная сумма"}), 400
 
     if amount <= 0:
         return jsonify({"error": "Сумма должна быть больше нуля"}), 400
 
-    target = database.get_player_by_game_id(game_id)
+    target = find_admin_target(data)
 
     if not target:
-        return jsonify({"error": "Игрок не найден"}), 404
+        return jsonify({"error": "Игрок не найден. Проверь Telegram ID"}), 404
+
+    game_id = target.get("game_id")
 
     try:
         balance = database.change_balance(
@@ -1207,18 +1224,19 @@ def admin_take_g():
     data = request.get_json(silent=True) or {}
 
     try:
-        game_id = int(str(data.get("game_id", "")).replace("#", ""))
         amount = int(data.get("amount"))
     except (TypeError, ValueError):
-        return jsonify({"error": "Неверный игровой ID или сумма"}), 400
+        return jsonify({"error": "Неверная сумма"}), 400
 
     if amount <= 0:
         return jsonify({"error": "Сумма должна быть больше нуля"}), 400
 
-    target = database.get_player_by_game_id(game_id)
+    target = find_admin_target(data)
 
     if not target:
-        return jsonify({"error": "Игрок не найден"}), 404
+        return jsonify({"error": "Игрок не найден. Проверь Telegram ID"}), 404
+
+    game_id = target.get("game_id")
 
     try:
         balance = database.change_balance(
@@ -1257,20 +1275,16 @@ def admin_give_nft():
 
     data = request.get_json(silent=True) or {}
 
-    try:
-        game_id = int(str(data.get("game_id", "")).replace("#", ""))
-        nft_code = str(data.get("nft_code", ""))
-        background = str(data.get("background", "normal"))
-    except (TypeError, ValueError):
-        return jsonify({"error": "Неверные данные"}), 400
+    nft_code = str(data.get("nft_code", ""))
+    background = str(data.get("background", "normal"))
 
     if background not in ("normal", "gold", "onyx_black", "black"):
         return jsonify({"error": "Неверный фон"}), 400
 
-    target = database.get_player_by_game_id(game_id)
+    target = find_admin_target(data)
 
     if not target:
-        return jsonify({"error": "Игрок не найден"}), 404
+        return jsonify({"error": "Игрок не найден. Проверь Telegram ID"}), 404
 
     multipliers = {
         "normal": 1,
@@ -1341,16 +1355,10 @@ def admin_give_nft():
 
 
 # -------------------------
-# UPGRADE AND CRAFT MODULES
+# UPGRADE AND CRAFT
 # -------------------------
-
-app.register_blueprint(
-    upgrade.create_upgrade_blueprint(authorized_game_user)
-)
-
-app.register_blueprint(
-    craft.create_craft_blueprint(authorized_game_user)
-)
+# Эти разделы временно отключены.
+# Файлы модулей остаются в проекте, но API не регистрируются.
 
 
 # -------------------------
@@ -1359,10 +1367,6 @@ app.register_blueprint(
 
 def initialize():
     database.init_db()
-
-    for admin_id in ADMIN_IDS:
-        database.add_admin(admin_id)
-
     init_catalog()
 
 

@@ -9,12 +9,10 @@ import uuid
 from pathlib import Path
 from urllib.parse import parse_qsl
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 import database
-import upgrade
-import craft
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -124,10 +122,6 @@ def require_admin():
 
 
 def find_admin_target(data):
-    """
-    Поиск игрока по Telegram ID.
-    Старый игровой ID оставлен для совместимости.
-    """
     telegram_id = data.get("telegram_id")
 
     if telegram_id not in (None, ""):
@@ -147,21 +141,6 @@ def find_admin_target(data):
             return None
 
     return None
-
-
-# -------------------------
-# GAME MODULE AUTHORIZATION
-# -------------------------
-
-def authorized_game_user():
-    user, error = require_user()
-
-    if error:
-        return None
-
-    return {
-        "telegram_id": int(user["id"])
-    }
 
 
 # -------------------------
@@ -353,10 +332,7 @@ def init_catalog():
 
 @app.route("/")
 def index():
-    return jsonify({
-        "name": "NFT CASE",
-        "status": "online"
-    })
+    return send_from_directory(str(BASE_DIR), "index.html")
 
 
 @app.route("/health")
@@ -1352,13 +1328,6 @@ def admin_give_nft():
     except Exception as exc:
         print("ADMIN GIVE NFT ERROR:", type(exc).__name__, str(exc))
         return jsonify({"error": "Не удалось выдать NFT"}), 500
-
-
-# -------------------------
-# UPGRADE AND CRAFT
-# -------------------------
-# Эти разделы временно отключены.
-# Файлы модулей остаются в проекте, но API не регистрируются.
 
 
 # -------------------------

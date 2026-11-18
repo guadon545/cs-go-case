@@ -11,7 +11,7 @@
   "cases": [
     {
       "id": "starter",
-      "name": "Стартовый",
+      "name": "Первый подарок",
       "price_g": 100,
       "image_url": null,
       "background_chances": [
@@ -21,18 +21,18 @@
         {"background": "black", "chance": 0.1}
       ],
       "items": [
-        {"code": "rose", "name": "Роза", "rarity": "Обычный", "base_price": 20, "image_url": null, "chance": 40},
-        {"code": "heart", "name": "Сердце", "rarity": "Обычный", "base_price": 30, "image_url": null, "chance": 25},
-        {"code": "bear", "name": "Мишка", "rarity": "Необычный", "base_price": 45, "image_url": null, "chance": 16},
-        {"code": "cake", "name": "Торт", "rarity": "Необычный", "base_price": 70, "image_url": null, "chance": 10},
-        {"code": "star", "name": "Звезда", "rarity": "Редкий", "base_price": 100, "image_url": null, "chance": 6},
-        {"code": "rocket", "name": "Ракета", "rarity": "Эпический", "base_price": 200, "image_url": null, "chance": 2.5},
-        {"code": "trophy", "name": "Трофей", "rarity": "Легендарный", "base_price": 500, "image_url": null, "chance": 0.5}
+        {"code": "starter_socks", "name": "Fresh Socks", "rarity": "Обычный", "base_price": 20, "image_url": null, "chance": 40},
+        {"code": "starter_witch_hat", "name": "Witch Hat", "rarity": "Обычный", "base_price": 50, "image_url": null, "chance": 25},
+        {"code": "starter_jelly_bunny", "name": "Jelly Bunny", "rarity": "Необычный", "base_price": 80, "image_url": null, "chance": 16},
+        {"code": "starter_potion", "name": "Magic Potion", "rarity": "Необычный", "base_price": 150, "image_url": null, "chance": 10},
+        {"code": "starter_bear", "name": "Toy Bear", "rarity": "Редкий", "base_price": 250, "image_url": null, "chance": 6},
+        {"code": "starter_watch", "name": "Swiss Watch", "rarity": "Эпический", "base_price": 400, "image_url": null, "chance": 2.5},
+        {"code": "starter_peach", "name": "Precious Peach", "rarity": "Легендарный", "base_price": 500, "image_url": null, "chance": 0.5}
       ]
     },
     {
       "id": "pink",
-      "name": "Розовый",
+      "name": "Розовый неон",
       "price_g": 500,
       "image_url": null,
       "background_chances": [
@@ -42,18 +42,18 @@
         {"background": "black", "chance": 0.1}
       ],
       "items": [
-        {"code": "pink_bouquet", "name": "Розовый букет", "rarity": "Обычный", "base_price": 100, "image_url": null, "chance": 40},
-        {"code": "pink_heart", "name": "Розовое сердце", "rarity": "Обычный", "base_price": 150, "image_url": null, "chance": 25},
-        {"code": "pink_bear", "name": "Плюшевый мишка", "rarity": "Необычный", "base_price": 220, "image_url": null, "chance": 16},
-        {"code": "pink_cake", "name": "Клубничный торт", "rarity": "Необычный", "base_price": 350, "image_url": null, "chance": 10},
-        {"code": "pink_diamond", "name": "Розовый алмаз", "rarity": "Редкий", "base_price": 500, "image_url": null, "chance": 6},
-        {"code": "pink_crown", "name": "Розовая корона", "rarity": "Эпический", "base_price": 1000, "image_url": null, "chance": 2.5},
-        {"code": "pink_phoenix", "name": "Розовый феникс", "rarity": "Легендарный", "base_price": 2500, "image_url": null, "chance": 0.5}
+        {"code": "pink_candle", "name": "Love Candle", "rarity": "Обычный", "base_price": 100, "image_url": null, "chance": 40},
+        {"code": "pink_cookie", "name": "Cookie Heart", "rarity": "Обычный", "base_price": 250, "image_url": null, "chance": 25},
+        {"code": "pink_rose", "name": "Eternal Rose", "rarity": "Необычный", "base_price": 400, "image_url": null, "chance": 16},
+        {"code": "pink_trapped_heart", "name": "Trapped Heart", "rarity": "Необычный", "base_price": 750, "image_url": null, "chance": 10},
+        {"code": "pink_locket", "name": "Heart Locket", "rarity": "Редкий", "base_price": 1250, "image_url": null, "chance": 6},
+        {"code": "pink_cupid", "name": "Cupid Charm", "rarity": "Эпический", "base_price": 2000, "image_url": null, "chance": 2.5},
+        {"code": "pink_pepe", "name": "Plush Pepe", "rarity": "Легендарный", "base_price": 2500, "image_url": null, "chance": 0.5}
       ]
     },
     {
       "id": "gold",
-      "name": "Золотой",
+      "name": "Золотой запас",
       "price_g": 1500,
       "image_url": null,
       "background_chances": [
@@ -63,18 +63,18 @@
         {"background": "black", "chance": 0.1}
       ],
       "items": [
-        {"code": "gold_coin", "name": "Золотая монета", "rarity": "Обычный", "base_price": 300, "image_url": null, "chance": 40},
-        {"code": "gold_ring", "name": "Золотое кольцо", "rarity": "Обычный", "base_price": 450, "image_url": null, "chance": 25},
-        {"code": "gold_key", "name": "Золотой ключ", "rarity": "Необычный", "base_price": 650, "image_url": null, "chance": 16},
-        {"code": "gold_cup", "name": "Золотой кубок", "rarity": "Необычный", "base_price": 1000, "image_url": null, "chance": 10},
-        {"code": "gold_crown", "name": "Золотая корона", "rarity": "Редкий", "base_price": 1500, "image_url": null, "chance": 6},
-        {"code": "gold_dragon", "name": "Золотой дракон", "rarity": "Эпический", "base_price": 3000, "image_url": null, "chance": 2.5},
-        {"code": "gold_throne", "name": "Золотой трон", "rarity": "Легендарный", "base_price": 7500, "image_url": null, "chance": 0.5}
+        {"code": "gold_signet", "name": "Signet Ring", "rarity": "Обычный", "base_price": 300, "image_url": null, "chance": 40},
+        {"code": "gold_diamond_ring", "name": "Diamond Ring", "rarity": "Обычный", "base_price": 750, "image_url": null, "chance": 25},
+        {"code": "gold_gem", "name": "Gem Signet", "rarity": "Необычный", "base_price": 1200, "image_url": null, "chance": 16},
+        {"code": "gold_lucky_locket", "name": "Lucky Locket", "rarity": "Необычный", "base_price": 2250, "image_url": null, "chance": 10},
+        {"code": "gold_cap", "name": "Durov's Cap", "rarity": "Редкий", "base_price": 3750, "image_url": null, "chance": 6},
+        {"code": "gold_resistance_dog", "name": "Resistance Dog", "rarity": "Эпический", "base_price": 6000, "image_url": null, "chance": 2.5},
+        {"code": "gold_snoop", "name": "Snoop Dogg", "rarity": "Легендарный", "base_price": 7500, "image_url": null, "chance": 0.5}
       ]
     },
     {
       "id": "premium",
-      "name": "Премиум",
+      "name": "Премиум коллекция",
       "price_g": 3000,
       "image_url": null,
       "background_chances": [
@@ -84,18 +84,18 @@
         {"background": "black", "chance": 0.1}
       ],
       "items": [
-        {"code": "premium_watch", "name": "Премиум часы", "rarity": "Обычный", "base_price": 600, "image_url": null, "chance": 40},
-        {"code": "premium_glasses", "name": "Очки люкс", "rarity": "Обычный", "base_price": 900, "image_url": null, "chance": 25},
-        {"code": "premium_bag", "name": "Дизайнерская сумка", "rarity": "Необычный", "base_price": 1300, "image_url": null, "chance": 16},
-        {"code": "premium_car", "name": "Мини-автомобиль", "rarity": "Необычный", "base_price": 2000, "image_url": null, "chance": 10},
-        {"code": "premium_diamond", "name": "Большой алмаз", "rarity": "Редкий", "base_price": 3000, "image_url": null, "chance": 6},
-        {"code": "premium_jet", "name": "Частный самолёт", "rarity": "Эпический", "base_price": 6000, "image_url": null, "chance": 2.5},
-        {"code": "premium_palace", "name": "Дворец", "rarity": "Легендарный", "base_price": 15000, "image_url": null, "chance": 0.5}
+        {"code": "premium_snow_globe", "name": "Snow Globe", "rarity": "Обычный", "base_price": 600, "image_url": null, "chance": 40},
+        {"code": "premium_top_hat", "name": "Top Hat", "rarity": "Обычный", "base_price": 1500, "image_url": null, "chance": 25},
+        {"code": "premium_perfume", "name": "Perfume Bottle", "rarity": "Необычный", "base_price": 2400, "image_url": null, "chance": 16},
+        {"code": "premium_brick", "name": "Artisan Brick", "rarity": "Необычный", "base_price": 4500, "image_url": null, "chance": 10},
+        {"code": "premium_helmet", "name": "Heroic Helmet", "rarity": "Редкий", "base_price": 7500, "image_url": null, "chance": 6},
+        {"code": "premium_loot_bag", "name": "Loot Bag", "rarity": "Эпический", "base_price": 12000, "image_url": null, "chance": 2.5},
+        {"code": "premium_glasses", "name": "Durov's Glasses", "rarity": "Легендарный", "base_price": 15000, "image_url": null, "chance": 0.5}
       ]
     },
     {
       "id": "legendary",
-      "name": "Легендарный",
+      "name": "Легенда",
       "price_g": 7500,
       "image_url": null,
       "background_chances": [
@@ -105,13 +105,13 @@
         {"background": "black", "chance": 0.1}
       ],
       "items": [
-        {"code": "legendary_sword", "name": "Легендарный меч", "rarity": "Обычный", "base_price": 1500, "image_url": null, "chance": 40},
-        {"code": "legendary_shield", "name": "Щит героя", "rarity": "Обычный", "base_price": 2200, "image_url": null, "chance": 25},
-        {"code": "legendary_helmet", "name": "Шлем воина", "rarity": "Необычный", "base_price": 3300, "image_url": null, "chance": 16},
-        {"code": "legendary_wings", "name": "Крылья", "rarity": "Необычный", "base_price": 5000, "image_url": null, "chance": 10},
-        {"code": "legendary_dragon", "name": "Дракон", "rarity": "Редкий", "base_price": 7500, "image_url": null, "chance": 6},
-        {"code": "legendary_phoenix", "name": "Феникс", "rarity": "Эпический", "base_price": 15000, "image_url": null, "chance": 2.5},
-        {"code": "legendary_artifact", "name": "Древний артефакт", "rarity": "Легендарный", "base_price": 37500, "image_url": null, "chance": 0.5}
+        {"code": "legendary_voodoo", "name": "Voodoo Doll", "rarity": "Обычный", "base_price": 1500, "image_url": null, "chance": 40},
+        {"code": "legendary_skull", "name": "Electric Skull", "rarity": "Обычный", "base_price": 3750, "image_url": null, "chance": 25},
+        {"code": "legendary_bird", "name": "Rare Bird", "rarity": "Необычный", "base_price": 6000, "image_url": null, "chance": 16},
+        {"code": "legendary_bracelet", "name": "Nail Bracelet", "rarity": "Необычный", "base_price": 11250, "image_url": null, "chance": 10},
+        {"code": "legendary_cat", "name": "Scared Cat", "rarity": "Редкий", "base_price": 18750, "image_url": null, "chance": 6},
+        {"code": "legendary_cigar", "name": "Snoop Cigar", "rarity": "Эпический", "base_price": 30000, "image_url": null, "chance": 2.5},
+        {"code": "legendary_pepe", "name": "Plush Pepe", "rarity": "Легендарный", "base_price": 37500, "image_url": null, "chance": 0.5}
       ]
     },
     {
@@ -126,18 +126,18 @@
         {"background": "black", "chance": 0.1}
       ],
       "items": [
-        {"code": "cosmos_moon", "name": "Лунный камень", "rarity": "Обычный", "base_price": 2400, "image_url": null, "chance": 40},
-        {"code": "cosmos_planet", "name": "Планета", "rarity": "Обычный", "base_price": 3600, "image_url": null, "chance": 25},
-        {"code": "cosmos_satellite", "name": "Спутник", "rarity": "Необычный", "base_price": 5200, "image_url": null, "chance": 16},
-        {"code": "cosmos_comet", "name": "Комета", "rarity": "Необычный", "base_price": 8000, "image_url": null, "chance": 10},
-        {"code": "cosmos_nebula", "name": "Туманность", "rarity": "Редкий", "base_price": 12000, "image_url": null, "chance": 6},
-        {"code": "cosmos_galaxy", "name": "Галактика", "rarity": "Эпический", "base_price": 24000, "image_url": null, "chance": 2.5},
-        {"code": "cosmos_blackhole", "name": "Чёрная дыра", "rarity": "Легендарный", "base_price": 60000, "image_url": null, "chance": 0.5}
+        {"code": "cosmos_shard", "name": "Astral Shard", "rarity": "Обычный", "base_price": 2400, "image_url": null, "chance": 40},
+        {"code": "cosmos_ion", "name": "Ion Gem", "rarity": "Обычный", "base_price": 6000, "image_url": null, "chance": 25},
+        {"code": "cosmos_crystal", "name": "Crystal Ball", "rarity": "Необычный", "base_price": 9600, "image_url": null, "chance": 16},
+        {"code": "cosmos_rocket", "name": "Stellar Rocket", "rarity": "Необычный", "base_price": 18000, "image_url": null, "chance": 10},
+        {"code": "cosmos_moon", "name": "Moon Pendant", "rarity": "Редкий", "base_price": 30000, "image_url": null, "chance": 6},
+        {"code": "cosmos_sword", "name": "Light Sword", "rarity": "Эпический", "base_price": 48000, "image_url": null, "chance": 2.5},
+        {"code": "cosmos_mask", "name": "Myth Mask", "rarity": "Легендарный", "base_price": 60000, "image_url": null, "chance": 0.5}
       ]
     },
     {
       "id": "royal",
-      "name": "Королевский",
+      "name": "Королевская охота",
       "price_g": 20000,
       "image_url": null,
       "background_chances": [
@@ -147,18 +147,18 @@
         {"background": "black", "chance": 0.1}
       ],
       "items": [
-        {"code": "royal_scepter", "name": "Скипетр", "rarity": "Обычный", "base_price": 4000, "image_url": null, "chance": 40},
-        {"code": "royal_orb", "name": "Королевская сфера", "rarity": "Обычный", "base_price": 6000, "image_url": null, "chance": 25},
-        {"code": "royal_ring", "name": "Перстень короля", "rarity": "Необычный", "base_price": 8500, "image_url": null, "chance": 16},
-        {"code": "royal_crown", "name": "Королевская корона", "rarity": "Необычный", "base_price": 13000, "image_url": null, "chance": 10},
-        {"code": "royal_lion", "name": "Золотой лев", "rarity": "Редкий", "base_price": 20000, "image_url": null, "chance": 6},
-        {"code": "royal_castle", "name": "Королевский замок", "rarity": "Эпический", "base_price": 40000, "image_url": null, "chance": 2.5},
-        {"code": "royal_empire", "name": "Императорская реликвия", "rarity": "Легендарный", "base_price": 100000, "image_url": null, "chance": 0.5}
+        {"code": "royal_papakha", "name": "Khabib's Papakha", "rarity": "Обычный", "base_price": 4000, "image_url": null, "chance": 40},
+        {"code": "royal_liberty", "name": "Liberty Figure", "rarity": "Обычный", "base_price": 10000, "image_url": null, "chance": 25},
+        {"code": "royal_westside", "name": "Westside Sign", "rarity": "Необычный", "base_price": 16000, "image_url": null, "chance": 16},
+        {"code": "royal_lowrider", "name": "Low Rider", "rarity": "Необычный", "base_price": 30000, "image_url": null, "chance": 10},
+        {"code": "royal_arm", "name": "Mighty Arm", "rarity": "Редкий", "base_price": 50000, "image_url": null, "chance": 6},
+        {"code": "royal_dog", "name": "Resistance Dog", "rarity": "Эпический", "base_price": 80000, "image_url": null, "chance": 2.5},
+        {"code": "royal_locket", "name": "Heart Locket", "rarity": "Легендарный", "base_price": 100000, "image_url": null, "chance": 0.5}
       ]
     },
     {
       "id": "diamond",
-      "name": "Алмазный",
+      "name": "Алмазный дождь",
       "price_g": 30000,
       "image_url": null,
       "background_chances": [
@@ -168,39 +168,18 @@
         {"background": "black", "chance": 0.1}
       ],
       "items": [
-        {"code": "diamond_shard", "name": "Осколок алмаза", "rarity": "Обычный", "base_price": 6000, "image_url": null, "chance": 40},
-        {"code": "diamond_ring", "name": "Алмазное кольцо", "rarity": "Обычный", "base_price": 9000, "image_url": null, "chance": 25},
-        {"code": "diamond_necklace", "name": "Алмазное ожерелье", "rarity": "Необычный", "base_price": 13000, "image_url": null, "chance": 16},
-        {"code": "diamond_heart", "name": "Алмазное сердце", "rarity": "Необычный", "base_price": 20000, "image_url": null, "chance": 10},
-        {"code": "diamond_star", "name": "Звезда из алмаза", "rarity": "Редкий", "base_price": 30000, "image_url": null, "chance": 6},
-        {"code": "diamond_dragon", "name": "Алмазный дракон", "rarity": "Эпический", "base_price": 60000, "image_url": null, "chance": 2.5},
-        {"code": "diamond_universe", "name": "Алмазная вселенная", "rarity": "Легендарный", "base_price": 150000, "image_url": null, "chance": 0.5}
-      ]
-    },
-    {
-      "id": "black",
-      "name": "Чёрный",
-      "price_g": 40000,
-      "image_url": null,
-      "background_chances": [
-        {"background": "normal", "chance": 98.5},
-        {"background": "gold", "chance": 1},
-        {"background": "onyx_black", "chance": 0.4},
-        {"background": "black", "chance": 0.1}
-      ],
-      "items": [
-        {"code": "black_mask", "name": "Чёрная маска", "rarity": "Обычный", "base_price": 8000, "image_url": null, "chance": 40},
-        {"code": "black_panther", "name": "Чёрная пантера", "rarity": "Обычный", "base_price": 12000, "image_url": null, "chance": 25},
-        {"code": "black_diamond", "name": "Чёрный алмаз", "rarity": "Необычный", "base_price": 18000, "image_url": null, "chance": 16},
-        {"code": "black_phantom", "name": "Фантом", "rarity": "Необычный", "base_price": 26000, "image_url": null, "chance": 10},
-        {"code": "black_dragon", "name": "Чёрный дракон", "rarity": "Редкий", "base_price": 40000, "image_url": null, "chance": 6},
-        {"code": "black_throne", "name": "Чёрный трон", "rarity": "Эпический", "base_price": 80000, "image_url": null, "chance": 2.5},
-        {"code": "black_emperor", "name": "Чёрный император", "rarity": "Легендарный", "base_price": 200000, "image_url": null, "chance": 0.5}
+        {"code": "diamond_watch", "name": "Swiss Watch", "rarity": "Обычный", "base_price": 6000, "image_url": null, "chance": 40},
+        {"code": "diamond_ring", "name": "Diamond Ring", "rarity": "Обычный", "base_price": 15000, "image_url": null, "chance": 25},
+        {"code": "diamond_bear", "name": "Toy Bear", "rarity": "Необычный", "base_price": 24000, "image_url": null, "chance": 16},
+        {"code": "diamond_cap", "name": "Durov's Cap", "rarity": "Необычный", "base_price": 45000, "image_url": null, "chance": 10},
+        {"code": "diamond_peach", "name": "Precious Peach", "rarity": "Редкий", "base_price": 75000, "image_url": null, "chance": 6},
+        {"code": "diamond_snoop", "name": "Snoop Dogg", "rarity": "Эпический", "base_price": 120000, "image_url": null, "chance": 2.5},
+        {"code": "diamond_pepe", "name": "Plush Pepe", "rarity": "Легендарный", "base_price": 150000, "image_url": null, "chance": 0.5}
       ]
     },
     {
       "id": "elite",
-      "name": "Элитный",
+      "name": "Чёрный престиж",
       "price_g": 50000,
       "image_url": null,
       "background_chances": [
@@ -210,13 +189,13 @@
         {"background": "black", "chance": 0.1}
       ],
       "items": [
-        {"code": "elite_watch", "name": "Часы миллионера", "rarity": "Обычный", "base_price": 10000, "image_url": null, "chance": 40},
-        {"code": "elite_car", "name": "Суперкар", "rarity": "Обычный", "base_price": 15000, "image_url": null, "chance": 25},
-        {"code": "elite_yacht", "name": "Яхта", "rarity": "Необычный", "base_price": 22000, "image_url": null, "chance": 16},
-        {"code": "elite_jet", "name": "Частный джет", "rarity": "Необычный", "base_price": 35000, "image_url": null, "chance": 10},
-        {"code": "elite_mansion", "name": "Особняк", "rarity": "Редкий", "base_price": 50000, "image_url": null, "chance": 6},
-        {"code": "elite_island", "name": "Частный остров", "rarity": "Эпический", "base_price": 100000, "image_url": null, "chance": 2.5},
-        {"code": "elite_universe", "name": "Владыка вселенной", "rarity": "Легендарный", "base_price": 250000, "image_url": null, "chance": 0.5}
+        {"code": "elite_loot_bag", "name": "Loot Bag", "rarity": "Обычный", "base_price": 10000, "image_url": null, "chance": 40},
+        {"code": "elite_cat", "name": "Scared Cat", "rarity": "Обычный", "base_price": 25000, "image_url": null, "chance": 25},
+        {"code": "elite_dog", "name": "Resistance Dog", "rarity": "Необычный", "base_price": 40000, "image_url": null, "chance": 16},
+        {"code": "elite_snoop", "name": "Snoop Dogg", "rarity": "Необычный", "base_price": 75000, "image_url": null, "chance": 10},
+        {"code": "elite_locket", "name": "Heart Locket", "rarity": "Редкий", "base_price": 125000, "image_url": null, "chance": 6},
+        {"code": "elite_cap", "name": "Durov's Cap", "rarity": "Эпический", "base_price": 200000, "image_url": null, "chance": 2.5},
+        {"code": "elite_pepe", "name": "Plush Pepe", "rarity": "Легендарный", "base_price": 250000, "image_url": null, "chance": 0.5}
       ]
     }
   ]

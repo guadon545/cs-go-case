@@ -182,8 +182,8 @@ def load_catalog():
     if catalog.get("version") != 2:
         raise RuntimeError("Неподдерживаемая версия catalog.json")
 
-    if len(catalog.get("cases", [])) != 10:
-        raise RuntimeError("В каталоге должно быть ровно 10 кейсов")
+    if len(catalog.get("cases", [])) != 9:
+        raise RuntimeError("В каталоге должно быть ровно 9 кейсов")
 
     for case in catalog["cases"]:
         if not 7 <= len(case.get("items", [])) <= 13:
@@ -218,6 +218,18 @@ def init_catalog():
     catalog = load_catalog()
 
     with database.get_db() as db:
+        active_codes = [case["id"] for case in catalog["cases"]]
+        placeholders = ", ".join(["%s"] * len(active_codes))
+
+        db.execute(
+            f"""
+            UPDATE nft_cases
+            SET is_active = FALSE
+            WHERE code NOT IN ({placeholders})
+            """,
+            active_codes
+        )
+
         for sort_order, case in enumerate(catalog["cases"]):
             db.execute("""
                 INSERT INTO nft_cases (

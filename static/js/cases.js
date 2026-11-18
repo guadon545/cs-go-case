@@ -58,28 +58,35 @@
                 return;
             }
 
-            grid.innerHTML = this.list.map(item => `
-                <div class="case-card">
-                    <div class="case-art">
-                        ${item.image_url
-                            ? `<img src="${this.escape(item.image_url)}" alt="">`
-                            : "🎁"}
-                    </div>
+            grid.innerHTML = this.list.map((item, index) => {
+                const isFeatured = index === this.list.length - 1;
 
-                    <div class="case-name">
-                        ${this.escape(item.name)}
-                    </div>
+                return `
+                    <div class="case-card"
+                        style="${isFeatured ? "grid-column:1/-1" : ""}">
 
-                    <div class="case-price">
-                        ${app.format(item.price)}
-                    </div>
+                        <div class="case-art"
+                            style="${isFeatured ? "height:145px;font-size:58px" : ""}">
+                            ${item.image_url
+                                ? `<img src="${this.escape(item.image_url)}" alt="">`
+                                : "🎁"}
+                        </div>
 
-                    <button class="card-button"
-                        data-open="${this.escape(item.code)}">
-                        Открыть кейс
-                    </button>
-                </div>
-            `).join("");
+                        <div class="case-name">
+                            ${this.escape(item.name)}
+                        </div>
+
+                        <div class="case-price">
+                            ${app.format(item.price)}
+                        </div>
+
+                        <button class="card-button"
+                            data-open="${this.escape(item.code)}">
+                            Открыть кейс
+                        </button>
+                    </div>
+                `;
+            }).join("");
 
             grid.querySelectorAll("[data-open]").forEach(button => {
                 button.addEventListener("click", () => {
@@ -104,40 +111,69 @@
                     <h2>${this.escape(data.case.name)}</h2>
 
                     <div class="case-art"
-                        style="height:130px;font-size:55px">
+                        style="height:145px;font-size:58px">
                         🎁
                     </div>
 
                     <p class="muted">
-                        Цена: ${app.format(data.case.price)}
+                        Цена за один кейс:
+                        <b>${app.format(data.case.price)}</b>
                     </p>
 
                     <hr>
+
                     <h3>Содержимое кейса</h3>
 
-                    ${items.map(item => `
-                        <div class="result-item">
-                            <b>${this.escape(item.name)}</b>
-                            <div class="muted small">
-                                Цена: ${app.format(item.base_price)}
-                                · Шанс: ${item.chance}%
+                    <div class="case-contents">
+                        ${items.map(item => `
+                            <div class="result-item">
+                                <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+                                    <b>${this.escape(item.name)}</b>
+                                    <span class="small">
+                                        ${item.chance}%
+                                    </span>
+                                </div>
+
+                                <div class="muted small">
+                                    ${this.escape(item.rarity || "")}
+                                    · Цена: ${app.format(item.base_price)}
+                                </div>
                             </div>
-                        </div>
-                    `).join("")}
+                        `).join("")}
+                    </div>
 
                     <hr>
 
-                    <div class="row">
-                        <button class="secondary" id="caseMinus">−</button>
-                        <b id="caseQuantity">1</b>
-                        <button class="secondary" id="casePlus">+</button>
+                    <h3>Количество кейсов</h3>
+
+                    <div class="row"
+                        style="justify-content:center;align-items:center;gap:22px;margin:14px 0">
+
+                        <button class="secondary"
+                            id="caseMinus"
+                            style="min-width:48px">
+                            −
+                        </button>
+
+                        <b id="caseQuantity"
+                            style="font-size:24px;min-width:30px;text-align:center">
+                            1
+                        </b>
+
+                        <button class="secondary"
+                            id="casePlus"
+                            style="min-width:48px">
+                            +
+                        </button>
                     </div>
 
-                    <p id="caseTotal" style="margin:15px 0">
+                    <div id="caseTotal"
+                        style="text-align:center;font-size:18px;margin:15px 0">
                         Итого: ${app.format(data.case.price)}
-                    </p>
+                    </div>
 
-                    <button class="primary" id="caseOpenConfirm">
+                    <button class="primary"
+                        id="caseOpenConfirm">
                         ОТКРЫТЬ
                     </button>
                 `;
@@ -185,102 +221,232 @@
             app.showModal(`
                 <style>
                     @keyframes chestFloat {
-                        0%,100% { transform:translateY(5px) rotate(-2deg); }
-                        50% { transform:translateY(-10px) rotate(2deg); }
+                        0%,100% {
+                            transform:translateY(5px) rotate(-2deg);
+                        }
+                        50% {
+                            transform:translateY(-10px) rotate(2deg);
+                        }
                     }
+
                     @keyframes lidOpen {
-                        0%,35% { transform:rotate(0deg); }
-                        65%,100% { transform:rotate(-38deg) translateY(-7px); }
+                        0%,35% {
+                            transform:rotate(0deg);
+                        }
+                        65%,100% {
+                            transform:rotate(-38deg) translateY(-7px);
+                        }
                     }
+
                     @keyframes chestGlow {
-                        0%,100% { filter:drop-shadow(0 0 8px #8968ff66); }
-                        50% { filter:drop-shadow(0 0 30px #b99aff); }
+                        0%,100% {
+                            filter:drop-shadow(0 0 8px #8968ff66);
+                        }
+                        50% {
+                            filter:drop-shadow(0 0 30px #b99aff);
+                        }
                     }
+
                     @keyframes beam {
-                        0%,45% { opacity:0; transform:scaleY(.1); }
-                        70% { opacity:1; transform:scaleY(1); }
-                        100% { opacity:0; transform:scaleY(1.15); }
+                        0%,45% {
+                            opacity:0;
+                            transform:scaleY(.1);
+                        }
+                        70% {
+                            opacity:1;
+                            transform:scaleY(1);
+                        }
+                        100% {
+                            opacity:0;
+                            transform:scaleY(1.15);
+                        }
                     }
+
                     @keyframes sparkle {
-                        0%,100% { opacity:.15; transform:scale(.5) rotate(0); }
-                        50% { opacity:1; transform:scale(1.25) rotate(90deg); }
+                        0%,100% {
+                            opacity:.15;
+                            transform:scale(.5) rotate(0);
+                        }
+                        50% {
+                            opacity:1;
+                            transform:scale(1.25) rotate(90deg);
+                        }
                     }
+
                     @keyframes loadingPulse {
-                        0%,100% { opacity:.45; }
-                        50% { opacity:1; }
+                        0%,100% {
+                            opacity:.45;
+                        }
+                        50% {
+                            opacity:1;
+                        }
                     }
+
                     @keyframes caseProgress {
-                        0% {width:5%;margin-left:0}
-                        65% {width:70%;margin-left:15%}
-                        100% {width:100%;margin-left:0}
+                        0% {
+                            width:5%;
+                            margin-left:0;
+                        }
+                        65% {
+                            width:70%;
+                            margin-left:15%;
+                        }
+                        100% {
+                            width:100%;
+                            margin-left:0;
+                        }
                     }
+
                     .case-opening-stage {
-                        position:relative;height:220px;display:flex;
-                        align-items:center;justify-content:center;overflow:hidden;
+                        position:relative;
+                        height:220px;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        overflow:hidden;
                     }
+
                     .case-opening-chest {
-                        position:relative;width:150px;height:105px;
-                        animation:chestFloat 1.5s ease-in-out infinite,
-                                  chestGlow 1.5s ease-in-out infinite;
+                        position:relative;
+                        width:150px;
+                        height:105px;
+                        animation:
+                            chestFloat 1.5s ease-in-out infinite,
+                            chestGlow 1.5s ease-in-out infinite;
                         z-index:2;
                     }
+
                     .case-chest-base {
-                        position:absolute;bottom:0;left:8px;width:134px;height:70px;
-                        border:3px solid #f1c879;border-radius:12px 12px 17px 17px;
+                        position:absolute;
+                        bottom:0;
+                        left:8px;
+                        width:134px;
+                        height:70px;
+                        border:3px solid #f1c879;
+                        border-radius:12px 12px 17px 17px;
                         background:linear-gradient(145deg,#a65b27,#633016);
-                        box-shadow:inset 0 8px 15px #ffffff22,0 12px 25px #0008;
+                        box-shadow:
+                            inset 0 8px 15px #ffffff22,
+                            0 12px 25px #0008;
                     }
+
                     .case-chest-base:before {
-                        content:"";position:absolute;left:55px;top:0;width:19px;height:100%;
-                        background:linear-gradient(90deg,#d49b43,#ffe4a0,#a96a27);
+                        content:"";
+                        position:absolute;
+                        left:55px;
+                        top:0;
+                        width:19px;
+                        height:100%;
+                        background:linear-gradient(
+                            90deg,
+                            #d49b43,
+                            #ffe4a0,
+                            #a96a27
+                        );
                     }
+
                     .case-chest-lid {
-                        position:absolute;top:13px;left:5px;width:140px;height:42px;
-                        border:3px solid #f1c879;border-radius:13px 13px 5px 5px;
+                        position:absolute;
+                        top:13px;
+                        left:5px;
+                        width:140px;
+                        height:42px;
+                        border:3px solid #f1c879;
+                        border-radius:13px 13px 5px 5px;
                         background:linear-gradient(145deg,#d18a3e,#81401d);
                         transform-origin:12px 38px;
                         animation:lidOpen 2.6s ease-in-out infinite;
                         z-index:3;
                     }
+
                     .case-chest-lock {
-                        position:absolute;z-index:4;left:65px;top:56px;width:22px;height:27px;
-                        border:2px solid #ffe2a0;border-radius:6px;
+                        position:absolute;
+                        z-index:4;
+                        left:65px;
+                        top:56px;
+                        width:22px;
+                        height:27px;
+                        border:2px solid #ffe2a0;
+                        border-radius:6px;
                         background:linear-gradient(#f5d17c,#a96a27);
                     }
+
                     .case-opening-beam {
-                        position:absolute;bottom:54px;width:100px;height:150px;
-                        background:linear-gradient(transparent,#c5a5ff99,transparent);
-                        filter:blur(13px);transform-origin:bottom;
-                        animation:beam 2.6s ease-in-out infinite;z-index:1;
+                        position:absolute;
+                        bottom:54px;
+                        width:100px;
+                        height:150px;
+                        background:linear-gradient(
+                            transparent,
+                            #c5a5ff99,
+                            transparent
+                        );
+                        filter:blur(13px);
+                        transform-origin:bottom;
+                        animation:beam 2.6s ease-in-out infinite;
+                        z-index:1;
                     }
+
                     .case-spark {
-                        position:absolute;color:#e2ccff;font-size:24px;
+                        position:absolute;
+                        color:#e2ccff;
+                        font-size:24px;
                         animation:sparkle 1.2s ease-in-out infinite;
                     }
-                    .case-spark.s1 {top:28px;left:18%}
-                    .case-spark.s2 {top:55px;right:17%;animation-delay:.3s}
-                    .case-spark.s3 {bottom:30px;left:25%;animation-delay:.6s}
-                    .case-spark.s4 {bottom:40px;right:25%;animation-delay:.9s}
-                    .case-opening-text {animation:loadingPulse 1s ease-in-out infinite;}
+
+                    .case-spark.s1 {
+                        top:28px;
+                        left:18%;
+                    }
+
+                    .case-spark.s2 {
+                        top:55px;
+                        right:17%;
+                        animation-delay:.3s;
+                    }
+
+                    .case-spark.s3 {
+                        bottom:30px;
+                        left:25%;
+                        animation-delay:.6s;
+                    }
+
+                    .case-spark.s4 {
+                        bottom:40px;
+                        right:25%;
+                        animation-delay:.9s;
+                    }
+
+                    .case-opening-text {
+                        animation:loadingPulse 1s ease-in-out infinite;
+                    }
                 </style>
+
                 <div style="text-align:center;padding:15px 5px">
-                    <h2 style="margin-bottom:4px">Открываем кейс</h2>
+                    <h2 style="margin-bottom:4px">
+                        Открываем кейс
+                    </h2>
+
                     <div class="case-opening-stage">
                         <div class="case-opening-beam"></div>
+
                         <span class="case-spark s1">✦</span>
                         <span class="case-spark s2">✧</span>
                         <span class="case-spark s3">✦</span>
                         <span class="case-spark s4">✧</span>
+
                         <div class="case-opening-chest">
                             <div class="case-chest-lid"></div>
                             <div class="case-chest-base"></div>
                             <div class="case-chest-lock"></div>
                         </div>
                     </div>
+
                     <h3 class="case-opening-text"
                         style="margin-top:5px;color:#cbb4ff">
                         Ищем твой NFT...
                     </h3>
+
                     <div style="height:4px;background:#ffffff18;border-radius:9px;overflow:hidden;margin:18px 20px">
                         <div style="height:100%;width:45%;border-radius:9px;background:linear-gradient(90deg,#8058db,#d6baff);animation:caseProgress 2.6s ease-in-out infinite"></div>
                     </div>
@@ -292,6 +458,7 @@
             if (this.opening) return;
 
             const button = document.getElementById("caseOpenConfirm");
+
             if (!button) return;
 
             this.opening = true;
@@ -357,13 +524,26 @@
                         animation:rewardAppear .45s ease both;
                     }
 
-                    .case-reward:nth-child(2) {animation-delay:.1s}
-                    .case-reward:nth-child(3) {animation-delay:.2s}
-                    .case-reward:nth-child(4) {animation-delay:.3s}
-                    .case-reward:nth-child(5) {animation-delay:.4s}
+                    .case-reward:nth-child(2) {
+                        animation-delay:.1s;
+                    }
+
+                    .case-reward:nth-child(3) {
+                        animation-delay:.2s;
+                    }
+
+                    .case-reward:nth-child(4) {
+                        animation-delay:.3s;
+                    }
+
+                    .case-reward:nth-child(5) {
+                        animation-delay:.4s;
+                    }
                 </style>
 
-                <h2 style="margin-bottom:10px">Твои NFT!</h2>
+                <h2 style="margin-bottom:10px">
+                    Твои NFT!
+                </h2>
 
                 <p class="muted small">
                     Открыто кейсов: ${result.quantity}
@@ -399,12 +579,14 @@
                     ЗАБРАТЬ ВСЁ
                 </button>
 
-                <button class="primary" id="caseSell"
+                <button class="primary"
+                    id="caseSell"
                     style="margin-top:9px">
                     ПРОДАТЬ ВСЁ · ${app.format(total)}
                 </button>
 
-                <button class="secondary" id="caseAgain"
+                <button class="secondary"
+                    id="caseAgain"
                     style="width:100%;margin-top:9px">
                     ОТКРЫТЬ ЕЩЁ
                 </button>
@@ -424,16 +606,17 @@
 
             document.getElementById("caseAgain").onclick = () => {
                 this.sound("click");
-                app.closeModal();
-                this.openDetails(this.currentCase.code);
+                this.finishBatch("claim", true);
             };
         },
 
-        async finishBatch(action) {
+        async finishBatch(action, reopen = false) {
             if (!app.pendingBatch) {
                 app.notice("Награды не найдены");
                 return;
             }
+
+            const caseCode = this.currentCase?.code;
 
             try {
                 const endpoint = action === "sell"
@@ -455,10 +638,16 @@
                         "Продано! Получено " + app.format(result.earned)
                     );
                 } else {
-                    app.notice("NFT добавлены в инвентарь");
+                    if (!reopen) {
+                        app.notice("NFT добавлены в инвентарь");
+                    }
                 }
 
                 await app.refresh();
+
+                if (reopen && caseCode) {
+                    await this.openDetails(caseCode);
+                }
 
             } catch (error) {
                 app.notice(error.message || "Ошибка обработки наград");
@@ -473,3 +662,4 @@
     window.Cases = Cases;
     Cases.init();
 })();
+ 
